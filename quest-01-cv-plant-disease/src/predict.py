@@ -1,8 +1,5 @@
 """
 Inference on a single leaf image using the trained ONNX model.
-
-Usage:
-    python src/predict.py path/to/leaf.jpg
 """
 
 import argparse
@@ -10,10 +7,9 @@ import json
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
 import onnxruntime as ort
+from PIL import Image
 from torchvision import transforms
-
 
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
@@ -39,9 +35,7 @@ def load_labels(path: Path) -> list[str]:
 
 def preprocess(image_path: Path) -> np.ndarray:
     img = Image.open(image_path).convert("RGB")
-    tensor = TRANSFORM(img)
-    # Add batch dimension and convert to numpy
-    return tensor.unsqueeze(0).numpy().astype(np.float32)
+    return TRANSFORM(img).unsqueeze(0).numpy().astype(np.float32)
 
 
 def predict(
@@ -50,7 +44,6 @@ def predict(
     labels_path: Path = DEFAULT_LABELS,
     top_k: int = 3,
 ):
-    """Run inference and return top-k predictions."""
     if not onnx_path.exists():
         raise FileNotFoundError(
             f"ONNX model not found at {onnx_path}. Run `python src/evaluate.py` first."
@@ -60,29 +53,23 @@ def predict(
 
     class_names = load_labels(labels_path)
     input_data = preprocess(image_path)
-
-    # ONNX Runtime session
     session = ort.InferenceSession(str(onnx_path))
-    input_name = session.get_inputs()[0].name
-    output_name = session.get_outputs()[0].name
+    outputs = session.run(
+        [session.get_outputs()[0].name], {session.get_inputs()[0].name: input_data}
+    )[0]
 
-    outputs = session.run([output_name], {input_name: input_data})[0]  # [1, 38]
-    probabilities = 1.0 / (1.0 + np.exp(-outputs))  # sigmoid → probs
-    probabilities = probabilities / probabilities.sum(axis=1, keepdims=True)
+    exp = np.exp(outputs - outputs.max(axis=1, keepdims=True))
+    probabilities = exp / exp.sum(axis=1, keepdims=True)
 
     top_indices = np.argsort(probabilities[0])[::-1][:top_k]
-
-    results = []
-    for idx in top_indices:
-        results.append(
-            {
-                "class": class_names[idx],
-                "class_id": int(idx),
-                "confidence": float(probabilities[0, idx]),
-            }
-        )
-
-    return results
+    return [
+        {
+            "class": class_names[idx],
+            "class_id": int(idx),
+            "confidence": float(probabilities[0, idx]),
+        }
+        for idx in top_indices
+    ]
 
 
 def main():
@@ -99,7 +86,6 @@ def main():
         return
 
     results = predict(image_path, Path(args.model), Path(args.labels), top_k=args.top_k)
-
     print(f"\nPredictions for {image_path.name}:")
     print("-" * 50)
     for i, r in enumerate(results, 1):

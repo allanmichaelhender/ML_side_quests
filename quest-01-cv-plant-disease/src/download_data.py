@@ -2,23 +2,27 @@
 Download and prepare the PlantVillage dataset.
 
 Downloads from Kaggle via the official Kaggle API, organises into
-train/val structure, and creates a small sample subset for quick testing.
+train/val splits, and creates a small sample subset for quick testing.
 
 Requires Kaggle API credentials. Provide them via one of:
   A) Environment variables: KAGGLE_USERNAME + KAGGLE_KEY (.env file)
   B) ~/.kaggle/kaggle.json file (download from Kaggle settings)
-
-See: https://www.kaggle.com/docs/api#getting-started-installation-&-authentication
 """
 
 import argparse
 import os
+import random
 import shutil
 import sys
 import zipfile
 from pathlib import Path
 
 from kaggle.api.kaggle_api_extended import KaggleApi
+
+
+HERE = Path(__file__).resolve().parent
+PROJECT = HERE.parent
+DEFAULT_DATA = PROJECT / "data"
 
 
 def download_plantvillage(data_dir: Path) -> Path:
@@ -30,7 +34,6 @@ def download_plantvillage(data_dir: Path) -> Path:
         print(f"Removing existing {dest}")
         shutil.rmtree(dest)
 
-    # Check credentials before attempting
     has_env_vars = bool(
         os.environ.get("KAGGLE_USERNAME") and os.environ.get("KAGGLE_KEY")
     )
@@ -62,11 +65,10 @@ def download_plantvillage(data_dir: Path) -> Path:
     api.dataset_download_files("emmarex/plantdisease", path=str(data_dir), unzip=False)
     print(f"Downloaded to {zip_path}")
 
-    # Extract
     print("Extracting...")
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(dest)
-    zip_path.unlink()  # remove zip after extraction
+    zip_path.unlink()
     print(f"Extracted to {dest}")
     return dest
 
@@ -74,26 +76,15 @@ def download_plantvillage(data_dir: Path) -> Path:
 def organise_splits(
     raw_dir: Path, data_dir: Path, val_split: float = 0.2, seed: int = 42
 ):
-    """
-    Find class folders under raw_dir, split into train/val, and copy
-    to data_dir/train and data_dir/val.
-
-    The Kaggle "emmarex/plantdisease" dataset has no pre-made splits —
-    all class folders sit flat under a subdirectory.
-    """
-    import random
-
+    """Find class folders, split into train/val using relative symlinks."""
     random.seed(seed)
 
-    # Find the directory that actually contains class folders
-    # Could be raw_dir or raw_dir/PlantVillage
     candidates = [raw_dir] + sorted(raw_dir.iterdir())
     class_root = None
     for c in candidates:
         if not c.is_dir():
             continue
         subdirs = [d for d in c.iterdir() if d.is_dir()]
-        # Skip if it looks like a nested folder with the same name pattern
         if len(subdirs) >= 3 and not any(d.name == raw_dir.name for d in subdirs):
             class_root = c
             break
@@ -101,7 +92,7 @@ def organise_splits(
         print(f"ERROR: Could not find class folders under {raw_dir}")
         sys.exit(1)
 
-    # Exclude the nested "PlantVillage" folder — it's a duplicate of the parent
+    # Exclude nested folders with the same name (duplicate)
     class_dirs = sorted(
         d for d in class_root.iterdir() if d.is_dir() and d.name != class_root.name
     )
@@ -110,7 +101,12 @@ def organise_splits(
     for split_name in ("train", "val"):
         dst = data_dir / split_name
         if dst.exists():
-            shutil.rmtree(dst)
+            try:
+                shutil.rmtree(dst)
+            except OSError:
+                import subprocess
+
+                subprocess.run(["rm", "-rf", str(dst)], check=True)
         dst.mkdir(parents=True)
 
     for class_dir in class_dirs:
@@ -118,7 +114,6 @@ def organise_splits(
         random.shuffle(images)
         split_idx = max(1, int(len(images) * (1 - val_split)))
 
-        # Use relative symlinks (instant) instead of copying
         for img in images[:split_idx]:
             dest_dir = data_dir / "train" / class_dir.name
             dest_dir.mkdir(parents=True, exist_ok=True)
@@ -144,13 +139,14 @@ def organise_splits(
         print(f"  {split_name}: {n_classes} classes, {n_images} images")
 
 
-def create_sample(raw_dir: Path, sample_dir: Path, samples_per_class: int = 3) -> None:
-    """Create a tiny sample subset for quick testing."""
+def create_sample(data_dir: Path, samples_per_class: int = 3):
+    """Create a tiny sample subset from the train/val splits."""
+    sample_dir = data_dir / "sample"
     if sample_dir.exists():
         shutil.rmtree(sample_dir)
 
     for split in ("train", "val"):
-        src_split = raw_dir / split
+        src_split = data_dir / split
         dst_split = sample_dir / split
         dst_split.mkdir(parents=True, exist_ok=True)
 
@@ -177,34 +173,22 @@ def create_sample(raw_dir: Path, sample_dir: Path, samples_per_class: int = 3) -
 
 def main():
     parser = argparse.ArgumentParser(description="Download PlantVillage dataset")
-    parser.add_argument(
-        "--data-dir",
-        type=str,
-        default=str(Path(__file__).resolve().parent),
-        help="Destination directory (default: same as this script)",
-    )
-    parser.add_argument(
-        "--sample-only",
-        action="store_true",
-        help="Only recreate the sample subset from existing data",
-    )
+    parser.add_argument("--data-dir", type=str, default=str(DEFAULT_DATA))
+    parser.add_argument("--sample-only", action="store_true")
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir).resolve()
-    sample_dir = data_dir / "sample"
 
     if args.sample_only:
-        train_dir = data_dir / "train"
-        if not train_dir.exists():
+        if not (data_dir / "train").exists():
             print("Train/val splits not found. Run without --sample-only first.")
             sys.exit(1)
-        create_sample(data_dir, sample_dir)
+        create_sample(data_dir)
         return
 
-    # Full download
     raw_dir = download_plantvillage(data_dir)
     organise_splits(raw_dir, data_dir)
-    create_sample(data_dir, sample_dir)
+    create_sample(data_dir)
     print("\nDone! Dataset ready at:", data_dir)
 
 

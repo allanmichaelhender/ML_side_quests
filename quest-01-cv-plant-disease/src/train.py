@@ -18,16 +18,13 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms, models
 
-# ── Paths ──────────────────────────────────────────────────────────────────
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
 DEFAULT_DATA = PROJECT / "data"
 DEFAULT_OUTPUT = PROJECT / "results"
 
 
-# ── Data ───────────────────────────────────────────────────────────────────
 def get_transforms():
-    """Return train and validation transform pipelines."""
     IMAGENET_MEAN = [0.485, 0.456, 0.406]
     IMAGENET_STD = [0.229, 0.224, 0.225]
 
@@ -50,17 +47,14 @@ def get_transforms():
             transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
         ]
     )
-
     return train_transform, val_transform
 
 
 def load_data(data_dir: Path, batch_size: int):
-    """Load train/val datasets and return dataloaders + class names."""
     train_transform, val_transform = get_transforms()
 
     train_dir = data_dir / "train"
     val_dir = data_dir / "val"
-
     if not train_dir.exists() or not val_dir.exists():
         print(f"ERROR: Train/val directories not found in {data_dir}")
         print("Run `python data/download.py` first.")
@@ -78,42 +72,30 @@ def load_data(data_dir: Path, batch_size: int):
 
     print(f"Classes ({len(train_dataset.classes)}): {train_dataset.classes}")
     print(f"Train samples: {len(train_dataset)}  |  Val samples: {len(val_dataset)}")
-
     return train_loader, val_loader, train_dataset.classes
 
 
-# ── Model ──────────────────────────────────────────────────────────────────
 def build_model(num_classes: int):
-    """Build MobileNetV2 with a fresh classification head."""
     model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V1)
-
-    # Freeze all backbone layers initially
     for param in model.parameters():
         param.requires_grad = False
-
-    # Replace classifier head
     in_features = model.classifier[1].in_features
     model.classifier = nn.Sequential(
         nn.Dropout(0.2),
         nn.Linear(in_features, num_classes),
     )
-
     return model
 
 
 def unfreeze_last_blocks(model: nn.Module, n_blocks: int = 2):
-    """Unfreeze the last `n_blocks` convolutional blocks for fine-tuning."""
-    # MobileNetV2 features are in model.features as a list of layers
     blocks = list(model.features)
     for block in blocks[-n_blocks:]:
         for param in block.parameters():
             param.requires_grad = True
-    print(
-        f"Unfroze last {n_blocks} blocks ({sum(p.numel() for p in blocks[-n_blocks:] if p.requires_grad):,} params trainable)"
-    )
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Unfroze last {n_blocks} blocks ({trainable:,} params trainable)")
 
 
-# ── Training ───────────────────────────────────────────────────────────────
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
     running_loss = 0.0
@@ -122,7 +104,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 
     for inputs, labels in loader:
         inputs, labels = inputs.to(device), labels.to(device)
-
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)
@@ -134,9 +115,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total += labels.size(0)
         correct += predicted.eq(labels).sum().item()
 
-    epoch_loss = running_loss / total
-    epoch_acc = 100.0 * correct / total
-    return epoch_loss, epoch_acc
+    return running_loss / total, 100.0 * correct / total
 
 
 @torch.no_grad()
@@ -156,9 +135,7 @@ def validate(model, loader, criterion, device):
         total += labels.size(0)
         correct += predicted.eq(labels).sum().item()
 
-    epoch_loss = running_loss / total
-    epoch_acc = 100.0 * correct / total
-    return epoch_loss, epoch_acc
+    return running_loss / total, 100.0 * correct / total
 
 
 def main():
@@ -166,22 +143,15 @@ def main():
     parser.add_argument("--data-dir", type=str, default=str(DEFAULT_DATA))
     parser.add_argument("--output-dir", type=str, default=str(DEFAULT_OUTPUT))
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--transfer-epochs", type=int, default=2, help="Phase 1 epochs")
     parser.add_argument(
-        "--transfer-epochs",
-        type=int,
-        default=2,
-        help="Phase 1 epochs (backbone frozen)",
-    )
-    parser.add_argument(
-        "--fine-tune-epochs", type=int, default=3, help="Phase 2 epochs (end-to-end)"
+        "--fine-tune-epochs", type=int, default=3, help="Phase 2 epochs"
     )
     parser.add_argument("--lr-transfer", type=float, default=1e-3)
     parser.add_argument("--lr-finetune", type=float, default=1e-4)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
-        "--fast",
-        action="store_true",
-        help="Use sample data (45 images/class) for quick testing",
+        "--fast", action="store_true", help="Use sample data for quick testing"
     )
     args = parser.parse_args()
 
@@ -199,12 +169,10 @@ def main():
     print(f"Device: {device}")
     print(f"{'=' * 60}")
 
-    # ── Data ───────────────────────────────────────────────────────────────
     train_loader, val_loader, class_names = load_data(data_dir, args.batch_size)
     num_classes = len(class_names)
     print(f"{'=' * 60}")
 
-    # ── Model ──────────────────────────────────────────────────────────────
     model = build_model(num_classes)
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
@@ -213,7 +181,6 @@ def main():
     print("PHASE 1 — Transfer Learning (backbone frozen)")
     print(f"{'=' * 60}")
 
-    # Only classifier params are trainable
     optimizer = optim.Adam(model.classifier.parameters(), lr=args.lr_transfer)
 
     for epoch in range(1, args.transfer_epochs + 1):
@@ -226,18 +193,14 @@ def main():
         print(
             f"  Epoch {epoch:2d}/{args.transfer_epochs} | "
             f"Train Loss: {train_loss:.4f} Acc: {train_acc:.2f}% | "
-            f"Val Loss: {val_loss:.4f} Acc: {val_acc:.2f}% | "
-            f"{elapsed:.1f}s"
+            f"Val Loss: {val_loss:.4f} Acc: {val_acc:.2f}% | {elapsed:.1f}s"
         )
 
-    # ── Fine-tune ──────────────────────────────────────────────────────────
     print(f"{'=' * 60}")
-    print("PHASE 2 — Fine-tuning (unfroze last 2 conv blocks)")
+    print("PHASE 2 — Fine-tuning")
     print(f"{'=' * 60}")
 
     unfreeze_last_blocks(model, n_blocks=2)
-
-    # Now all trainable params (backbone blocks + classifier)
     optimizer = optim.Adam(
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=args.lr_finetune,
@@ -253,11 +216,9 @@ def main():
         print(
             f"  Epoch {epoch:2d}/{args.fine_tune_epochs} | "
             f"Train Loss: {train_loss:.4f} Acc: {train_acc:.2f}% | "
-            f"Val Loss: {val_loss:.4f} Acc: {val_acc:.2f}% | "
-            f"{elapsed:.1f}s"
+            f"Val Loss: {val_loss:.4f} Acc: {val_acc:.2f}% | {elapsed:.1f}s"
         )
 
-    # ── Save ───────────────────────────────────────────────────────────────
     model_path = output_dir / "model.pt"
     torch.save(
         {
@@ -268,12 +229,10 @@ def main():
         },
         model_path,
     )
-    print(f"\nModel saved to {model_path}")
-
-    # Also save class names as JSON for reuse in other scripts
     with open(output_dir / "class_names.json", "w") as f:
         json.dump(class_names, f)
 
+    print(f"\nModel saved to {model_path}")
     print(f"Final validation accuracy: {val_acc:.2f}%")
     print("Done!")
 
