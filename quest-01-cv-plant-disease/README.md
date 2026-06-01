@@ -7,7 +7,10 @@ Classify plant leaf images into 38 disease/healthy categories using transfer lea
 - **Source**: [PlantVillage Dataset](https://www.kaggle.com/datasets/emmarex/plantdisease) via Kaggle
 - **Size**: 54,000+ labelled leaf images
 - **Classes**: 38 classes covering 14 crop species (tomato, potato, corn, grape, apple, etc.)
-- **Split**: Pre-split into train/validation sets
+- **Split**: 70% train / 15% validation / 15% test (random split with fixed seed 42)
+  - **Train** — used for backpropagation during transfer learning and fine-tuning
+  - **Validation** — used for per-epoch monitoring (loss and accuracy); influences hyperparameter decisions
+  - **Test** — fully held out, never seen during any phase of training; used only once in `src/test.py` for the final unbiased evaluation
 
 ## Approach
 
@@ -22,12 +25,13 @@ Classify plant leaf images into 38 disease/healthy categories using transfer lea
 
 ## Results
 
-_Results to be populated after training._
+| Metric        | Value  |
+| ------------- | ------ |
+| Test Accuracy | 96.06% |
+| Macro F1      | 0.9592 |
+| Weighted F1   | 0.9607 |
 
-| Metric              | Value |
-| ------------------- | ----- |
-| Validation Accuracy | —     |
-| Macro F1            | —     |
+Per-class metrics, confusion matrix, and Grad-CAM visualisations are available in `results/` after running `src/test.py`.
 
 ## Usage
 
@@ -39,11 +43,15 @@ docker build -t quest-01-cv .
 docker run --rm -v "$(pwd)/results:/app/results" quest-01-cv
 
 # Download data first, then train
-docker run --rm -v "$(pwd)/data:/app/data" quest-01-cv python data/download.py
+docker run --rm -v "$(pwd)/data:/app/data" quest-01-cv python src/download_data.py
 docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/results:/app/results" quest-01-cv
 
+# Evaluate on held-out test set
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/results:/app/results" quest-01-cv \
+  python src/test.py --gradcam-samples 8
+
 # Launch Streamlit demo
-docker run --rm -p 8501:8501 -v "$(pwd)/results:/app/results" quest-01-cv \
+docker run --rm -p 8501:8501 -v "$(pwd)/data:/app/data" -v "$(pwd)/results:/app/results" quest-01-cv \
   streamlit run app.py --server.port=8501 --server.address=0.0.0.0
 
 # Or use docker compose from the root
@@ -57,10 +65,9 @@ docker compose up quest-01-cv
 python -m venv .venv
 source .venv/bin/activate   # or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
-python data/download.py
+python src/download_data.py
 python src/train.py
-python src/evaluate.py --gradcam-samples 8
-python src/predict.py path/to/leaf.jpg
+python src/test.py --gradcam-samples 8
 streamlit run app.py
 ```
 
@@ -72,20 +79,23 @@ quest-01-cv-plant-disease/
 ├── .dockerignore
 ├── README.md
 ├── requirements.txt
-├── app.py                  # Streamlit demo
+├── app.py                     # Streamlit demo
 ├── data/
-│   ├── download.py         # Download from Kaggle
-│   └── sample/             # Small test subset
+│   └── plantvillage_raw/      # Raw class folders (downloaded)
 ├── src/
-│   ├── train.py            # Transfer learning + fine-tuning
-│   ├── evaluate.py         # Metrics, Grad-CAM, ONNX export
-│   └── predict.py          # Single-image inference
+│   ├── data_utils.py          # Shared utilities (find_class_root, TransformedSubset)
+│   ├── download_data.py       # Download PlantVillage from Kaggle
+│   ├── train.py               # Transfer learning + fine-tuning
+│   └── test.py                # Evaluation on held-out test set (Grad-CAM, ONNX, metrics)
 └── results/
-    ├── model.pt            # PyTorch checkpoint
-    ├── model.onnx          # ONNX export
-    ├── class_names.json
-    ├── metrics.json
-    └── figures/            # Confusion matrix, Grad-CAM images
+    ├── model.pt               # PyTorch checkpoint
+    ├── model.onnx             # ONNX export
+    ├── class_names.json       # Class index-to-name mapping
+    ├── metrics.json           # Accuracy, per-class precision/recall/F1
+    ├── test_indices.json      # Indices of the held-out test split
+    ├── figures/
+    │   └── confusion_matrix.png
+    └── gradcam/               # Grad-CAM overlay visualisations
 ```
 
 ## Key Libraries
@@ -93,5 +103,8 @@ quest-01-cv-plant-disease/
 - `torch` / `torchvision` — MobileNetV2 model and data pipeline
 - `onnx` / `onnxruntime` — Lightweight CPU inference
 - `streamlit` — Demo interface
-- `scikit-learn` — Evaluation metrics
+- `scikit-learn` — Evaluation metrics (classification report, confusion matrix)
 - `opencv-python` — Grad-CAM overlay rendering
+- `matplotlib` — Confusion matrix and Grad-CAM figure generation
+- `kaggle` — Dataset download via Kaggle API
+- `tqdm` — Download progress bar

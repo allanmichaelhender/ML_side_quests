@@ -1,10 +1,6 @@
-"""
-Evaluate the trained model: accuracy, per-class metrics, confusion matrix,
-Grad-CAM visualisations, and ONNX export.
-"""
-
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import cv2
@@ -16,7 +12,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from PIL import Image
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -26,12 +21,15 @@ from sklearn.metrics import (
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms, models
 
+from data_utils import find_class_root, TransformedSubset
+
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
 DEFAULT_DATA = PROJECT / "data"
 DEFAULT_OUTPUT = PROJECT / "results"
 DEFAULT_MODEL = DEFAULT_OUTPUT / "model.pt"
 
+# Default ImageNet Normalisation values
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 
@@ -46,6 +44,7 @@ def get_val_transform():
     )
 
 
+# Loading in model from the checkpoint/save defined at the end of train.py
 def load_checkpoint(model_path: Path, device: torch.device):
     checkpoint = torch.load(model_path, map_location=device, weights_only=True)
     num_classes = len(checkpoint["class_names"])
@@ -67,6 +66,8 @@ def load_checkpoint(model_path: Path, device: torch.device):
 @torch.no_grad()
 def compute_metrics(model, val_loader, class_names, device):
     all_preds, all_labels = [], []
+    model.eval()
+
     for inputs, labels in val_loader:
         inputs = inputs.to(device)
         outputs = model(inputs)
@@ -74,11 +75,22 @@ def compute_metrics(model, val_loader, class_names, device):
         all_preds.extend(predicted.cpu().tolist())
         all_labels.extend(labels.tolist())
 
+    # Overall fraction of correct predictions
     acc = accuracy_score(all_labels, all_preds)
+
+    # N×N matrix: rows = true class, cols = predicted class; diagonal = correct
     cm = confusion_matrix(all_labels, all_preds)
+
+    # Per-class precision, recall, f1, support as a formatted string
     report = classification_report(
         all_labels, all_preds, target_names=class_names, digits=4
     )
+
+    # Raw per-class metrics: precision, recall, f1, support (each is a list)
+    #   precision = TP / (TP + FP)  — how many predicted for this class were correct
+    #   recall    = TP / (TP + FN)  — how many actual instances of this class were found
+    #   f1        = harmonic mean of precision and recall
+    #   support   = number of actual instances of this class in the validation set
     per_class = precision_recall_fscore_support(
         all_labels, all_preds, labels=range(len(class_names))
     )
@@ -114,6 +126,7 @@ def plot_confusion_matrix(cm, class_names, save_path: Path):
     print(f"Confusion matrix saved to {save_path}")
 
 
+# We use GradCAM to visualise which parts of the image the model focuses on for its predictions.
 class GradCAM:
     def __init__(self, model: nn.Module, target_layer: nn.Module):
         self.model = model
@@ -199,6 +212,11 @@ def generate_gradcam(
     print(f"Grad-CAM visualisations saved to {cam_dir}/")
 
 
+# Export to ONNX (Open Neural Network Exchange) — a cross-platform model format.
+# This decouples deployment from PyTorch: the Streamlit app (app.py) loads
+# model.onnx via lightweight ONNX Runtime instead of needing PyTorch.
+# class_names.json is saved alongside so downstream consumers can map output
+# indices (0, 1, 2, ...) back to human-readable disease names.
 def export_onnx(model, class_names, output_dir: Path):
     onnx_path = output_dir / "model.onnx"
     dummy = torch.randn(1, 3, 224, 224)
@@ -217,29 +235,48 @@ def export_onnx(model, class_names, output_dir: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate PlantVillage model")
-    parser.add_argument("--data-dir", type=str, default=str(DEFAULT_DATA))
-    parser.add_argument("--output-dir", type=str, default=str(DEFAULT_OUTPUT))
-    parser.add_argument("--model-path", type=str, default=str(DEFAULT_MODEL))
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--gradcam-samples", type=int, default=8)
-    parser.add_argument("--export-onnx", action="store_true", default=True)
+    parser = argparse.ArgumentParser(
+        description="Test PlantVillage model on held-out test set"
+    )
+    parser.add_argument(
+        "--gradcam-samples",
+        type=int,
+        default=8,
+        help="Number of Grad-CAM visualisations to generate (0 to skip)",
+    )
     args = parser.parse_args()
 
-    output_dir = Path(args.output_dir)
+    output_dir = DEFAULT_OUTPUT
     output_dir.mkdir(parents=True, exist_ok=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
-    val_dir = Path(args.data_dir) / "val"
-    val_dataset = datasets.ImageFolder(val_dir, transform=get_val_transform())
-    val_loader = DataLoader(
-        val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0
-    )
-    print(f"Validation samples: {len(val_dataset)}")
+    raw_dir = DEFAULT_DATA / "plantvillage_raw"
+    if not raw_dir.exists():
+        print(f"ERROR: Raw data not found in {raw_dir}")
+        print("Run `python src/download_data.py` first.")
+        sys.exit(1)
 
-    model, class_names = load_checkpoint(Path(args.model_path), device)
-    metrics, cm = compute_metrics(model, val_loader, class_names, device)
+    class_root = find_class_root(raw_dir)
+
+    # Load the held-out test indices saved during training
+    test_indices_path = output_dir / "test_indices.json"
+    if not test_indices_path.exists():
+        print(f"ERROR: Test indices not found at {test_indices_path}")
+        print("Re-run `python src/train.py` to generate them.")
+        sys.exit(1)
+
+    with open(test_indices_path) as f:
+        test_indices = json.load(f)
+
+    # Build the test dataset from those indices (truly unseen — never used during training)
+    full_dataset = datasets.ImageFolder(class_root)
+    test_dataset = TransformedSubset(full_dataset, test_indices, get_val_transform())
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=0)
+    print(f"Test samples (held-out): {len(test_dataset)}")
+
+    model, class_names = load_checkpoint(DEFAULT_MODEL, device)
+    metrics, cm = compute_metrics(model, test_loader, class_names, device)
 
     metrics["confusion_matrix"] = cm.tolist()
     with open(output_dir / "metrics.json", "w") as f:
@@ -252,14 +289,13 @@ def main():
     if args.gradcam_samples > 0:
         generate_gradcam(
             model,
-            val_loader,
+            test_loader,
             class_names,
             device,
             output_dir,
             num_samples=args.gradcam_samples,
         )
-    if args.export_onnx:
-        export_onnx(model, class_names, output_dir)
+    export_onnx(model, class_names, output_dir)
 
     print("\nEvaluation complete!")
 
