@@ -2,8 +2,6 @@
 __pycache__
 *.pyc
 .git
-data/plantvillage_raw
-results/model.pt
-results/model.onnx
-results/figures
-results/gradcam
+data/
+results/
+models/

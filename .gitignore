@@ -1,0 +1,25 @@
+# Environment variables (contains API keys)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Dataset downloads (large, not committed)
+quest-*/data/plantvillage_raw/
+quest-*/data/plantdisease/
+quest-*/data/*.zip
+
+# Training outputs and results (regenerated each run)
+quest-*/results/
+quest-*/models/
+quest-*/data/sample/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

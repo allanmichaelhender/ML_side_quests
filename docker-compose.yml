@@ -1,8 +1,12 @@
+name: ml-side-quests
+
 services:
   quest-01-cv:
     build: ./quest-01-cv-plant-disease
     image: ml-side-quests/quest-01-cv
     container_name: quest-01-cv
+    env_file:
+      - .env
     volumes:
       - ./quest-01-cv-plant-disease/data:/app/data
       - ./quest-01-cv-plant-disease/results:/app/results
@@ -21,6 +25,8 @@ services:
     build: ./quest-02-nlp-sentiment-analysis
     image: ml-side-quests/quest-02-nlp
     container_name: quest-02-nlp
+    env_file:
+      - .env
     volumes:
       - ./quest-02-nlp-sentiment-analysis/data:/app/data
       - ./quest-02-nlp-sentiment-analysis/results:/app/results
@@ -39,6 +45,8 @@ services:
     build: ./quest-03-genai-earnings-call
     image: ml-side-quests/quest-03-genai
     container_name: quest-03-genai
+    env_file:
+      - .env
     volumes:
       - ./quest-03-genai-earnings-call/data:/app/data
       - ./quest-03-genai-earnings-call/results:/app/results
@@ -61,6 +69,8 @@ services:
     build: ./quest-04-rag-pipeline
     image: ml-side-quests/quest-04-rag
     container_name: quest-04-rag
+    env_file:
+      - .env
     volumes:
       - ./quest-04-rag-pipeline/data:/app/data
       - ./quest-04-rag-pipeline/results:/app/results
@@ -79,6 +89,8 @@ services:
     build: ./quest-05-nlp-ticket-routing
     image: ml-side-quests/quest-05-ticket
     container_name: quest-05-ticket
+    env_file:
+      - .env
     volumes:
       - ./quest-05-nlp-ticket-routing/data:/app/data
       - ./quest-05-nlp-ticket-routing/results:/app/results
@@ -97,6 +109,8 @@ services:
     build: ./quest-06-rl-grid-balancing
     image: ml-side-quests/quest-06-rl
     container_name: quest-06-rl
+    env_file:
+      - .env
     volumes:
       - ./quest-06-rl-grid-balancing/data:/app/data
       - ./quest-06-rl-grid-balancing/results:/app/results

@@ -304,7 +304,7 @@ def main():
     val_dir = Path(args.data_dir) / "val"
     val_dataset = datasets.ImageFolder(val_dir, transform=get_val_transform())
     val_loader = DataLoader(
-        val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2
+        val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0
     )
     print(f"Validation samples: {len(val_dataset)}")
 

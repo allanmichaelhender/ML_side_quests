@@ -70,10 +70,10 @@ def load_data(data_dir: Path, batch_size: int):
     val_dataset = datasets.ImageFolder(val_dir, transform=val_transform)
 
     train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, num_workers=2
+        train_dataset, batch_size=batch_size, shuffle=True, num_workers=0
     )
     val_loader = DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=False, num_workers=2
+        val_dataset, batch_size=batch_size, shuffle=False, num_workers=0
     )
 
     print(f"Classes ({len(train_dataset.classes)}): {train_dataset.classes}")
@@ -169,21 +169,29 @@ def main():
     parser.add_argument(
         "--transfer-epochs",
         type=int,
-        default=5,
+        default=2,
         help="Phase 1 epochs (backbone frozen)",
     )
     parser.add_argument(
-        "--fine-tune-epochs", type=int, default=10, help="Phase 2 epochs (end-to-end)"
+        "--fine-tune-epochs", type=int, default=3, help="Phase 2 epochs (end-to-end)"
     )
     parser.add_argument("--lr-transfer", type=float, default=1e-3)
     parser.add_argument("--lr-finetune", type=float, default=1e-4)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--fast",
+        action="store_true",
+        help="Use sample data (45 images/class) for quick testing",
+    )
     args = parser.parse_args()
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
     data_dir = Path(args.data_dir)
+    if args.fast:
+        data_dir = data_dir / "sample"
+        print("⚠️  FAST MODE: using sample data (45 images/class)")
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
