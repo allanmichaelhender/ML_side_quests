@@ -1,0 +1,112 @@
+services:
+  quest-01-cv:
+    build: ./quest-01-cv-plant-disease
+    image: ml-side-quests/quest-01-cv
+    container_name: quest-01-cv
+    volumes:
+      - ./quest-01-cv-plant-disease/data:/app/data
+      - ./quest-01-cv-plant-disease/results:/app/results
+    ports:
+      - "8501:8501"
+    command:
+      [
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port=8501",
+        "--server.address=0.0.0.0",
+      ]
+
+  quest-02-nlp:
+    build: ./quest-02-nlp-sentiment-analysis
+    image: ml-side-quests/quest-02-nlp
+    container_name: quest-02-nlp
+    volumes:
+      - ./quest-02-nlp-sentiment-analysis/data:/app/data
+      - ./quest-02-nlp-sentiment-analysis/results:/app/results
+    ports:
+      - "8502:8502"
+    command:
+      [
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port=8502",
+        "--server.address=0.0.0.0",
+      ]
+
+  quest-03-genai:
+    build: ./quest-03-genai-earnings-call
+    image: ml-side-quests/quest-03-genai
+    container_name: quest-03-genai
+    volumes:
+      - ./quest-03-genai-earnings-call/data:/app/data
+      - ./quest-03-genai-earnings-call/results:/app/results
+      - ./quest-03-genai-earnings-call/models:/app/models
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    ports:
+      - "8503:8503"
+    command:
+      [
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port=8503",
+        "--server.address=0.0.0.0",
+      ]
+
+  quest-04-rag:
+    build: ./quest-04-rag-pipeline
+    image: ml-side-quests/quest-04-rag
+    container_name: quest-04-rag
+    volumes:
+      - ./quest-04-rag-pipeline/data:/app/data
+      - ./quest-04-rag-pipeline/results:/app/results
+    ports:
+      - "8504:8504"
+    command:
+      [
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port=8504",
+        "--server.address=0.0.0.0",
+      ]
+
+  quest-05-ticket:
+    build: ./quest-05-nlp-ticket-routing
+    image: ml-side-quests/quest-05-ticket
+    container_name: quest-05-ticket
+    volumes:
+      - ./quest-05-nlp-ticket-routing/data:/app/data
+      - ./quest-05-nlp-ticket-routing/results:/app/results
+    ports:
+      - "8505:8505"
+    command:
+      [
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port=8505",
+        "--server.address=0.0.0.0",
+      ]
+
+  quest-06-rl:
+    build: ./quest-06-rl-grid-balancing
+    image: ml-side-quests/quest-06-rl
+    container_name: quest-06-rl
+    volumes:
+      - ./quest-06-rl-grid-balancing/data:/app/data
+      - ./quest-06-rl-grid-balancing/results:/app/results
+    ports:
+      - "8506:8506"
+    command:
+      [
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port=8506",
+        "--server.address=0.0.0.0",
+      ]
