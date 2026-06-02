@@ -14,11 +14,19 @@ quest-*/data/plantdisease/
 quest-*/data/train/
 quest-*/data/val/
 quest-*/data/*.zip
+quest-*/data/*.parquet
+quest-*/data/*.arrow
 
 # Training outputs and results (regenerated each run)
 quest-*/results/
 quest-*/models/
-quest-*/data/sample/
+
+# Node.js
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
 
 # IDE
 .idea/

@@ -124,3 +124,10 @@ services:
         "--server.port=8506",
         "--server.address=0.0.0.0",
       ]
+
+  frontend:
+    build: ./vercel_frontend
+    image: ml-side-quests/frontend
+    container_name: ml-side-quests-frontend
+    ports:
+      - "8500:80"

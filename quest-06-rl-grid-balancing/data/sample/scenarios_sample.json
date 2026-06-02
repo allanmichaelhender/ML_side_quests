@@ -1,0 +1,3362 @@
+[
+  {
+    "season": "summer",
+    "hour": 0,
+    "day_of_week": 0,
+    "demand_mw": 2791.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.289,
+      "hydro": 0.724
+    },
+    "source_prices": {
+      "coal": 38.5,
+      "gas": 45.7,
+      "solar": 3.5,
+      "wind": 10.9,
+      "hydro": 8.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 1,
+    "day_of_week": 0,
+    "demand_mw": 2751.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.342,
+      "hydro": 0.702
+    },
+    "source_prices": {
+      "coal": 34.7,
+      "gas": 44.5,
+      "solar": 2.6,
+      "wind": 12.1,
+      "hydro": 8.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 2,
+    "day_of_week": 0,
+    "demand_mw": 2720.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.437,
+      "hydro": 0.665
+    },
+    "source_prices": {
+      "coal": 31.7,
+      "gas": 41.3,
+      "solar": 6.7,
+      "wind": 5.8,
+      "hydro": 2.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 3,
+    "day_of_week": 0,
+    "demand_mw": 2708.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.53,
+      "hydro": 0.702
+    },
+    "source_prices": {
+      "coal": 34.8,
+      "gas": 46.8,
+      "solar": 6.9,
+      "wind": 4.3,
+      "hydro": 7.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 4,
+    "day_of_week": 0,
+    "demand_mw": 2688.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.512,
+      "hydro": 0.702
+    },
+    "source_prices": {
+      "coal": 37.4,
+      "gas": 44.3,
+      "solar": 2.8,
+      "wind": 4.7,
+      "hydro": 9.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 5,
+    "day_of_week": 0,
+    "demand_mw": 2713.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.574,
+      "hydro": 0.701
+    },
+    "source_prices": {
+      "coal": 38.7,
+      "gas": 42.4,
+      "solar": 5.6,
+      "wind": 6.8,
+      "hydro": 6.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 6,
+    "day_of_week": 0,
+    "demand_mw": 2894.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.07,
+      "wind": 0.403,
+      "hydro": 0.796
+    },
+    "source_prices": {
+      "coal": 32.7,
+      "gas": 43.3,
+      "solar": 7.8,
+      "wind": 9.0,
+      "hydro": 13.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 7,
+    "day_of_week": 0,
+    "demand_mw": 3074.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.237,
+      "wind": 0.37,
+      "hydro": 0.779
+    },
+    "source_prices": {
+      "coal": 37.9,
+      "gas": 39.9,
+      "solar": 9.0,
+      "wind": 13.2,
+      "hydro": 12.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 8,
+    "day_of_week": 0,
+    "demand_mw": 3235.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.49,
+      "wind": 0.382,
+      "hydro": 0.711
+    },
+    "source_prices": {
+      "coal": 34.4,
+      "gas": 44.2,
+      "solar": 8.0,
+      "wind": 14.8,
+      "hydro": 14.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 9,
+    "day_of_week": 0,
+    "demand_mw": 3374.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.644,
+      "wind": 0.533,
+      "hydro": 0.684
+    },
+    "source_prices": {
+      "coal": 39.7,
+      "gas": 47.0,
+      "solar": 9.9,
+      "wind": 9.2,
+      "hydro": 8.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 10,
+    "day_of_week": 0,
+    "demand_mw": 3506.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.811,
+      "wind": 0.331,
+      "hydro": 0.707
+    },
+    "source_prices": {
+      "coal": 40.1,
+      "gas": 52.0,
+      "solar": 1.2,
+      "wind": 4.7,
+      "hydro": 9.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 11,
+    "day_of_week": 0,
+    "demand_mw": 3535.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.845,
+      "wind": 0.58,
+      "hydro": 0.688
+    },
+    "source_prices": {
+      "coal": 31.7,
+      "gas": 44.0,
+      "solar": 4.1,
+      "wind": 7.4,
+      "hydro": 6.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 12,
+    "day_of_week": 0,
+    "demand_mw": 3355.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.817,
+      "wind": 0.634,
+      "hydro": 0.557
+    },
+    "source_prices": {
+      "coal": 34.4,
+      "gas": 39.3,
+      "solar": 12.0,
+      "wind": 6.7,
+      "hydro": 8.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 13,
+    "day_of_week": 0,
+    "demand_mw": 3330.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.851,
+      "wind": 0.496,
+      "hydro": 0.688
+    },
+    "source_prices": {
+      "coal": 37.8,
+      "gas": 50.6,
+      "solar": 2.0,
+      "wind": 8.0,
+      "hydro": 4.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 14,
+    "day_of_week": 0,
+    "demand_mw": 3264.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.718,
+      "wind": 0.422,
+      "hydro": 0.762
+    },
+    "source_prices": {
+      "coal": 32.6,
+      "gas": 46.2,
+      "solar": 11.4,
+      "wind": 9.7,
+      "hydro": 13.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 15,
+    "day_of_week": 0,
+    "demand_mw": 3263.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.555,
+      "wind": 0.445,
+      "hydro": 0.593
+    },
+    "source_prices": {
+      "coal": 40.3,
+      "gas": 47.3,
+      "solar": 3.2,
+      "wind": 7.8,
+      "hydro": 11.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 16,
+    "day_of_week": 0,
+    "demand_mw": 3340.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.375,
+      "wind": 0.382,
+      "hydro": 0.722
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 36.7,
+      "solar": 0.9,
+      "wind": 13.1,
+      "hydro": 8.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 17,
+    "day_of_week": 0,
+    "demand_mw": 3387.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.273,
+      "wind": 0.316,
+      "hydro": 0.702
+    },
+    "source_prices": {
+      "coal": 34.2,
+      "gas": 46.6,
+      "solar": 4.8,
+      "wind": 6.8,
+      "hydro": 8.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 18,
+    "day_of_week": 0,
+    "demand_mw": 3487.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.073,
+      "wind": 0.373,
+      "hydro": 0.699
+    },
+    "source_prices": {
+      "coal": 33.0,
+      "gas": 44.3,
+      "solar": 6.3,
+      "wind": 7.6,
+      "hydro": 8.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 19,
+    "day_of_week": 0,
+    "demand_mw": 3407.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.482,
+      "hydro": 0.676
+    },
+    "source_prices": {
+      "coal": 35.5,
+      "gas": 41.6,
+      "solar": 10.3,
+      "wind": 8.2,
+      "hydro": 2.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 20,
+    "day_of_week": 0,
+    "demand_mw": 3390.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.541,
+      "hydro": 0.763
+    },
+    "source_prices": {
+      "coal": 31.7,
+      "gas": 46.5,
+      "solar": 6.6,
+      "wind": 11.6,
+      "hydro": 10.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 21,
+    "day_of_week": 0,
+    "demand_mw": 3246.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.673,
+      "hydro": 0.738
+    },
+    "source_prices": {
+      "coal": 32.7,
+      "gas": 45.3,
+      "solar": 6.0,
+      "wind": 7.1,
+      "hydro": 6.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 22,
+    "day_of_week": 0,
+    "demand_mw": 3105.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.55,
+      "hydro": 0.783
+    },
+    "source_prices": {
+      "coal": 39.1,
+      "gas": 50.2,
+      "solar": 0.9,
+      "wind": 10.5,
+      "hydro": 5.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 23,
+    "day_of_week": 0,
+    "demand_mw": 2971.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.332,
+      "hydro": 0.733
+    },
+    "source_prices": {
+      "coal": 33.3,
+      "gas": 41.5,
+      "solar": 8.9,
+      "wind": 7.8,
+      "hydro": 5.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 0,
+    "day_of_week": 1,
+    "demand_mw": 2828.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.581,
+      "hydro": 0.587
+    },
+    "source_prices": {
+      "coal": 34.7,
+      "gas": 46.3,
+      "solar": 5.7,
+      "wind": 12.1,
+      "hydro": 10.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 1,
+    "day_of_week": 1,
+    "demand_mw": 2699.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.496,
+      "hydro": 0.607
+    },
+    "source_prices": {
+      "coal": 31.6,
+      "gas": 45.9,
+      "solar": 7.3,
+      "wind": 7.0,
+      "hydro": 9.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 2,
+    "day_of_week": 1,
+    "demand_mw": 2670.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.377,
+      "hydro": 0.625
+    },
+    "source_prices": {
+      "coal": 31.0,
+      "gas": 45.8,
+      "solar": 4.1,
+      "wind": 10.1,
+      "hydro": 10.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 3,
+    "day_of_week": 1,
+    "demand_mw": 2758.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.617,
+      "hydro": 0.7
+    },
+    "source_prices": {
+      "coal": 38.5,
+      "gas": 40.6,
+      "solar": 3.3,
+      "wind": 5.7,
+      "hydro": 15.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 4,
+    "day_of_week": 1,
+    "demand_mw": 2734.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.581,
+      "hydro": 0.811
+    },
+    "source_prices": {
+      "coal": 38.4,
+      "gas": 38.1,
+      "solar": 2.8,
+      "wind": 12.5,
+      "hydro": 14.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 5,
+    "day_of_week": 1,
+    "demand_mw": 2725.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.5,
+      "hydro": 0.68
+    },
+    "source_prices": {
+      "coal": 37.9,
+      "gas": 47.8,
+      "solar": 1.5,
+      "wind": 11.6,
+      "hydro": 16.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 6,
+    "day_of_week": 1,
+    "demand_mw": 2912.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.47,
+      "hydro": 0.605
+    },
+    "source_prices": {
+      "coal": 32.9,
+      "gas": 42.6,
+      "solar": 2.9,
+      "wind": 11.2,
+      "hydro": 11.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 7,
+    "day_of_week": 1,
+    "demand_mw": 3102.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.25,
+      "wind": 0.397,
+      "hydro": 0.649
+    },
+    "source_prices": {
+      "coal": 38.1,
+      "gas": 49.0,
+      "solar": 1.6,
+      "wind": 4.1,
+      "hydro": 10.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 8,
+    "day_of_week": 1,
+    "demand_mw": 3285.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.485,
+      "wind": 0.601,
+      "hydro": 0.724
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 47.4,
+      "solar": 5.9,
+      "wind": 4.7,
+      "hydro": 7.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 9,
+    "day_of_week": 1,
+    "demand_mw": 3378.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.657,
+      "wind": 0.764,
+      "hydro": 0.713
+    },
+    "source_prices": {
+      "coal": 35.5,
+      "gas": 49.2,
+      "solar": 5.7,
+      "wind": 8.9,
+      "hydro": 10.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 10,
+    "day_of_week": 1,
+    "demand_mw": 3523.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.812,
+      "wind": 0.389,
+      "hydro": 0.749
+    },
+    "source_prices": {
+      "coal": 31.8,
+      "gas": 44.0,
+      "solar": 1.5,
+      "wind": 7.2,
+      "hydro": 8.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 11,
+    "day_of_week": 1,
+    "demand_mw": 3426.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.933,
+      "wind": 0.519,
+      "hydro": 0.66
+    },
+    "source_prices": {
+      "coal": 36.6,
+      "gas": 46.4,
+      "solar": 0.3,
+      "wind": 10.2,
+      "hydro": 6.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 12,
+    "day_of_week": 1,
+    "demand_mw": 3320.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.867,
+      "wind": 0.704,
+      "hydro": 0.786
+    },
+    "source_prices": {
+      "coal": 40.7,
+      "gas": 46.1,
+      "solar": 5.9,
+      "wind": 2.6,
+      "hydro": 11.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 13,
+    "day_of_week": 1,
+    "demand_mw": 3325.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.828,
+      "wind": 0.515,
+      "hydro": 0.695
+    },
+    "source_prices": {
+      "coal": 37.8,
+      "gas": 42.3,
+      "solar": 4.9,
+      "wind": 5.1,
+      "hydro": 12.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 14,
+    "day_of_week": 1,
+    "demand_mw": 3271.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.778,
+      "wind": 0.417,
+      "hydro": 0.67
+    },
+    "source_prices": {
+      "coal": 40.8,
+      "gas": 43.9,
+      "solar": 1.0,
+      "wind": 10.4,
+      "hydro": 4.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 15,
+    "day_of_week": 1,
+    "demand_mw": 3333.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.634,
+      "wind": 0.478,
+      "hydro": 0.732
+    },
+    "source_prices": {
+      "coal": 35.3,
+      "gas": 42.0,
+      "solar": 6.4,
+      "wind": 7.6,
+      "hydro": 9.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 16,
+    "day_of_week": 1,
+    "demand_mw": 3317.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.49,
+      "wind": 0.548,
+      "hydro": 0.713
+    },
+    "source_prices": {
+      "coal": 33.2,
+      "gas": 44.0,
+      "solar": 2.9,
+      "wind": 6.0,
+      "hydro": 9.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 17,
+    "day_of_week": 1,
+    "demand_mw": 3395.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.272,
+      "wind": 0.305,
+      "hydro": 0.713
+    },
+    "source_prices": {
+      "coal": 30.2,
+      "gas": 43.0,
+      "solar": 7.6,
+      "wind": 12.2,
+      "hydro": 11.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 18,
+    "day_of_week": 1,
+    "demand_mw": 3550.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.13,
+      "wind": 0.554,
+      "hydro": 0.702
+    },
+    "source_prices": {
+      "coal": 36.6,
+      "gas": 41.5,
+      "solar": 9.2,
+      "wind": 6.0,
+      "hydro": 11.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 19,
+    "day_of_week": 1,
+    "demand_mw": 3382.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.486,
+      "hydro": 0.67
+    },
+    "source_prices": {
+      "coal": 32.2,
+      "gas": 48.2,
+      "solar": 3.9,
+      "wind": 9.6,
+      "hydro": 13.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 20,
+    "day_of_week": 1,
+    "demand_mw": 3352.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.479,
+      "hydro": 0.592
+    },
+    "source_prices": {
+      "coal": 34.2,
+      "gas": 42.6,
+      "solar": 7.8,
+      "wind": 7.3,
+      "hydro": 9.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 21,
+    "day_of_week": 1,
+    "demand_mw": 3283.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.476,
+      "hydro": 0.778
+    },
+    "source_prices": {
+      "coal": 33.7,
+      "gas": 49.1,
+      "solar": 2.0,
+      "wind": 8.7,
+      "hydro": 10.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 22,
+    "day_of_week": 1,
+    "demand_mw": 3052.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.47,
+      "hydro": 0.597
+    },
+    "source_prices": {
+      "coal": 37.7,
+      "gas": 40.3,
+      "solar": 3.8,
+      "wind": 5.5,
+      "hydro": 6.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 23,
+    "day_of_week": 1,
+    "demand_mw": 2881.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.395,
+      "hydro": 0.711
+    },
+    "source_prices": {
+      "coal": 35.6,
+      "gas": 44.4,
+      "solar": 2.4,
+      "wind": 13.1,
+      "hydro": 15.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 0,
+    "day_of_week": 2,
+    "demand_mw": 2856.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.513,
+      "hydro": 0.757
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 47.7,
+      "solar": 4.1,
+      "wind": 16.6,
+      "hydro": 12.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 1,
+    "day_of_week": 2,
+    "demand_mw": 2643.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.412,
+      "hydro": 0.686
+    },
+    "source_prices": {
+      "coal": 33.9,
+      "gas": 48.7,
+      "solar": 10.3,
+      "wind": 10.8,
+      "hydro": 8.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 2,
+    "day_of_week": 2,
+    "demand_mw": 2682.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.364,
+      "hydro": 0.671
+    },
+    "source_prices": {
+      "coal": 36.1,
+      "gas": 48.7,
+      "solar": 5.1,
+      "wind": 2.1,
+      "hydro": 9.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 3,
+    "day_of_week": 2,
+    "demand_mw": 2741.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.376,
+      "hydro": 0.677
+    },
+    "source_prices": {
+      "coal": 28.6,
+      "gas": 40.1,
+      "solar": 9.6,
+      "wind": 8.2,
+      "hydro": 11.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 4,
+    "day_of_week": 2,
+    "demand_mw": 2716.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.479,
+      "hydro": 0.65
+    },
+    "source_prices": {
+      "coal": 32.8,
+      "gas": 46.4,
+      "solar": 4.1,
+      "wind": 10.9,
+      "hydro": 11.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 5,
+    "day_of_week": 2,
+    "demand_mw": 2780.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.564,
+      "hydro": 0.66
+    },
+    "source_prices": {
+      "coal": 35.5,
+      "gas": 42.0,
+      "solar": 4.2,
+      "wind": 4.8,
+      "hydro": 7.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 6,
+    "day_of_week": 2,
+    "demand_mw": 2805.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.021,
+      "wind": 0.534,
+      "hydro": 0.632
+    },
+    "source_prices": {
+      "coal": 35.4,
+      "gas": 46.5,
+      "solar": 1.5,
+      "wind": 8.4,
+      "hydro": 10.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 7,
+    "day_of_week": 2,
+    "demand_mw": 3176.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.253,
+      "wind": 0.345,
+      "hydro": 0.68
+    },
+    "source_prices": {
+      "coal": 35.7,
+      "gas": 44.4,
+      "solar": 7.0,
+      "wind": 9.1,
+      "hydro": 10.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 8,
+    "day_of_week": 2,
+    "demand_mw": 3233.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.51,
+      "wind": 0.549,
+      "hydro": 0.662
+    },
+    "source_prices": {
+      "coal": 39.5,
+      "gas": 42.8,
+      "solar": 0.8,
+      "wind": 1.1,
+      "hydro": 7.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 9,
+    "day_of_week": 2,
+    "demand_mw": 3353.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.629,
+      "wind": 0.546,
+      "hydro": 0.755
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 40.6,
+      "solar": 6.2,
+      "wind": 14.4,
+      "hydro": 7.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 10,
+    "day_of_week": 2,
+    "demand_mw": 3447.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.711,
+      "wind": 0.323,
+      "hydro": 0.739
+    },
+    "source_prices": {
+      "coal": 32.8,
+      "gas": 45.2,
+      "solar": 4.1,
+      "wind": 8.6,
+      "hydro": 11.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 11,
+    "day_of_week": 2,
+    "demand_mw": 3494.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.823,
+      "wind": 0.313,
+      "hydro": 0.642
+    },
+    "source_prices": {
+      "coal": 34.6,
+      "gas": 45.6,
+      "solar": 4.8,
+      "wind": 7.2,
+      "hydro": 9.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 12,
+    "day_of_week": 2,
+    "demand_mw": 3381.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.883,
+      "wind": 0.374,
+      "hydro": 0.748
+    },
+    "source_prices": {
+      "coal": 37.9,
+      "gas": 49.4,
+      "solar": 7.1,
+      "wind": 9.0,
+      "hydro": 8.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 13,
+    "day_of_week": 2,
+    "demand_mw": 3311.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.813,
+      "wind": 0.299,
+      "hydro": 0.735
+    },
+    "source_prices": {
+      "coal": 41.5,
+      "gas": 42.1,
+      "solar": 7.4,
+      "wind": 11.8,
+      "hydro": 5.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 14,
+    "day_of_week": 2,
+    "demand_mw": 3321.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.8,
+      "wind": 0.595,
+      "hydro": 0.696
+    },
+    "source_prices": {
+      "coal": 35.0,
+      "gas": 48.6,
+      "solar": 10.7,
+      "wind": 8.5,
+      "hydro": 10.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 15,
+    "day_of_week": 2,
+    "demand_mw": 3340.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.532,
+      "wind": 0.428,
+      "hydro": 0.692
+    },
+    "source_prices": {
+      "coal": 33.6,
+      "gas": 50.7,
+      "solar": 5.0,
+      "wind": 8.4,
+      "hydro": 7.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 16,
+    "day_of_week": 2,
+    "demand_mw": 3317.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.511,
+      "wind": 0.385,
+      "hydro": 0.735
+    },
+    "source_prices": {
+      "coal": 34.0,
+      "gas": 42.9,
+      "solar": 3.4,
+      "wind": 3.3,
+      "hydro": 5.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 17,
+    "day_of_week": 2,
+    "demand_mw": 3385.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.278,
+      "wind": 0.547,
+      "hydro": 0.661
+    },
+    "source_prices": {
+      "coal": 38.9,
+      "gas": 44.2,
+      "solar": 4.2,
+      "wind": 6.6,
+      "hydro": 10.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 18,
+    "day_of_week": 2,
+    "demand_mw": 3456.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.12,
+      "wind": 0.344,
+      "hydro": 0.685
+    },
+    "source_prices": {
+      "coal": 36.9,
+      "gas": 49.8,
+      "solar": 5.9,
+      "wind": 4.4,
+      "hydro": 11.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 19,
+    "day_of_week": 2,
+    "demand_mw": 3502.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.455,
+      "hydro": 0.666
+    },
+    "source_prices": {
+      "coal": 35.6,
+      "gas": 43.6,
+      "solar": 8.2,
+      "wind": 9.6,
+      "hydro": 12.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 20,
+    "day_of_week": 2,
+    "demand_mw": 3377.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.333,
+      "hydro": 0.649
+    },
+    "source_prices": {
+      "coal": 31.7,
+      "gas": 43.8,
+      "solar": 6.2,
+      "wind": 8.6,
+      "hydro": 7.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 21,
+    "day_of_week": 2,
+    "demand_mw": 3245.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.466,
+      "hydro": 0.693
+    },
+    "source_prices": {
+      "coal": 32.5,
+      "gas": 49.7,
+      "solar": 5.4,
+      "wind": 8.8,
+      "hydro": 14.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 22,
+    "day_of_week": 2,
+    "demand_mw": 3080.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.42,
+      "hydro": 0.744
+    },
+    "source_prices": {
+      "coal": 33.8,
+      "gas": 40.6,
+      "solar": 0.1,
+      "wind": 8.2,
+      "hydro": 4.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 23,
+    "day_of_week": 2,
+    "demand_mw": 2969.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.487,
+      "hydro": 0.679
+    },
+    "source_prices": {
+      "coal": 36.9,
+      "gas": 44.2,
+      "solar": 7.4,
+      "wind": 9.5,
+      "hydro": 9.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 0,
+    "day_of_week": 3,
+    "demand_mw": 2733.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.445,
+      "hydro": 0.731
+    },
+    "source_prices": {
+      "coal": 32.9,
+      "gas": 50.3,
+      "solar": 8.5,
+      "wind": 12.3,
+      "hydro": 10.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 1,
+    "day_of_week": 3,
+    "demand_mw": 2726.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.53,
+      "hydro": 0.782
+    },
+    "source_prices": {
+      "coal": 27.9,
+      "gas": 46.9,
+      "solar": 2.7,
+      "wind": 9.6,
+      "hydro": 10.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 2,
+    "day_of_week": 3,
+    "demand_mw": 2685.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.599,
+      "hydro": 0.613
+    },
+    "source_prices": {
+      "coal": 37.0,
+      "gas": 44.0,
+      "solar": 4.4,
+      "wind": 4.7,
+      "hydro": 10.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 3,
+    "day_of_week": 3,
+    "demand_mw": 2706.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.536,
+      "hydro": 0.635
+    },
+    "source_prices": {
+      "coal": 41.4,
+      "gas": 39.6,
+      "solar": 2.0,
+      "wind": 11.0,
+      "hydro": 14.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 4,
+    "day_of_week": 3,
+    "demand_mw": 2703.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.308,
+      "hydro": 0.643
+    },
+    "source_prices": {
+      "coal": 38.9,
+      "gas": 50.0,
+      "solar": 5.7,
+      "wind": 10.9,
+      "hydro": 8.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 5,
+    "day_of_week": 3,
+    "demand_mw": 2801.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.47,
+      "hydro": 0.644
+    },
+    "source_prices": {
+      "coal": 34.9,
+      "gas": 44.9,
+      "solar": 1.1,
+      "wind": 11.9,
+      "hydro": 9.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 6,
+    "day_of_week": 3,
+    "demand_mw": 2766.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.045,
+      "wind": 0.488,
+      "hydro": 0.685
+    },
+    "source_prices": {
+      "coal": 34.4,
+      "gas": 44.3,
+      "solar": 8.2,
+      "wind": -0.6,
+      "hydro": 11.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 7,
+    "day_of_week": 3,
+    "demand_mw": 3130.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.189,
+      "wind": 0.534,
+      "hydro": 0.738
+    },
+    "source_prices": {
+      "coal": 32.4,
+      "gas": 45.3,
+      "solar": 5.9,
+      "wind": 5.0,
+      "hydro": 13.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 8,
+    "day_of_week": 3,
+    "demand_mw": 3274.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.447,
+      "wind": 0.518,
+      "hydro": 0.692
+    },
+    "source_prices": {
+      "coal": 30.6,
+      "gas": 37.6,
+      "solar": 3.8,
+      "wind": 9.0,
+      "hydro": 15.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 9,
+    "day_of_week": 3,
+    "demand_mw": 3491.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.746,
+      "wind": 0.394,
+      "hydro": 0.655
+    },
+    "source_prices": {
+      "coal": 35.1,
+      "gas": 43.4,
+      "solar": 6.0,
+      "wind": 7.6,
+      "hydro": 12.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 10,
+    "day_of_week": 3,
+    "demand_mw": 3366.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.843,
+      "wind": 0.454,
+      "hydro": 0.76
+    },
+    "source_prices": {
+      "coal": 35.5,
+      "gas": 41.7,
+      "solar": 10.4,
+      "wind": 7.8,
+      "hydro": 10.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 11,
+    "day_of_week": 3,
+    "demand_mw": 3478.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.896,
+      "wind": 0.396,
+      "hydro": 0.769
+    },
+    "source_prices": {
+      "coal": 32.9,
+      "gas": 42.0,
+      "solar": 9.8,
+      "wind": 5.3,
+      "hydro": 5.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 12,
+    "day_of_week": 3,
+    "demand_mw": 3380.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.941,
+      "wind": 0.336,
+      "hydro": 0.71
+    },
+    "source_prices": {
+      "coal": 27.9,
+      "gas": 39.9,
+      "solar": 4.4,
+      "wind": 14.2,
+      "hydro": 10.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 13,
+    "day_of_week": 3,
+    "demand_mw": 3366.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.842,
+      "wind": 0.381,
+      "hydro": 0.658
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 45.5,
+      "solar": 2.5,
+      "wind": 12.8,
+      "hydro": 7.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 14,
+    "day_of_week": 3,
+    "demand_mw": 3348.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.761,
+      "wind": 0.438,
+      "hydro": 0.752
+    },
+    "source_prices": {
+      "coal": 32.6,
+      "gas": 43.3,
+      "solar": 6.3,
+      "wind": 5.4,
+      "hydro": 10.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 15,
+    "day_of_week": 3,
+    "demand_mw": 3237.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.636,
+      "wind": 0.528,
+      "hydro": 0.648
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 44.3,
+      "solar": 6.6,
+      "wind": 10.5,
+      "hydro": 9.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 16,
+    "day_of_week": 3,
+    "demand_mw": 3309.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.456,
+      "wind": 0.384,
+      "hydro": 0.741
+    },
+    "source_prices": {
+      "coal": 31.3,
+      "gas": 41.7,
+      "solar": 6.5,
+      "wind": 7.0,
+      "hydro": 4.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 17,
+    "day_of_week": 3,
+    "demand_mw": 3334.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.183,
+      "wind": 0.375,
+      "hydro": 0.729
+    },
+    "source_prices": {
+      "coal": 32.8,
+      "gas": 47.0,
+      "solar": 4.0,
+      "wind": 7.3,
+      "hydro": 13.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 18,
+    "day_of_week": 3,
+    "demand_mw": 3578.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.08,
+      "wind": 0.518,
+      "hydro": 0.705
+    },
+    "source_prices": {
+      "coal": 38.6,
+      "gas": 44.8,
+      "solar": 4.0,
+      "wind": 9.2,
+      "hydro": 9.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 19,
+    "day_of_week": 3,
+    "demand_mw": 3501.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.031,
+      "wind": 0.596,
+      "hydro": 0.717
+    },
+    "source_prices": {
+      "coal": 33.5,
+      "gas": 45.0,
+      "solar": 3.7,
+      "wind": 10.4,
+      "hydro": 9.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 20,
+    "day_of_week": 3,
+    "demand_mw": 3401.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.316,
+      "hydro": 0.68
+    },
+    "source_prices": {
+      "coal": 36.1,
+      "gas": 42.2,
+      "solar": 6.3,
+      "wind": 11.1,
+      "hydro": 12.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 21,
+    "day_of_week": 3,
+    "demand_mw": 3300.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.51,
+      "hydro": 0.757
+    },
+    "source_prices": {
+      "coal": 31.6,
+      "gas": 45.3,
+      "solar": 6.1,
+      "wind": 6.2,
+      "hydro": 7.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 22,
+    "day_of_week": 3,
+    "demand_mw": 3124.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.661,
+      "hydro": 0.644
+    },
+    "source_prices": {
+      "coal": 36.5,
+      "gas": 42.5,
+      "solar": 6.8,
+      "wind": 9.5,
+      "hydro": 14.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 23,
+    "day_of_week": 3,
+    "demand_mw": 2920.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.501,
+      "hydro": 0.706
+    },
+    "source_prices": {
+      "coal": 32.4,
+      "gas": 43.6,
+      "solar": 5.4,
+      "wind": 12.4,
+      "hydro": 8.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 0,
+    "day_of_week": 4,
+    "demand_mw": 2816.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.528,
+      "hydro": 0.734
+    },
+    "source_prices": {
+      "coal": 36.7,
+      "gas": 47.7,
+      "solar": 7.8,
+      "wind": 5.6,
+      "hydro": 10.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 1,
+    "day_of_week": 4,
+    "demand_mw": 2743.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.573,
+      "hydro": 0.73
+    },
+    "source_prices": {
+      "coal": 32.8,
+      "gas": 49.2,
+      "solar": 4.0,
+      "wind": 10.7,
+      "hydro": 1.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 2,
+    "day_of_week": 4,
+    "demand_mw": 2774.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.61,
+      "hydro": 0.7
+    },
+    "source_prices": {
+      "coal": 29.3,
+      "gas": 44.8,
+      "solar": 10.7,
+      "wind": 7.6,
+      "hydro": 7.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 3,
+    "day_of_week": 4,
+    "demand_mw": 2656.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.513,
+      "hydro": 0.739
+    },
+    "source_prices": {
+      "coal": 33.6,
+      "gas": 37.6,
+      "solar": 8.7,
+      "wind": 3.2,
+      "hydro": 9.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 4,
+    "day_of_week": 4,
+    "demand_mw": 2784.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.371,
+      "hydro": 0.683
+    },
+    "source_prices": {
+      "coal": 35.7,
+      "gas": 45.5,
+      "solar": 4.0,
+      "wind": 8.7,
+      "hydro": 14.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 5,
+    "day_of_week": 4,
+    "demand_mw": 2788.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.489,
+      "hydro": 0.673
+    },
+    "source_prices": {
+      "coal": 33.9,
+      "gas": 40.8,
+      "solar": 3.9,
+      "wind": 12.9,
+      "hydro": 10.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 6,
+    "day_of_week": 4,
+    "demand_mw": 2882.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.074,
+      "wind": 0.515,
+      "hydro": 0.662
+    },
+    "source_prices": {
+      "coal": 35.2,
+      "gas": 45.4,
+      "solar": -0.9,
+      "wind": 9.0,
+      "hydro": 12.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 7,
+    "day_of_week": 4,
+    "demand_mw": 3065.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.26,
+      "wind": 0.527,
+      "hydro": 0.644
+    },
+    "source_prices": {
+      "coal": 32.4,
+      "gas": 42.2,
+      "solar": 10.6,
+      "wind": 7.1,
+      "hydro": 6.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 8,
+    "day_of_week": 4,
+    "demand_mw": 3266.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.509,
+      "wind": 0.368,
+      "hydro": 0.593
+    },
+    "source_prices": {
+      "coal": 35.5,
+      "gas": 43.4,
+      "solar": 4.9,
+      "wind": 7.7,
+      "hydro": 11.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 9,
+    "day_of_week": 4,
+    "demand_mw": 3363.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.598,
+      "wind": 0.636,
+      "hydro": 0.774
+    },
+    "source_prices": {
+      "coal": 37.5,
+      "gas": 42.7,
+      "solar": 7.7,
+      "wind": 8.6,
+      "hydro": 10.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 10,
+    "day_of_week": 4,
+    "demand_mw": 3468.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.78,
+      "wind": 0.545,
+      "hydro": 0.791
+    },
+    "source_prices": {
+      "coal": 35.0,
+      "gas": 44.1,
+      "solar": 5.9,
+      "wind": 7.4,
+      "hydro": 7.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 11,
+    "day_of_week": 4,
+    "demand_mw": 3465.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.871,
+      "wind": 0.555,
+      "hydro": 0.676
+    },
+    "source_prices": {
+      "coal": 36.7,
+      "gas": 41.9,
+      "solar": 2.7,
+      "wind": 9.9,
+      "hydro": 14.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 12,
+    "day_of_week": 4,
+    "demand_mw": 3471.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.876,
+      "wind": 0.313,
+      "hydro": 0.695
+    },
+    "source_prices": {
+      "coal": 30.4,
+      "gas": 46.2,
+      "solar": 5.0,
+      "wind": 7.1,
+      "hydro": 6.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 13,
+    "day_of_week": 4,
+    "demand_mw": 3275.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.82,
+      "wind": 0.404,
+      "hydro": 0.688
+    },
+    "source_prices": {
+      "coal": 37.8,
+      "gas": 46.8,
+      "solar": 7.8,
+      "wind": 7.3,
+      "hydro": 13.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 14,
+    "day_of_week": 4,
+    "demand_mw": 3265.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.784,
+      "wind": 0.311,
+      "hydro": 0.695
+    },
+    "source_prices": {
+      "coal": 36.3,
+      "gas": 47.8,
+      "solar": 3.4,
+      "wind": 7.6,
+      "hydro": 9.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 15,
+    "day_of_week": 4,
+    "demand_mw": 3259.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.632,
+      "wind": 0.387,
+      "hydro": 0.703
+    },
+    "source_prices": {
+      "coal": 37.1,
+      "gas": 48.8,
+      "solar": 7.1,
+      "wind": 7.9,
+      "hydro": 8.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 16,
+    "day_of_week": 4,
+    "demand_mw": 3369.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.412,
+      "wind": 0.447,
+      "hydro": 0.737
+    },
+    "source_prices": {
+      "coal": 36.5,
+      "gas": 46.4,
+      "solar": 6.1,
+      "wind": 6.8,
+      "hydro": 9.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 17,
+    "day_of_week": 4,
+    "demand_mw": 3405.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.21,
+      "wind": 0.561,
+      "hydro": 0.74
+    },
+    "source_prices": {
+      "coal": 40.1,
+      "gas": 46.6,
+      "solar": 3.8,
+      "wind": 5.9,
+      "hydro": 7.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 18,
+    "day_of_week": 4,
+    "demand_mw": 3554.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.136,
+      "wind": 0.323,
+      "hydro": 0.663
+    },
+    "source_prices": {
+      "coal": 41.7,
+      "gas": 42.5,
+      "solar": 10.7,
+      "wind": 7.3,
+      "hydro": 7.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 19,
+    "day_of_week": 4,
+    "demand_mw": 3542.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.35,
+      "hydro": 0.755
+    },
+    "source_prices": {
+      "coal": 35.2,
+      "gas": 41.9,
+      "solar": 9.6,
+      "wind": 6.3,
+      "hydro": 14.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 20,
+    "day_of_week": 4,
+    "demand_mw": 3388.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.451,
+      "hydro": 0.726
+    },
+    "source_prices": {
+      "coal": 39.1,
+      "gas": 45.2,
+      "solar": 7.5,
+      "wind": 12.2,
+      "hydro": 12.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 21,
+    "day_of_week": 4,
+    "demand_mw": 3282.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.547,
+      "hydro": 0.739
+    },
+    "source_prices": {
+      "coal": 34.6,
+      "gas": 45.8,
+      "solar": 5.8,
+      "wind": 8.1,
+      "hydro": 10.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 22,
+    "day_of_week": 4,
+    "demand_mw": 3081.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.377,
+      "hydro": 0.645
+    },
+    "source_prices": {
+      "coal": 34.4,
+      "gas": 42.8,
+      "solar": 7.9,
+      "wind": 8.7,
+      "hydro": 13.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 23,
+    "day_of_week": 4,
+    "demand_mw": 2904.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.347,
+      "hydro": 0.624
+    },
+    "source_prices": {
+      "coal": 34.5,
+      "gas": 44.4,
+      "solar": 9.1,
+      "wind": 12.2,
+      "hydro": 9.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 0,
+    "day_of_week": 5,
+    "demand_mw": 2815.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.712,
+      "hydro": 0.705
+    },
+    "source_prices": {
+      "coal": 38.9,
+      "gas": 45.9,
+      "solar": -0.1,
+      "wind": 10.2,
+      "hydro": 7.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 1,
+    "day_of_week": 5,
+    "demand_mw": 2727.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.348,
+      "hydro": 0.733
+    },
+    "source_prices": {
+      "coal": 32.6,
+      "gas": 46.8,
+      "solar": 3.7,
+      "wind": 8.8,
+      "hydro": 14.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 2,
+    "day_of_week": 5,
+    "demand_mw": 2773.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.452,
+      "hydro": 0.709
+    },
+    "source_prices": {
+      "coal": 33.7,
+      "gas": 46.6,
+      "solar": 4.6,
+      "wind": 9.7,
+      "hydro": 4.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 3,
+    "day_of_week": 5,
+    "demand_mw": 2719.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.453,
+      "hydro": 0.663
+    },
+    "source_prices": {
+      "coal": 33.9,
+      "gas": 42.1,
+      "solar": 0.7,
+      "wind": 7.2,
+      "hydro": 7.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 4,
+    "day_of_week": 5,
+    "demand_mw": 2716.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.371,
+      "hydro": 0.671
+    },
+    "source_prices": {
+      "coal": 41.0,
+      "gas": 42.3,
+      "solar": 6.2,
+      "wind": 12.8,
+      "hydro": 16.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 5,
+    "day_of_week": 5,
+    "demand_mw": 2797.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.544,
+      "hydro": 0.736
+    },
+    "source_prices": {
+      "coal": 36.7,
+      "gas": 43.4,
+      "solar": 9.3,
+      "wind": 10.3,
+      "hydro": 5.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 6,
+    "day_of_week": 5,
+    "demand_mw": 2950.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.026,
+      "wind": 0.528,
+      "hydro": 0.744
+    },
+    "source_prices": {
+      "coal": 41.3,
+      "gas": 51.4,
+      "solar": 6.9,
+      "wind": 1.2,
+      "hydro": 18.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 7,
+    "day_of_week": 5,
+    "demand_mw": 3012.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.222,
+      "wind": 0.629,
+      "hydro": 0.67
+    },
+    "source_prices": {
+      "coal": 39.6,
+      "gas": 38.6,
+      "solar": 12.1,
+      "wind": 4.5,
+      "hydro": 7.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 8,
+    "day_of_week": 5,
+    "demand_mw": 3241.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.476,
+      "wind": 0.376,
+      "hydro": 0.786
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 41.0,
+      "solar": 2.6,
+      "wind": 7.3,
+      "hydro": 9.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 9,
+    "day_of_week": 5,
+    "demand_mw": 3333.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.604,
+      "wind": 0.44,
+      "hydro": 0.727
+    },
+    "source_prices": {
+      "coal": 33.5,
+      "gas": 42.0,
+      "solar": 6.5,
+      "wind": 15.3,
+      "hydro": 5.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 10,
+    "day_of_week": 5,
+    "demand_mw": 3417.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.784,
+      "wind": 0.766,
+      "hydro": 0.598
+    },
+    "source_prices": {
+      "coal": 34.6,
+      "gas": 43.9,
+      "solar": 3.6,
+      "wind": 6.9,
+      "hydro": 12.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 11,
+    "day_of_week": 5,
+    "demand_mw": 3422.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.846,
+      "wind": 0.37,
+      "hydro": 0.627
+    },
+    "source_prices": {
+      "coal": 36.4,
+      "gas": 45.0,
+      "solar": 2.1,
+      "wind": 1.3,
+      "hydro": 10.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 12,
+    "day_of_week": 5,
+    "demand_mw": 3450.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.92,
+      "wind": 0.509,
+      "hydro": 0.772
+    },
+    "source_prices": {
+      "coal": 37.0,
+      "gas": 44.0,
+      "solar": 6.6,
+      "wind": 9.4,
+      "hydro": 11.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 13,
+    "day_of_week": 5,
+    "demand_mw": 3269.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.782,
+      "wind": 0.432,
+      "hydro": 0.673
+    },
+    "source_prices": {
+      "coal": 36.9,
+      "gas": 43.9,
+      "solar": 4.7,
+      "wind": 10.7,
+      "hydro": 13.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 14,
+    "day_of_week": 5,
+    "demand_mw": 3445.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.808,
+      "wind": 0.287,
+      "hydro": 0.703
+    },
+    "source_prices": {
+      "coal": 31.5,
+      "gas": 41.2,
+      "solar": 6.6,
+      "wind": 5.0,
+      "hydro": 6.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 15,
+    "day_of_week": 5,
+    "demand_mw": 3207.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.634,
+      "wind": 0.381,
+      "hydro": 0.771
+    },
+    "source_prices": {
+      "coal": 35.9,
+      "gas": 46.1,
+      "solar": 4.7,
+      "wind": 3.3,
+      "hydro": 9.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 16,
+    "day_of_week": 5,
+    "demand_mw": 3270.2,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.492,
+      "wind": 0.554,
+      "hydro": 0.716
+    },
+    "source_prices": {
+      "coal": 31.9,
+      "gas": 43.3,
+      "solar": 10.5,
+      "wind": 12.2,
+      "hydro": 14.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 17,
+    "day_of_week": 5,
+    "demand_mw": 3369.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.28,
+      "wind": 0.439,
+      "hydro": 0.648
+    },
+    "source_prices": {
+      "coal": 36.8,
+      "gas": 43.6,
+      "solar": 4.9,
+      "wind": 6.8,
+      "hydro": 10.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 18,
+    "day_of_week": 5,
+    "demand_mw": 3516.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.052,
+      "wind": 0.448,
+      "hydro": 0.646
+    },
+    "source_prices": {
+      "coal": 32.0,
+      "gas": 37.8,
+      "solar": 7.9,
+      "wind": 4.7,
+      "hydro": 12.6
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 19,
+    "day_of_week": 5,
+    "demand_mw": 3525.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.42,
+      "hydro": 0.741
+    },
+    "source_prices": {
+      "coal": 37.8,
+      "gas": 51.0,
+      "solar": 5.7,
+      "wind": 12.9,
+      "hydro": 6.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 20,
+    "day_of_week": 5,
+    "demand_mw": 3352.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.575,
+      "hydro": 0.667
+    },
+    "source_prices": {
+      "coal": 31.8,
+      "gas": 47.3,
+      "solar": 0.7,
+      "wind": 9.8,
+      "hydro": 14.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 21,
+    "day_of_week": 5,
+    "demand_mw": 3224.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.506,
+      "hydro": 0.693
+    },
+    "source_prices": {
+      "coal": 38.6,
+      "gas": 48.5,
+      "solar": 2.6,
+      "wind": 9.1,
+      "hydro": 10.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 22,
+    "day_of_week": 5,
+    "demand_mw": 3101.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.697,
+      "hydro": 0.712
+    },
+    "source_prices": {
+      "coal": 34.3,
+      "gas": 47.4,
+      "solar": 9.2,
+      "wind": 7.6,
+      "hydro": 12.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 23,
+    "day_of_week": 5,
+    "demand_mw": 2927.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.478,
+      "hydro": 0.768
+    },
+    "source_prices": {
+      "coal": 36.1,
+      "gas": 47.1,
+      "solar": 9.7,
+      "wind": 9.8,
+      "hydro": 13.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 0,
+    "day_of_week": 6,
+    "demand_mw": 2871.0,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.564,
+      "hydro": 0.744
+    },
+    "source_prices": {
+      "coal": 36.4,
+      "gas": 46.7,
+      "solar": 5.7,
+      "wind": 6.1,
+      "hydro": 12.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 1,
+    "day_of_week": 6,
+    "demand_mw": 2722.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.494,
+      "hydro": 0.595
+    },
+    "source_prices": {
+      "coal": 37.2,
+      "gas": 47.5,
+      "solar": 8.2,
+      "wind": 9.4,
+      "hydro": 13.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 2,
+    "day_of_week": 6,
+    "demand_mw": 2644.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.591,
+      "hydro": 0.595
+    },
+    "source_prices": {
+      "coal": 38.8,
+      "gas": 40.5,
+      "solar": 4.6,
+      "wind": 10.5,
+      "hydro": 10.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 3,
+    "day_of_week": 6,
+    "demand_mw": 2558.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.333,
+      "hydro": 0.719
+    },
+    "source_prices": {
+      "coal": 34.0,
+      "gas": 45.4,
+      "solar": 5.5,
+      "wind": 8.7,
+      "hydro": 10.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 4,
+    "day_of_week": 6,
+    "demand_mw": 2835.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.736,
+      "hydro": 0.733
+    },
+    "source_prices": {
+      "coal": 32.1,
+      "gas": 43.3,
+      "solar": 7.5,
+      "wind": 1.6,
+      "hydro": 9.7
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 5,
+    "day_of_week": 6,
+    "demand_mw": 2834.6,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.363,
+      "hydro": 0.634
+    },
+    "source_prices": {
+      "coal": 39.5,
+      "gas": 47.5,
+      "solar": 6.8,
+      "wind": 9.8,
+      "hydro": 11.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 6,
+    "day_of_week": 6,
+    "demand_mw": 2979.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.024,
+      "wind": 0.384,
+      "hydro": 0.704
+    },
+    "source_prices": {
+      "coal": 31.1,
+      "gas": 46.1,
+      "solar": 1.7,
+      "wind": 12.0,
+      "hydro": 10.5
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 7,
+    "day_of_week": 6,
+    "demand_mw": 3018.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.128,
+      "wind": 0.373,
+      "hydro": 0.656
+    },
+    "source_prices": {
+      "coal": 37.8,
+      "gas": 45.7,
+      "solar": 3.5,
+      "wind": 8.8,
+      "hydro": 6.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 8,
+    "day_of_week": 6,
+    "demand_mw": 3307.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.497,
+      "wind": 0.479,
+      "hydro": 0.705
+    },
+    "source_prices": {
+      "coal": 33.7,
+      "gas": 47.4,
+      "solar": 2.6,
+      "wind": 8.5,
+      "hydro": 4.2
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 9,
+    "day_of_week": 6,
+    "demand_mw": 3341.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.703,
+      "wind": 0.315,
+      "hydro": 0.707
+    },
+    "source_prices": {
+      "coal": 35.8,
+      "gas": 43.4,
+      "solar": 3.9,
+      "wind": 4.0,
+      "hydro": 9.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 10,
+    "day_of_week": 6,
+    "demand_mw": 3409.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.847,
+      "wind": 0.499,
+      "hydro": 0.72
+    },
+    "source_prices": {
+      "coal": 37.9,
+      "gas": 44.0,
+      "solar": 3.8,
+      "wind": 12.3,
+      "hydro": 9.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 11,
+    "day_of_week": 6,
+    "demand_mw": 3492.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.926,
+      "wind": 0.595,
+      "hydro": 0.708
+    },
+    "source_prices": {
+      "coal": 38.8,
+      "gas": 49.0,
+      "solar": 2.3,
+      "wind": 7.5,
+      "hydro": 8.9
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 12,
+    "day_of_week": 6,
+    "demand_mw": 3373.3,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.828,
+      "wind": 0.462,
+      "hydro": 0.704
+    },
+    "source_prices": {
+      "coal": 36.8,
+      "gas": 48.1,
+      "solar": 5.6,
+      "wind": 12.2,
+      "hydro": 9.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 13,
+    "day_of_week": 6,
+    "demand_mw": 3340.8,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.817,
+      "wind": 0.607,
+      "hydro": 0.63
+    },
+    "source_prices": {
+      "coal": 36.7,
+      "gas": 41.4,
+      "solar": 4.7,
+      "wind": 12.8,
+      "hydro": 12.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 14,
+    "day_of_week": 6,
+    "demand_mw": 3219.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.839,
+      "wind": 0.591,
+      "hydro": 0.745
+    },
+    "source_prices": {
+      "coal": 37.9,
+      "gas": 38.8,
+      "solar": 8.2,
+      "wind": 12.4,
+      "hydro": 11.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 15,
+    "day_of_week": 6,
+    "demand_mw": 3255.1,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.645,
+      "wind": 0.405,
+      "hydro": 0.619
+    },
+    "source_prices": {
+      "coal": 38.4,
+      "gas": 46.3,
+      "solar": 0.2,
+      "wind": 7.9,
+      "hydro": 12.4
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 16,
+    "day_of_week": 6,
+    "demand_mw": 3324.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.499,
+      "wind": 0.465,
+      "hydro": 0.645
+    },
+    "source_prices": {
+      "coal": 40.8,
+      "gas": 46.6,
+      "solar": 9.0,
+      "wind": 12.4,
+      "hydro": 6.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 17,
+    "day_of_week": 6,
+    "demand_mw": 3412.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.293,
+      "wind": 0.385,
+      "hydro": 0.725
+    },
+    "source_prices": {
+      "coal": 36.4,
+      "gas": 42.1,
+      "solar": 9.4,
+      "wind": 10.0,
+      "hydro": 11.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 18,
+    "day_of_week": 6,
+    "demand_mw": 3409.9,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.123,
+      "wind": 0.396,
+      "hydro": 0.774
+    },
+    "source_prices": {
+      "coal": 32.2,
+      "gas": 43.4,
+      "solar": 5.5,
+      "wind": 6.8,
+      "hydro": 10.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 19,
+    "day_of_week": 6,
+    "demand_mw": 3416.7,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.625,
+      "hydro": 0.654
+    },
+    "source_prices": {
+      "coal": 36.1,
+      "gas": 48.5,
+      "solar": 2.0,
+      "wind": 7.2,
+      "hydro": 4.3
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 20,
+    "day_of_week": 6,
+    "demand_mw": 3386.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.421,
+      "hydro": 0.672
+    },
+    "source_prices": {
+      "coal": 35.0,
+      "gas": 51.5,
+      "solar": 3.0,
+      "wind": 8.7,
+      "hydro": 16.8
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 21,
+    "day_of_week": 6,
+    "demand_mw": 3304.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.501,
+      "hydro": 0.736
+    },
+    "source_prices": {
+      "coal": 37.0,
+      "gas": 42.5,
+      "solar": 7.6,
+      "wind": 7.4,
+      "hydro": 13.1
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 22,
+    "day_of_week": 6,
+    "demand_mw": 3071.5,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.452,
+      "hydro": 0.699
+    },
+    "source_prices": {
+      "coal": 37.0,
+      "gas": 44.3,
+      "solar": 5.8,
+      "wind": 10.3,
+      "hydro": 11.0
+    }
+  },
+  {
+    "season": "summer",
+    "hour": 23,
+    "day_of_week": 6,
+    "demand_mw": 2872.4,
+    "source_availability": {
+      "coal": 1.0,
+      "gas": 1.0,
+      "solar": 0.0,
+      "wind": 0.309,
+      "hydro": 0.688
+    },
+    "source_prices": {
+      "coal": 36.4,
+      "gas": 48.4,
+      "solar": 6.6,
+      "wind": 10.1,
+      "hydro": 10.7
+    }
+  }
+]
