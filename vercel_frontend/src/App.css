@@ -17,6 +17,7 @@
 .app-header h1 {
   font-size: 2.75rem;
   font-weight: 800;
+  text-transform: uppercase;
   background: linear-gradient(135deg, #818cf8, #c084fc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -136,6 +137,30 @@
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.footer-repo {
+  margin: 0;
+}
+
+.footer-repo a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: opacity var(--transition);
+}
+
+.footer-repo a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
 }
 
 /* ── Responsive ───────────────────────────────────────────── */
