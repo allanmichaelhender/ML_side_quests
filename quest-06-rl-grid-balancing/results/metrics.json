@@ -1,0 +1,42 @@
+[
+  {
+    "policy": "Random",
+    "n_episodes": 10,
+    "mean_reward": -414989299.75,
+    "std_reward": 25699047.61,
+    "mean_reliability": 0.022,
+    "std_reliability": 0.006,
+    "mean_cost_per_mwh": 20.76,
+    "mean_emissions_per_mwh": 1.53
+  },
+  {
+    "policy": "Merit Order",
+    "n_episodes": 10,
+    "mean_reward": -13540191.44,
+    "std_reward": 0.0,
+    "mean_reliability": 0.4881,
+    "std_reliability": 0.0,
+    "mean_cost_per_mwh": 29.08,
+    "mean_emissions_per_mwh": 2.51
+  },
+  {
+    "policy": "Equal Split",
+    "n_episodes": 10,
+    "mean_reward": -15536891.8,
+    "std_reward": 0.0,
+    "mean_reliability": 0.4643,
+    "std_reliability": 0.0,
+    "mean_cost_per_mwh": 33.78,
+    "mean_emissions_per_mwh": 2.47
+  },
+  {
+    "policy": "PPO",
+    "n_episodes": 10,
+    "mean_reward": -19968724.17,
+    "std_reward": 0.0,
+    "mean_reliability": 0.9167,
+    "std_reliability": 0.0,
+    "mean_cost_per_mwh": 39.96,
+    "mean_emissions_per_mwh": 3.0
+  }
+]

@@ -18,11 +18,17 @@ quest-*/data/*.parquet
 quest-*/data/*.arrow
 
 # Training outputs and results (regenerated each run)
-quest-*/results/
-# But keep the small files needed by deployed apps (model, labels, metrics)
+quest-*/results/*
+# But keep the small files needed by deployed apps (model, labels, metrics, gradcam)
 !quest-*/results/model.onnx
+!quest-*/results/model.onnx.data
 !quest-*/results/class_names.json
 !quest-*/results/metrics.json
+!quest-*/results/label_info.json
+!quest-*/results/gradcam/
+!quest-*/results/gradcam/**
+!quest-*/results/figures/
+!quest-*/results/figures/**
 quest-*/models/
 
 # Node.js

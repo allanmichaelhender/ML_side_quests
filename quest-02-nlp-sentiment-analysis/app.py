@@ -34,11 +34,7 @@ def load_model():
     )
 
     if not (MODEL_DIR / "config.json").exists():
-        st.error(
-            f"Model not found at `{MODEL_DIR}`. "
-            "Please run `python src/train.py` first to train the model."
-        )
-        st.stop()
+        return None, None, None
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = DistilBertForSequenceClassification.from_pretrained(
@@ -175,6 +171,12 @@ st.markdown(
 
 model, tokenizer, device = load_model()
 
+if model is None:
+    st.warning(
+        "Model not found. Run `python src/train.py` locally to train it. "
+        "The results sidebar will still show evaluation metrics if available."
+    )
+
 # ── Input ────────────────────────────────────────────────────
 st.subheader("Enter a review")
 input_mode = st.radio(
@@ -212,10 +214,15 @@ else:
         placeholder="e.g. This product is amazing! I love it.",
     )
 
-analyze_btn = st.button("Analyze Sentiment", type="primary", use_container_width=True)
+analyze_btn = st.button(
+    "Analyze Sentiment",
+    type="primary",
+    use_container_width=True,
+    disabled=(model is None),
+)
 
 # ── Results ──────────────────────────────────────────────────
-if analyze_btn and text.strip():
+if analyze_btn and text.strip() and model is not None:
     with st.spinner("Analysing sentiment..."):
         pred_label, confidence, probs = predict_sentiment(
             text, model, tokenizer, device
