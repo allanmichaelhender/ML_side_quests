@@ -50,6 +50,7 @@ def load_model_and_tokenizer(
     model = DistilBertForSequenceClassification.from_pretrained(
         str(model_dir),
         num_labels=num_labels,
+        attn_implementation="eager",
     )
     model.to(device)
     model.eval()
@@ -72,10 +73,35 @@ def evaluate_model(
     """Run full evaluation on the test set."""
     device = next(model.parameters()).device
 
-    # Load and tokenize test set
-    dataset = load_amazon_reviews(max_samples=None)
-    tokenized = tokenize_dataset(dataset, tokenizer, max_length=max_length)
-    test_dataset = tokenized["test"]
+    # Load only the test set directly (skip loading training data)
+    import pandas as pd
+    from datasets import Dataset
+
+    test_path = DEFAULT_DATA / "test-00000-of-00001.parquet"
+    if not test_path.exists():
+        from data_utils import download_data
+        download_data()
+
+    test_df = pd.read_parquet(test_path)
+    if max_samples and max_samples < len(test_df):
+        rng = np.random.default_rng(42)
+        test_df = test_df.sample(n=max_samples, random_state=rng.integers(0, 2**31)).reset_index(drop=True)
+
+    # Tokenize directly
+    texts = [f"{t} {c}" for t, c in zip(test_df["title"], test_df["content"])]
+    tokenized = tokenizer(
+        texts,
+        padding="max_length",
+        truncation=True,
+        max_length=max_length,
+        return_tensors=None,
+    )
+    tokenized["labels"] = test_df["label"].tolist()
+
+    test_dataset = Dataset.from_dict(tokenized)
+    test_dataset.set_format("torch", columns=["input_ids", "attention_mask", "labels"])
+
+    print(f"Test set: {len(test_dataset)} samples")
 
     # Create dataloader
     from torch.utils.data import DataLoader
@@ -247,11 +273,11 @@ def visualize_attention(
             "Great quality and fast shipping. Would definitely recommend to anyone looking for a good buy.",
         ),
         (
-            "neutral",
+            "positive",
             "It's okay for the price. Nothing special but it gets the job done. Average product overall.",
         ),
         (
-            "neutral",
+            "negative",
             "The item arrived on time and works as described. Not great but not terrible either.",
         ),
         (

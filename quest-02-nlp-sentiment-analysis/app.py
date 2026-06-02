@@ -41,7 +41,10 @@ def load_model():
         st.stop()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = DistilBertForSequenceClassification.from_pretrained(str(MODEL_DIR))
+    model = DistilBertForSequenceClassification.from_pretrained(
+        str(MODEL_DIR),
+        attn_implementation="eager",
+    )
     model.to(device)
     model.eval()
     tokenizer = DistilBertTokenizerFast.from_pretrained(str(MODEL_DIR))

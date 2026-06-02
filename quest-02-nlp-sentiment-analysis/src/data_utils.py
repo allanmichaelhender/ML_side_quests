@@ -96,7 +96,10 @@ def load_amazon_reviews(
     val_df = train_df.iloc[val_idx].reset_index(drop=True)
 
     # Stratified subsample training set
-    train_df_subset = _stratified_sample_df(train_df_part, max_samples, seed)
+    if max_samples is not None:
+        train_df_subset = _stratified_sample_df(train_df_part, max_samples, seed)
+    else:
+        train_df_subset = train_df_part
 
     # Also subsample validation to a reasonable size for quick eval
     val_max = min(len(val_df), 5_000)
