@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 8505
 
-CMD ["python", "src/train.py"]
+CMD ["streamlit", "run", "app.py", "--server.port=8505", "--server.address=0.0.0.0"]

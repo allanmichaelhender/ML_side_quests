@@ -1,0 +1,82 @@
+[
+  {
+    "text": "I haven't received my new card yet and it's been 2 weeks since I ordered it.",
+    "intent": "card_arrival"
+  },
+  {
+    "text": "Can you tell me why my last transaction was declined? I have enough funds.",
+    "intent": "declined_transaction"
+  },
+  {
+    "text": "Someone used my card to make a purchase I didn't authorise. Please help!",
+    "intent": "fraud_report"
+  },
+  {
+    "text": "I need to update my phone number on my account.",
+    "intent": "change_contact_details"
+  },
+  {
+    "text": "There's a charge on my statement that I don't recognise from last week.",
+    "intent": "dispute_transaction"
+  },
+  {
+    "text": "How do I set up a direct debit for my monthly rent payment?",
+    "intent": "direct_debit_setup"
+  },
+  {
+    "text": "I forgot my online banking password and can't log in.",
+    "intent": "forgotten_pin_or_pass"
+  },
+  {
+    "text": "Can you increase my daily withdrawal limit?",
+    "intent": "card_limits"
+  },
+  {
+    "text": "I want to close my savings account and transfer the balance.",
+    "intent": "closure"
+  },
+  {
+    "text": "My card was lost in transit, I need a replacement urgently.",
+    "intent": "lost_or_stolen_card"
+  },
+  {
+    "text": "The money I transferred hasn't arrived in the other account yet.",
+    "intent": "pending_transfer"
+  },
+  {
+    "text": "I need a statement for my account for the last 3 months.",
+    "intent": "request_statement"
+  },
+  {
+    "text": "Can I get a loan approval status update?",
+    "intent": "loan_application_status"
+  },
+  {
+    "text": "The ATM dispensed less cash than I requested and charged my account the full amount.",
+    "intent": "atm_support"
+  },
+  {
+    "text": "My contactless payment isn't working on the new terminal.",
+    "intent": "contactless_not_working"
+  },
+  {
+    "text": "I want to check the balance on my savings account.",
+    "intent": "balance_inquiry"
+  },
+  {
+    "text": "Can you explain why I got charged an overdraft fee this month?",
+    "intent": "overdraft_question"
+  },
+  {
+    "text": "I need to transfer money to my friend's account in another bank.",
+    "intent": "transfer_other_bank"
+  },
+  {
+    "text": "How do I activate my new credit card?",
+    "intent": "activate_card"
+  },
+  {
+    "text": "I've been charged twice for the same purchase online.",
+    "intent": "double_charge"
+  }
+]

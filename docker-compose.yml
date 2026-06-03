@@ -91,6 +91,8 @@ services:
     container_name: quest-05-ticket
     env_file:
       - .env
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
     volumes:
       - ./quest-05-nlp-ticket-routing/data:/app/data
       - ./quest-05-nlp-ticket-routing/results:/app/results
