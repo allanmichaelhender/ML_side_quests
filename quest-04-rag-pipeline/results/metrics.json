@@ -1,0 +1,9 @@
+{
+  "num_queries": 200,
+  "hit_rate@1": 0.425,
+  "hit_rate@5": 0.745,
+  "hit_rate@10": 0.87,
+  "mrr": 0.5669920634920635,
+  "precision@5": 0.149,
+  "avg_retrieval_time_ms": 53.48745942115784
+}

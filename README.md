@@ -1,7 +1,5 @@
 # ML Side Quests
 
-[![Vercel](https://img.shields.io/badge/Portfolio-vercel_frontend-818cf8?style=flat&logo=vercel)](https://ml-sidequests.vercel.app)
-
 A collection of industry-focused ML projects demonstrating breadth across **computer vision**, **NLP**, **generative AI**, **retrieval-augmented generation**, and **reinforcement learning**.
 
 Each quest is independently containerised with Docker and has its own Streamlit demo.
@@ -115,14 +113,14 @@ streamlit run app.py
 
 All quests are designed to train and run on CPU (no GPU required).
 
-| Quest                 | Estimated CPU Training Time    |
-| --------------------- | ------------------------------ |
-| 1 — Plant Disease CV  | 1–3 hours                      |
-| 2 — Sentiment BERT    | 1–2 hours                      |
-| 3 — Earnings Call LLM | 6–10 hours (LoRA)              |
-| 4 — RAG Pipeline      | No training — indexing ~30 min |
-| 5 — Ticket Routing    | < 30 minutes                   |
-| 6 — Grid RL Agent     | 30–60 minutes                  |
+| Quest                 | Estimated CPU Training Time        |
+| --------------------- | ---------------------------------- |
+| 1 — Plant Disease CV  | 1–3 hours                          |
+| 2 — Sentiment BERT    | 1–2 hours                          |
+| 3 — Earnings Call LLM | 2–3 hours (LoRA, r=4, 500 samples) |
+| 4 — RAG Pipeline      | No training — indexing ~30 min     |
+| 5 — Ticket Routing    | < 30 minutes                       |
+| 6 — Grid RL Agent     | 30–60 minutes                      |
 
 ---
 

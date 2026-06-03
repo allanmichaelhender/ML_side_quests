@@ -1,0 +1,640 @@
+"""
+Data utilities for Energy Earnings Call Analyst.
+
+Downloads SEC filing data for energy companies via edgar-sec,
+creates instruction-tuning pairs, and prepares datasets for LoRA fine-tuning.
+"""
+
+import json
+import re
+import time
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+import requests
+from datasets import Dataset, DatasetDict
+from transformers import PreTrainedTokenizer, set_seed
+
+HERE = Path(__file__).resolve().parent
+PROJECT = HERE.parent
+DEFAULT_DATA_DIR = PROJECT / "data"
+DEFAULT_OUTPUT_DIR = PROJECT / "results"
+
+# ── Energy companies to track ────────────────────────────────────
+ENERGY_COMPANIES: List[Dict[str, str | int]] = [
+    {"name": "Exxon Mobil", "ticker": "XOM", "cik": 34088},
+    {"name": "Chevron", "ticker": "CVX", "cik": 93410},
+    {"name": "ConocoPhillips", "ticker": "COP", "cik": 1163165},
+    {"name": "EOG Resources", "ticker": "EOG", "cik": 821189},
+    {"name": "Pioneer Natural Resources", "ticker": "PXD", "cik": 1017788},
+    {"name": "Occidental Petroleum", "ticker": "OXY", "cik": 797468},
+    {"name": "Schlumberger", "ticker": "SLB", "cik": 87347},
+    {"name": "Baker Hughes", "ticker": "BKR", "cik": 1702280},
+]
+
+# ── Financial metrics to extract (GAAP tags) ─────────────────────
+FINANCIAL_METRICS = {
+    "Revenue": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+    "Net Income": "us-gaap:NetIncomeLoss",
+    "Total Assets": "us-gaap:Assets",
+    "Total Liabilities": "us-gaap:Liabilities",
+    "Operating Income": "us-gaap:OperatingIncomeLoss",
+    "Earnings Per Share": "us-gaap:EarningsPerShareBasic",
+    "Cash and Equivalents": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+    "Long Term Debt": "us-gaap:LongTermDebt",
+    "Gross Profit": "us-gaap:GrossProfit",
+    "Research and Development": "us-gaap:ResearchAndDevelopmentExpense",
+}
+
+# ── Instruction templates ────────────────────────────────────────
+INSTRUCTION_TEMPLATES = [
+    "What was {company}'s {metric} for {period}?",
+    "Extract the {metric} for {company} in {period}.",
+    "Looking at {company}'s {period} financials, what is the {metric}?",
+    "Provide the {metric} figure reported by {company} for {period}.",
+    "What amount did {company} report as {metric} in {period}?",
+]
+
+SUMMARY_TEMPLATES = [
+    "Summarize the key financial results for {company} for {period} based on their SEC filing.",
+    "Provide a financial overview of {company} for {period} including revenue, net income, and key metrics.",
+    "Analyze {company}'s financial performance for {period}.",
+]
+
+TINYLLAMA_PROMPT = """<|system|>
+You are a financial analyst specializing in energy company earnings. Answer questions accurately based on SEC filing data.</s>
+<|user|>
+{instruction}
+
+{input}</s>
+<|assistant|>
+{response}</s>"""
+
+
+def _format_currency(value: float) -> str:
+    """Format a large number into a readable currency string."""
+    if abs(value) >= 1e12:
+        return f"${value / 1e12:.2f}T"
+    elif abs(value) >= 1e9:
+        return f"${value / 1e9:.2f}B"
+    elif abs(value) >= 1e6:
+        return f"${value / 1e6:.2f}M"
+    elif abs(value) >= 1e3:
+        return f"${value / 1e3:.2f}K"
+    else:
+        return f"${value:.2f}"
+
+
+def fetch_financial_data(
+    companies: List[Dict] = None,
+    metrics: Dict[str, str] = None,
+    max_fiscal_years: int = 3,
+    cache_dir: Optional[Path] = None,
+) -> List[Dict]:
+    """
+    Fetch XBRL financial data for energy companies using edgar-sec.
+
+    Returns a list of records: {company, ticker, metric, period, value, unit}
+    """
+    if companies is None:
+        companies = ENERGY_COMPANIES
+    if metrics is None:
+        metrics = FINANCIAL_METRICS
+
+    all_records = []
+
+    # Check cache first
+    if cache_dir is not None:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_path = cache_dir / "financial_data.json"
+        if cache_path.exists():
+            with open(cache_path) as f:
+                cached = json.load(f)
+            if cached.get("companies") == [c["ticker"] for c in companies]:
+                print(
+                    f"[CACHE] Loaded {len(cached['records'])} financial records from cache"
+                )
+                return cached["records"]
+
+    # Try live SEC API; fall back to realistic mock data on any failure
+    try:
+        from edgar_sec import EdgarAPI
+
+        edgar = EdgarAPI(cache_mode=True)
+
+        for company in companies:
+            try:
+                company_facts = edgar.get_company_facts(ticker=company["ticker"])
+            except Exception:
+                continue
+
+            for metric_name, gaap_tag in metrics.items():
+                try:
+                    tag_parts = gaap_tag.split(":")
+                    taxonomy = tag_parts[0]
+                    tag = tag_parts[1]
+
+                    concept = edgar.get_company_concept(
+                        taxonomy, tag, ticker=company["ticker"]
+                    )
+
+                    if not concept or not concept.units:
+                        continue
+
+                    for unit_name, values in concept.units.items():
+                        if "USD" not in unit_name and unit_name != "USD":
+                            continue
+
+                        sorted_vals = sorted(
+                            values, key=lambda v: v.get("end", ""), reverse=True
+                        )
+                        years_seen = 0
+                        for v in sorted_vals:
+                            if "end" not in v:
+                                continue
+                            year = v["end"][:4]
+                            if years_seen >= max_fiscal_years:
+                                break
+
+                            all_records.append(
+                                {
+                                    "company": company["name"],
+                                    "ticker": company["ticker"],
+                                    "metric": metric_name,
+                                    "period": v["end"],
+                                    "fy": v.get("fy", int(year)),
+                                    "fp": v.get("fp", "FY"),
+                                    "value": v.get("val", 0),
+                                    "unit": unit_name,
+                                }
+                            )
+                            years_seen += 1
+
+                except Exception:
+                    continue
+
+            time.sleep(0.5)
+
+        if all_records:
+            print(f"  [OK] Fetched {len(all_records)} records from SEC EDGAR")
+    except Exception:
+        pass
+
+    # Use mock data if API returned nothing
+    if not all_records:
+        return _generate_mock_data(companies, metrics, max_fiscal_years)
+
+    # Cache
+    if cache_dir is not None:
+        with open(cache_path, "w") as f:
+            json.dump(
+                {
+                    "companies": [c["ticker"] for c in companies],
+                    "records": all_records,
+                },
+                f,
+                indent=2,
+            )
+
+    return all_records
+
+
+def _generate_mock_data(
+    companies: List[Dict],
+    metrics: Dict[str, str],
+    max_fiscal_years: int = 3,
+) -> List[Dict]:
+    """Generate realistic mock financial data for development/testing."""
+    rng = np.random.default_rng(42)
+    records = []
+
+    # Approximate real financial data ranges for energy companies
+    company_ranges = {
+        "XOM": {
+            "revenue": (300e9, 400e9),
+            "net_income": (20e9, 60e9),
+            "assets": (350e9, 400e9),
+        },
+        "CVX": {
+            "revenue": (150e9, 250e9),
+            "net_income": (15e9, 35e9),
+            "assets": (250e9, 260e9),
+        },
+        "COP": {
+            "revenue": (50e9, 80e9),
+            "net_income": (5e9, 15e9),
+            "assets": (90e9, 100e9),
+        },
+        "EOG": {
+            "revenue": (15e9, 30e9),
+            "net_income": (3e9, 8e9),
+            "assets": (35e9, 45e9),
+        },
+        "PXD": {
+            "revenue": (10e9, 25e9),
+            "net_income": (2e9, 6e9),
+            "assets": (20e9, 30e9),
+        },
+        "OXY": {
+            "revenue": (20e9, 40e9),
+            "net_income": (2e9, 13e9),
+            "assets": (70e9, 80e9),
+        },
+        "SLB": {
+            "revenue": (25e9, 35e9),
+            "net_income": (2e9, 6e9),
+            "assets": (40e9, 45e9),
+        },
+        "BKR": {
+            "revenue": (20e9, 25e9),
+            "net_income": (1e9, 3e9),
+            "assets": (30e9, 35e9),
+        },
+    }
+
+    current_year = 2025
+    for company in companies:
+        ranges = company_ranges.get(company["ticker"], {})
+        for fy_offset in range(max_fiscal_years):
+            year = current_year - fy_offset
+            for metric_name in metrics.keys():
+                if metric_name == "Revenue":
+                    lo, hi = ranges.get("revenue", (10e9, 50e9))
+                elif metric_name == "Net Income":
+                    lo, hi = ranges.get("net_income", (1e9, 10e9))
+                elif metric_name == "Total Assets":
+                    lo, hi = ranges.get("assets", (20e9, 100e9))
+                elif metric_name == "Total Liabilities":
+                    a, b = ranges.get("assets", (10e9, 60e9))
+                    lo, hi = a * 0.3, b * 0.6
+                elif metric_name == "Operating Income":
+                    lo, hi = ranges.get("net_income", (1e9, 10e9))
+                elif metric_name == "Earnings Per Share":
+                    lo, hi = (3.0, 12.0)
+                elif metric_name == "Cash and Equivalents":
+                    lo, hi = (3e9, 30e9)
+                elif metric_name == "Long Term Debt":
+                    lo, hi = (5e9, 40e9)
+                elif metric_name == "Gross Profit":
+                    a, b = ranges.get("revenue", (10e9, 50e9))
+                    lo, hi = a * 0.3, b * 0.6
+                elif metric_name == "Research and Development":
+                    lo, hi = (200e6, 1e9)
+                else:
+                    lo, hi = (1e9, 10e9)
+
+                value = rng.uniform(lo, hi)
+                records.append(
+                    {
+                        "company": company["name"],
+                        "ticker": company["ticker"],
+                        "metric": metric_name,
+                        "period": f"{year}-12-31",
+                        "fy": year,
+                        "fp": "FY",
+                        "value": round(value, 2),
+                        "unit": "USD",
+                    }
+                )
+    return records
+
+
+def create_instruction_pairs(
+    financial_records: List[Dict],
+    max_samples: int = 500,
+    seed: int = 42,
+) -> List[Dict]:
+    """
+    Convert financial records into instruction-response pairs.
+
+    Each pair is: {instruction, input, response, company, ticker, metric, period}
+    """
+    rng = np.random.default_rng(seed)
+    pairs: List[Dict] = []
+
+    # ── 1. Individual metric Q&A ────────────────────────────────
+    for record in financial_records:
+        company = record["company"]
+        metric = record["metric"]
+        period = record.get("period", "")
+        value = record["value"]
+        ticker = record["ticker"]
+
+        # Format year nicely
+        year_str = period[:4] if period else "the most recent fiscal year"
+        period_label = f"FY{record.get('fy', year_str)}"
+
+        # Pick a random instruction template
+        template = rng.choice(INSTRUCTION_TEMPLATES)
+        instruction = template.format(
+            company=company, metric=metric.lower(), period=period_label
+        )
+
+        # Format the response
+        formatted_value = _format_currency(value)
+        response = f"For {period_label}, {company} ({ticker}) reported {metric.lower()} of {formatted_value}."
+
+        pairs.append(
+            {
+                "instruction": instruction,
+                "input": "",
+                "response": response,
+                "company": company,
+                "ticker": ticker,
+                "metric": metric,
+                "period": period_label,
+                "value": value,
+            }
+        )
+
+    # ── 2. Multi-metric summary questions ───────────────────────
+    # Group records by company + fiscal year
+    from collections import defaultdict
+
+    by_company_year = defaultdict(list)
+    for rec in financial_records:
+        key = (rec["company"], rec["ticker"], rec.get("fy", 0))
+        by_company_year[key].append(rec)
+
+    for (company, ticker, fy), recs in by_company_year.items():
+        period_label = f"FY{fy}"
+        template = rng.choice(SUMMARY_TEMPLATES)
+        instruction = template.format(company=company, period=period_label)
+
+        # Build a structured summary
+        metrics_dict = {r["metric"]: r["value"] for r in recs}
+        lines = [f"**Financial Summary for {company} ({ticker}) — {period_label}**"]
+        for metric_name in FINANCIAL_METRICS.keys():
+            if metric_name in metrics_dict:
+                lines.append(
+                    f"- {metric_name}: {_format_currency(metrics_dict[metric_name])}"
+                )
+
+        response = "\n".join(lines)
+        pairs.append(
+            {
+                "instruction": instruction,
+                "input": "",
+                "response": response,
+                "company": company,
+                "ticker": ticker,
+                "metric": "summary",
+                "period": period_label,
+            }
+        )
+
+    # ── Shuffle and limit ────────────────────────────────────────
+    rng.shuffle(pairs)
+    if max_samples and len(pairs) > max_samples:
+        pairs = pairs[:max_samples]
+        print(
+            f"  Sampled {max_samples} instruction pairs (from {len(financial_records)} records)"
+        )
+
+    return pairs
+
+
+def format_for_tinyllama(pairs: List[Dict]) -> List[str]:
+    """Format instruction pairs into TinyLlama's prompt format."""
+    formatted = []
+    for pair in pairs:
+        text = TINYLLAMA_PROMPT.format(
+            instruction=pair["instruction"],
+            input=pair["input"],
+            response=pair["response"],
+        )
+        formatted.append(text)
+    return formatted
+
+
+def tokenize_and_split(
+    formatted_texts: List[str],
+    tokenizer: PreTrainedTokenizer,
+    max_length: int = 512,
+    val_ratio: float = 0.1,
+    seed: int = 42,
+) -> DatasetDict:
+    """
+    Tokenize formatted texts and split into train/validation datasets.
+    """
+    set_seed(seed)
+
+    def tokenize_fn(examples):
+        return tokenizer(
+            examples["text"],
+            truncation=True,
+            padding="max_length",
+            max_length=max_length,
+        )
+
+    # Create HF Dataset
+    dataset = Dataset.from_dict({"text": formatted_texts})
+    tokenized = dataset.map(
+        tokenize_fn,
+        batched=True,
+        remove_columns=["text"],
+        desc="Tokenizing",
+    )
+
+    # Split
+    split = tokenized.train_test_split(test_size=val_ratio, seed=seed)
+    return DatasetDict(train=split["train"], validation=split["test"])
+
+
+def download_filing_texts(
+    companies: List[Dict] = None,
+    form_types: Tuple[str, ...] = ("10-K", "10-Q", "8-K"),
+    max_filings_per_company: int = 2,
+    cache_dir: Optional[Path] = None,
+) -> List[str]:
+    """
+    Download raw SEC filing text for domain-adaptive pretraining.
+    Uses direct SEC EDGAR URLs.
+    """
+    if companies is None:
+        companies = ENERGY_COMPANIES
+
+    if cache_dir is not None:
+        cache_path = cache_dir / "filing_texts.json"
+        if cache_path.exists():
+            with open(cache_path) as f:
+                return json.load(f)
+
+    all_texts = []
+    headers = {
+        "User-Agent": "ML_side_quests/1.0 (your@email.com)",
+    }
+
+    for company in companies:
+        print(f"  Downloading filings for {company['name']}...")
+        cik_padded = str(company["cik"]).zfill(10)
+
+        try:
+            # Get submissions index
+            idx_url = (
+                f"https://www.sec.gov/cgi-bin/browse-edgar?"
+                f"action=getcompany&CIK={company['cik']}&type=&dateb=&owner=exclude&count=40"
+                f"&output=json"
+            )
+            resp = requests.get(idx_url, headers=headers, timeout=30)
+            if resp.status_code != 200:
+                continue
+
+            data = resp.json()
+            filings = []
+            for row in data.get("filings", {}).get("recent", {}).get("form", []):
+                pass  # This API has a different structure
+
+            # Alternative: use the EDGAR full-index feed
+            base_url = f"https://www.sec.gov/Archives/edgar/data/{company['cik']}"
+            index_url = f"{base_url}/index.json"
+            idx_resp = requests.get(index_url, headers=headers, timeout=30)
+            if idx_resp.status_code != 200:
+                continue
+
+            dirs = idx_resp.json().get("directory", {}).get("item", [])
+            count = 0
+            for d in sorted(dirs, key=lambda x: x.get("name", ""), reverse=True):
+                if count >= max_filings_per_company:
+                    break
+
+                dir_name = d.get("name", "")
+                if not dir_name.isdigit():
+                    continue
+
+                # Get filing detail
+                detail_url = f"{base_url}/{dir_name}/index.json"
+                det_resp = requests.get(detail_url, headers=headers, timeout=30)
+                if det_resp.status_code != 200:
+                    continue
+
+                items = det_resp.json().get("directory", {}).get("item", [])
+                for item in items:
+                    fname = item.get("name", "")
+                    # Look for the main filing document (txt format)
+                    if fname.endswith(".txt") or fname.endswith(".htm"):
+                        filing_url = f"{base_url}/{dir_name}/{fname}"
+                        filing_resp = requests.get(
+                            filing_url, headers=headers, timeout=60
+                        )
+                        if filing_resp.status_code == 200:
+                            text = filing_resp.text
+                            # Clean HTML tags
+                            clean = re.sub(r"<[^>]+>", " ", text)
+                            clean = re.sub(r"\s+", " ", clean).strip()
+                            # Only keep substantial chunks
+                            if len(clean) > 1000:
+                                # Split into ~512-token chunks
+                                chunks = _chunk_text(clean, chunk_size=2000)
+                                all_texts.extend(chunks)
+                                count += 1
+                                break
+
+                time.sleep(0.2)  # Rate limit
+
+        except Exception as e:
+            print(f"    [WARN]  Error: {e}")
+            continue
+
+    print(f"  Downloaded {len(all_texts)} text chunks")
+
+    if cache_dir is not None:
+        with open(cache_path, "w") as f:
+            json.dump(all_texts, f, indent=2)
+
+    return all_texts
+
+
+def _chunk_text(text: str, chunk_size: int = 2000) -> List[str]:
+    """Split text into overlapping chunks."""
+    chunks = []
+    overlap = 200
+    start = 0
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        chunks.append(text[start:end])
+        if end == len(text):
+            break
+        start += chunk_size - overlap
+    return chunks
+
+
+def prepare_dataset(
+    data_dir: Path = DEFAULT_DATA_DIR,
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
+    max_samples: int = 500,
+    max_length: int = 512,
+    val_ratio: float = 0.1,
+    seed: int = 42,
+) -> DatasetDict:
+    """
+    End-to-end dataset preparation:
+    1. Fetch financial data from SEC (or use mock data)
+    2. Create instruction pairs
+    3. Format for TinyLlama
+    4. Tokenize and split
+    """
+    cache_dir = data_dir / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("=" * 60)
+    print("[DATA] Preparing Earnings Call Analyst Dataset")
+    print("=" * 60)
+
+    # Step 1: Fetch financial data
+    print("\n1️⃣  Fetching financial data for energy companies...")
+    records = fetch_financial_data(cache_dir=cache_dir)
+
+    # Step 2: Add filing text examples for domain adaptation
+    print("\n2️⃣  Downloading filing texts...")
+    try:
+        filing_texts = download_filing_texts(cache_dir=cache_dir)
+        if filing_texts:
+            # Create simple next-token prediction examples
+            for text in filing_texts[: max(50, max_samples // 4)]:
+                records.append(
+                    {
+                        "company": "SEC Filing",
+                        "ticker": "N/A",
+                        "metric": "filing_excerpt",
+                        "period": "",
+                        "value": 0,
+                        "unit": "",
+                        "_text": text,
+                    }
+                )
+    except Exception as e:
+        print(f"  [WARN]  Could not download filing texts: {e}")
+
+    # Step 3: Create instruction pairs
+    print("\n3️⃣  Creating instruction-response pairs...")
+    pairs = create_instruction_pairs(records, max_samples=max_samples, seed=seed)
+
+    # Save raw pairs for inspection
+    pairs_path = output_dir / "instruction_pairs.json"
+    with open(pairs_path, "w") as f:
+        json.dump(pairs, f, indent=2, default=str)
+    print(f"   Saved {len(pairs)} pairs to {pairs_path}")
+
+    # Step 4: Save label info (company list, metrics, etc.)
+    label_info = {
+        "companies": [c["name"] for c in ENERGY_COMPANIES],
+        "tickers": [c["ticker"] for c in ENERGY_COMPANIES],
+        "metrics": list(FINANCIAL_METRICS.keys()),
+        "total_records": len(records),
+        "total_pairs": len(pairs),
+        "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    }
+    label_info_path = output_dir / "label_info.json"
+    with open(label_info_path, "w") as f:
+        json.dump(label_info, f, indent=2)
+    print(f"   Label info saved to {label_info_path}")
+
+    print("\n[OK] Dataset preparation complete!")
+    return pairs, label_info
+
+
+if __name__ == "__main__":
+    prepare_dataset()
