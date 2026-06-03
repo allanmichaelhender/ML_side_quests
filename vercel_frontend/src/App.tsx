@@ -44,7 +44,7 @@ const QUESTS: Quest[] = [
       "End-to-end retrieval evaluation comparing BM25, dense, hybrid, and reranked search over arXiv abstracts.",
     emoji: "🔍",
     tags: ["RAG", "FAISS", "Sentence-Transformers", "Reranking"],
-    streamlitUrl: null,
+    streamlitUrl: "https://ml-sidequests-04.streamlit.app",
   },
   {
     id: 5,
