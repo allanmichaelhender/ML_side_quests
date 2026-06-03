@@ -1,23 +1,31 @@
 """
 Streamlit app for the RAG Pipeline demo.
 
-Allows users to query the document corpus and see retrieved passages
-with relevance scores, before and after cross-encoder re-ranking.
+Allows users to query a SQuAD v2 document corpus and see retrieved
+passages with relevance scores, before and after cross-encoder re-ranking.
+
+Auto-builds a FAISS index from sample data on first run (Streamlit Cloud ready).
 """
 
-import json
 import sys
 import time
 from pathlib import Path
 
 import streamlit as st
-import numpy as np
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.retrieve import Retriever
+from src.data_utils import load_documents
+from src.embed_and_index import (
+    load_embedding_model,
+    embed_documents,
+    build_faiss_index,
+    save_index_and_metadata,
+    EMBEDDING_MODEL,
+)
 
 # ── Page config ──────────────────────────────────────────────────────────────
 
@@ -34,14 +42,14 @@ DATA_DIR = PROJECT_ROOT / "data"
 SAMPLE_DATA_DIR = DATA_DIR / "sample"
 
 SAMPLE_QUESTIONS = [
-    "What is the Transformer architecture?",
-    "How do Convolutional Neural Networks work?",
-    "What is transfer learning?",
-    "How does reinforcement learning differ from supervised learning?",
-    "What is Retrieval-Augmented Generation?",
-    "What is BERT and how is it pre-trained?",
-    "How does gradient descent work in machine learning?",
-    "What is the attention mechanism in neural networks?",
+    "When did Beyonce start becoming popular?",
+    "What areas did Beyonce compete in when she was growing up?",
+    "What town did Beyonce go to school in?",
+    "Who decided to place Beyonce's group in Star Search?",
+    "Which film featured Destiny's Child's first major single?",
+    "What mental health issue did Beyonce go through?",
+    "Who did Beyonce star with in Austin Powers in Goldmember?",
+    "What was the name of Destiny's Child's first major single?",
 ]
 
 # ── Session state ────────────────────────────────────────────────────────────
@@ -96,19 +104,46 @@ This RAG pipeline demonstrates:
 """
 )
 
-# ── Load retriever ───────────────────────────────────────────────────────────
+# ── Build / load index ───────────────────────────────────────────────────────
+
+
+def build_index(sample_path: Path, index_dir: Path) -> bool:
+    """Build a FAISS index from sample documents (for Streamlit Cloud)."""
+    try:
+        documents = load_documents(str(sample_path))
+        model = load_embedding_model(EMBEDDING_MODEL)
+        embeddings = embed_documents(
+            model, documents, batch_size=64, show_progress=False
+        )
+        index = build_faiss_index(embeddings)
+        save_index_and_metadata(index, documents, str(index_dir), EMBEDDING_MODEL)
+        return True
+    except Exception as e:
+        st.error(f"Failed to build index: {e}")
+        return False
 
 
 def load_retriever():
-    """Load the retriever (with spinner feedback)."""
-    if not INDEX_DIR.exists():
-        st.error(
-            f"FAISS index not found at `{INDEX_DIR}`.\n\n"
-            "Please run the following steps:\n"
-            "1. `python data/download.py` — download the SQuAD dataset\n"
-            "2. `python src/embed_and_index.py` — build the FAISS index"
-        )
-        return None
+    """Load or build the retriever index on first run."""
+    if not (INDEX_DIR / "index.faiss").exists():
+        sample_doc_path = SAMPLE_DATA_DIR / "documents_sample.json"
+        if sample_doc_path.exists():
+            with st.spinner("📦 Building FAISS index from sample data (~1 min)..."):
+                status = st.info(
+                    "Loading embedding model (first download may take a moment)..."
+                )
+                if build_index(sample_doc_path, INDEX_DIR):
+                    status.empty()
+                else:
+                    return None
+        else:
+            st.error(
+                "No FAISS index or sample data found.\n\n"
+                "Run locally:\n"
+                "1. `python data/download.py`\n"
+                "2. `python src/embed_and_index.py`"
+            )
+            return None
 
     try:
         retriever = Retriever(str(INDEX_DIR))
@@ -155,7 +190,7 @@ if st.session_state.index_loaded:
 query = st.text_input(
     "**Enter your question:**",
     value=st.session_state.get("query", ""),
-    placeholder="e.g., What is the Transformer architecture?",
+    placeholder="e.g., When did Beyonce start becoming popular?",
     key="query_input",
 )
 

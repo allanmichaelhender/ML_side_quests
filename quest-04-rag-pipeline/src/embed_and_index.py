@@ -21,7 +21,10 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-from data_utils import load_documents, save_documents
+try:
+    from data_utils import load_documents, save_documents
+except ImportError:
+    from src.data_utils import load_documents, save_documents
 
 logging.basicConfig(
     level=logging.INFO,
