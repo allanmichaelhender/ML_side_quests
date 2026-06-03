@@ -67,7 +67,9 @@ with st.sidebar:
     if metrics:
         st.divider()
         st.markdown("**Model:** TinyLlama 1.1B + LoRA")
-        st.markdown(f"**LoRA r={metrics.get('lora_r')}** · alpha={metrics.get('lora_alpha')}")
+        st.markdown(
+            f"**LoRA r={metrics.get('lora_r')}** · alpha={metrics.get('lora_alpha')}"
+        )
         st.markdown(f"**Epochs:** {metrics.get('num_epochs')}")
 
     st.divider()
@@ -115,7 +117,10 @@ if label_info:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Companies")
-        companies_df = {"Ticker": label_info.get("tickers", []), "Company": label_info.get("companies", [])}
+        companies_df = {
+            "Ticker": label_info.get("tickers", []),
+            "Company": label_info.get("companies", []),
+        }
         st.dataframe(companies_df, width="stretch", hide_index=True)
 
     with col2:

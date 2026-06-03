@@ -155,7 +155,7 @@ with tab_results:
         # ── Confusion Matrix ───────────────────────────────────────────────
         st.subheader("Confusion Matrix")
         if CM_PATH.exists():
-            st.image(str(CM_PATH), width='stretch')
+            st.image(str(CM_PATH), width="stretch")
         else:
             st.info("Confusion matrix image not found.")
 
@@ -218,7 +218,7 @@ with tab_results:
                             "Support": r["support"],
                         }
                     )
-                st.dataframe(rows_data, width='stretch', hide_index=True)
+                st.dataframe(rows_data, width="stretch", hide_index=True)
         else:
             st.info("Could not parse classification report.")
 
@@ -266,7 +266,7 @@ with tab_results:
                 cols = st.columns(3)
                 for col, img_path in zip(cols, row_imgs):
                     with col:
-                        st.image(str(img_path), width='stretch')
+                        st.image(str(img_path), width="stretch")
         else:
             st.info(
                 "No Grad-CAM images found. Run "
@@ -314,7 +314,7 @@ with tab_inference:
             col1, col2 = st.columns([1, 1])
 
             with col1:
-                st.image(image, caption="Uploaded Leaf", width='stretch')
+                st.image(image, caption="Uploaded Leaf", width="stretch")
 
             with col2:
                 with st.spinner("Analysing leaf..."):
@@ -345,7 +345,7 @@ with tab_inference:
                     cols = st.columns(3)
                     for col, img_path in zip(cols, row_imgs):
                         with col:
-                            st.image(str(img_path), width='stretch')
+                            st.image(str(img_path), width="stretch")
             else:
                 st.info(
                     "No Grad-CAM images found. Run "
