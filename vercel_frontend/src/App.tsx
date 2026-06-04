@@ -35,7 +35,7 @@ const QUESTS: Quest[] = [
       "LoRA fine-tuned LLM extracting sentiment and structured claims from SEC EDGAR earnings transcripts.",
     emoji: "📊",
     tags: ["GenAI", "LoRA", "PEFT", "EDGAR"],
-    streamlitUrl: null,
+    streamlitUrl: "https://ml-sidequests-03.streamlit.app",
   },
   {
     id: 4,
@@ -53,7 +53,7 @@ const QUESTS: Quest[] = [
       "TF-IDF, DistilBERT, and zero-shot LLM compared on multi-class ticket routing for customer support.",
     emoji: "🎫",
     tags: ["NLP", "Classification", "TF-IDF", "Zero-shot"],
-    streamlitUrl: null,
+    streamlitUrl: "https://ml-sidequests-05.streamlit.app",
   },
   {
     id: 6,

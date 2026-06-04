@@ -1,6 +1,8 @@
 """Streamlit demo for Sentiment Analysis with DistilBERT."""
 
+import logging
 import sys
+import warnings
 from pathlib import Path
 
 import streamlit as st
@@ -9,6 +11,9 @@ import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "src"))
