@@ -140,11 +140,13 @@ Return valid JSON only."""
                     time.sleep(1)
                 elif len(failures) < 5:
                     # Save first few failures for debugging
-                    failures.append({
-                        "ticket": text[:80],
-                        "raw_response": raw[:200] if raw else "no response",
-                        "error": str(e)[:100],
-                    })
+                    failures.append(
+                        {
+                            "ticket": text[:80],
+                            "raw_response": raw[:200] if raw else "no response",
+                            "error": str(e)[:100],
+                        }
+                    )
 
         if not success:
             predictions.append(-1)
@@ -157,7 +159,7 @@ Return valid JSON only."""
     if failures:
         print(f"\n  Sample rejections ({len(failures)} shown):")
         for f in failures:
-            print(f"    Ticket: \"{f['ticket']}...\"")
+            print(f'    Ticket: "{f["ticket"]}..."')
             print(f"    Returned: {f['raw_response']}")
             print(f"    Error: {f['error']}")
             print()

@@ -1,13 +1,18 @@
 """Quick test: what does DeepSeek return for ambiguous tickets?"""
+
 import os, json
 from dotenv import load_dotenv
+
 load_dotenv("../.env")
 from openai import OpenAI
 
-client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com")
+client = OpenAI(
+    api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com"
+)
 
 # Load the 77 intent names
 import sys
+
 sys.path.insert(0, "src")
 from llm_eval import INTENT_CATEGORIES
 
