@@ -110,8 +110,12 @@ def plot_confidence_bars(probs):
     return fig
 
 
-def plot_attention_heatmap(text: str, model, tokenizer, device):
-    """Generate an attention heatmap showing which tokens the model focused on."""
+def plot_integrated_gradients(text: str, model, tokenizer, device, target_class: int):
+    """Generate an Integrated Gradients attribution plot showing each token's contribution
+    to the predicted class. Positive = pushes toward the class, negative = pushes away."""
+    from captum.attr import LayerIntegratedGradients
+
+    model.eval()
     inputs = tokenizer(
         text,
         return_tensors="pt",
@@ -122,48 +126,55 @@ def plot_attention_heatmap(text: str, model, tokenizer, device):
     input_ids = inputs["input_ids"].to(device)
     attention_mask = inputs["attention_mask"].to(device)
 
-    with torch.no_grad():
-        outputs = model(
-            input_ids=input_ids, attention_mask=attention_mask, output_attentions=True
-        )
+    # Baseline: all [PAD] tokens (zero information)
+    baselines = torch.full_like(input_ids, tokenizer.pad_token_id)
 
-    # Last layer attention, averaged over heads
-    attentions = outputs.attentions[-1]  # (1, heads, seq_len, seq_len)
-    avg_attention = attentions.mean(dim=1).squeeze(0)  # (seq_len, seq_len)
-    cls_attention = avg_attention[0, 1:].cpu().numpy()
+    def forward_fn(input_ids, attention_mask):
+        return model(input_ids=input_ids, attention_mask=attention_mask).logits
+
+    lig = LayerIntegratedGradients(forward_fn, model.distilbert.embeddings)
+
+    attributions, delta = lig.attribute(
+        inputs=input_ids,
+        baselines=baselines,
+        additional_forward_args=(attention_mask,),
+        target=target_class,
+        return_convergence_delta=True,
+        n_steps=50,
+    )
+
+    # attributions: (1, seq_len, hidden_dim) → sum over hidden_dim → (seq_len,)
+    attr = attributions.sum(dim=-1).squeeze(0).cpu().detach().numpy()
 
     tokens = tokenizer.convert_ids_to_tokens(input_ids[0])
-    tokens = tokens[1:]  # skip [CLS]
 
-    # Truncate to actual tokens (remove padding)
-    actual_len = attention_mask[0].sum().item() - 1  # exclude [CLS]
+    # Trim to actual tokens (exclude padding)
+    actual_len = attention_mask[0].sum().item()
     tokens = tokens[:actual_len]
-    cls_attention = cls_attention[:actual_len]
-
-    # Normalize
-    if cls_attention.max() > cls_attention.min():
-        cls_attention = (cls_attention - cls_attention.min()) / (
-            cls_attention.max() - cls_attention.min()
-        )
+    attr = attr[:actual_len]
 
     # Plot
     fig, ax = plt.subplots(figsize=(12, 3))
     tokens_display = [t.replace("Ġ", " ") for t in tokens]
 
-    colors = plt.cm.Blues(cls_attention)
+    # Colour: green for positive contribution, red for negative
+    colours = ["#2ecc71" if v >= 0 else "#e74c3c" for v in attr]
     ax.bar(
         range(len(tokens_display)),
-        cls_attention,
-        color=colors,
+        attr,
+        color=colours,
         edgecolor="gray",
         linewidth=0.5,
     )
 
+    ax.axhline(0, color="black", linewidth=0.5)
     ax.set_xticks(range(len(tokens_display)))
     ax.set_xticklabels(tokens_display, rotation=60, ha="right", fontsize=8)
-    ax.set_ylabel("Attention", fontsize=11)
-    ax.set_title("Token-Level Attention (from [CLS] token)", fontsize=13)
-    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("Attribution", fontsize=11)
+    ax.set_title(
+        f"Token Contributions — Integrated Gradients (target: {LABEL_NAMES[target_class]})",
+        fontsize=11,
+    )
     sns.despine()
     plt.tight_layout()
     return fig
@@ -267,17 +278,20 @@ if analyze_btn and text.strip() and model is not None:
     with col2:
         st.pyplot(plot_confidence_bars(probs))
 
-    # Attention heatmap
+    # Token attribution (Integrated Gradients)
     with st.expander(
-        "🧠 Show attention heatmap (which words matter most?)", expanded=True
+        "🧠 Show token attributions (which words influenced the decision?)",
+        expanded=True,
     ):
         st.caption(
-            "The bar height shows how much the model 'paid attention' to each token "
-            "when making its classification decision."
+            "**Integrated Gradients** — green bars push toward the predicted class, "
+            "red bars push against it. Taller bars = stronger influence."
         )
         try:
-            attn_fig = plot_attention_heatmap(text, model, tokenizer, device)
-            st.pyplot(attn_fig)
+            ig_fig = plot_integrated_gradients(text, model, tokenizer, device, pred_idx)
+            st.pyplot(ig_fig)
+        except Exception as e:
+            st.warning(f"Could not generate attribution plot: {e}")
         except Exception as e:
             st.warning(f"Could not generate attention plot: {e}")
 
