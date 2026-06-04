@@ -6,5 +6,36 @@
   "train_loss": 0.5237177344644146,
   "epoch": 3.0,
   "train_duration_min": 25.4,
-  "max_samples": 5000
+  "max_samples": 5000,
+  "accuracy": 0.845,
+  "macro_f1": 0.8448,
+  "classification_report": "              precision    recall  f1-score   support\n\n    negative     0.8152    0.8891    0.8505       496\n    positive     0.8802    0.8016    0.8390       504\n\n    accuracy                         0.8450      1000\n   macro avg     0.8477    0.8454    0.8448      1000\nweighted avg     0.8479    0.8450    0.8447      1000\n",
+  "confusion_matrix": [
+    [
+      441,
+      55
+    ],
+    [
+      100,
+      404
+    ]
+  ],
+  "per_class": {
+    "precision": [
+      0.8152,
+      0.8802
+    ],
+    "recall": [
+      0.8891,
+      0.8016
+    ],
+    "f1": [
+      0.8505,
+      0.839
+    ],
+    "support": [
+      496,
+      504
+    ]
+  }
 }

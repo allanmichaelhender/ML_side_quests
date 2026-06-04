@@ -187,9 +187,58 @@ st.markdown(
     Fine-tuned on **Amazon Polarity** — classifies product reviews as
     **Negative** 😠 or **Positive** 😊.
 
-    *Powered by DistilBERT — 40% smaller than BERT, 60% faster, ~97% of the performance.*
+    *Powered by DistilBERT*
     """
 )
+
+# ── Sidebar: evaluation metrics ──────────────────────────────
+metrics_path = HERE / "results" / "metrics.json"
+if metrics_path.exists():
+    import json
+
+    with open(metrics_path) as f:
+        metrics = json.load(f)
+    if "accuracy" in metrics:
+        with st.sidebar:
+            st.header("📊 Test Set Performance")
+            st.metric("Accuracy", f"{metrics['accuracy']:.2%}")
+            st.metric("Macro F1", f"{metrics['macro_f1']:.2%}")
+
+            st.subheader("Per Class")
+            cols = st.columns(2)
+            for i, name in enumerate(LABEL_NAMES):
+                with cols[i]:
+                    st.markdown(f"**{name}**")
+                    st.markdown(
+                        f"Precision: {metrics['per_class']['precision'][i]:.2%}  \n"
+                        f"Recall:    {metrics['per_class']['recall'][i]:.2%}  \n"
+                        f"F1:        {metrics['per_class']['f1'][i]:.2%}"
+                    )
+
+            # Confusion matrix
+            cm = np.array(metrics["confusion_matrix"])
+            fig_cm, ax_cm = plt.subplots(figsize=(4, 3.5))
+            im = ax_cm.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+            ax_cm.set_xticks(range(len(LABEL_NAMES)))
+            ax_cm.set_yticks(range(len(LABEL_NAMES)))
+            ax_cm.set_xticklabels(LABEL_NAMES, fontsize=9)
+            ax_cm.set_yticklabels(LABEL_NAMES, fontsize=9)
+            for i in range(cm.shape[0]):
+                for j in range(cm.shape[1]):
+                    ax_cm.text(
+                        j,
+                        i,
+                        str(cm[i, j]),
+                        ha="center",
+                        va="center",
+                        fontsize=10,
+                        color="white" if cm[i, j] > cm.max() / 2 else "black",
+                    )
+            ax_cm.set_xlabel("Predicted", fontsize=9)
+            ax_cm.set_ylabel("True", fontsize=9)
+            plt.tight_layout()
+            st.pyplot(fig_cm)
+            plt.close()
 
 model, tokenizer, device = load_model()
 
@@ -315,8 +364,8 @@ with st.sidebar:
         - AdamW optimiser, linear warmup
 
         **Classes**:
-        - **Negative** 😠 (0 stars)
-        - **Positive** 😊 (1 stars)
+        - **Negative** 😠
+        - **Positive** 😊 
         """
     )
 
