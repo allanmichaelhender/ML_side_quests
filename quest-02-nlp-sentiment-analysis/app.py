@@ -28,27 +28,33 @@ st.set_page_config(
 )
 
 MODEL_DIR = HERE / "results" / "model"
+HF_REPO = "allanhender/sentiment-distilbert-amazon"
 
 
 @st.cache_resource
 def load_model():
-    """Load the trained model and tokenizer (cached)."""
+    """Load the trained model and tokenizer (cached).
+
+    Loads from local disk if available, otherwise falls back to Hugging Face Hub.
+    """
     from transformers import (
         DistilBertForSequenceClassification,
         DistilBertTokenizerFast,
     )
 
-    if not (MODEL_DIR / "config.json").exists():
-        return None, None, None
+    if (MODEL_DIR / "config.json").exists():
+        model_path = str(MODEL_DIR)
+    else:
+        model_path = HF_REPO
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = DistilBertForSequenceClassification.from_pretrained(
-        str(MODEL_DIR),
+        model_path,
         attn_implementation="eager",
     )
     model.to(device)
     model.eval()
-    tokenizer = DistilBertTokenizerFast.from_pretrained(str(MODEL_DIR))
+    tokenizer = DistilBertTokenizerFast.from_pretrained(model_path)
     return model, tokenizer, device
 
 
