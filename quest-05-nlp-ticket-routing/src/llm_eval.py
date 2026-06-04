@@ -86,6 +86,7 @@ Return valid JSON only."""
 
     predictions = []
     confidences = []
+    failures = []  # collect a few rejections for inspection
     total = len(test_texts)
     matched = 0
 
@@ -94,6 +95,7 @@ Return valid JSON only."""
         success = False
 
         for attempt in range(max_retries + 1):
+            raw = ""
             try:
                 response = client.chat.completions.create(
                     model=model,
@@ -107,7 +109,7 @@ Return valid JSON only."""
                 )
                 raw = response.choices[0].message.content.strip()
 
-                # Parse with Pydantic
+                # Parse with Pydantic (Literal enforces exact category match)
                 data = json.loads(raw)
                 classification = TicketClassification(**data)
                 raw_category = classification.category.strip().lower()
@@ -133,9 +135,16 @@ Return valid JSON only."""
                     matched += 1
                     success = True
                     break
-            except Exception:
+            except Exception as e:
                 if attempt < max_retries:
                     time.sleep(1)
+                elif len(failures) < 5:
+                    # Save first few failures for debugging
+                    failures.append({
+                        "ticket": text[:80],
+                        "raw_response": raw[:200] if raw else "no response",
+                        "error": str(e)[:100],
+                    })
 
         if not success:
             predictions.append(-1)
@@ -145,4 +154,11 @@ Return valid JSON only."""
             print(f"  DeepSeek: {i + 1}/{total} classified ({matched}/{i + 1} matched)")
 
     print(f"  DeepSeek done: {matched}/{total} successfully matched")
+    if failures:
+        print(f"\n  Sample rejections ({len(failures)} shown):")
+        for f in failures:
+            print(f"    Ticket: \"{f['ticket']}...\"")
+            print(f"    Returned: {f['raw_response']}")
+            print(f"    Error: {f['error']}")
+            print()
     return np.array(predictions), np.array(test_labels), np.array(confidences)

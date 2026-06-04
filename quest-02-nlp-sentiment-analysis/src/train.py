@@ -1,5 +1,3 @@
-"""Fine-tune DistilBERT for 3-class sentiment analysis on Amazon Reviews."""
-
 import json
 import time
 from pathlib import Path
@@ -64,11 +62,13 @@ def train(
 
     # ── Build model ─────────────────────────────────────────────
     num_labels = len(LABEL_NAMES)
+
+    # DistilBertForSequenceClassification is the DistilBERT transformer plus a classification head to classifiy the vectors, we initialise with the pretrained base weights
     model = DistilBertForSequenceClassification.from_pretrained(
         "distilbert-base-uncased",
         num_labels=num_labels,
-        id2label={i: l for i, l in enumerate(LABEL_NAMES)},
-        label2id={l: i for i, l in enumerate(LABEL_NAMES)},
+        id2label={i: l for i, l in enumerate(LABEL_NAMES)},  # mapping for id to labels
+        label2id={l: i for i, l in enumerate(LABEL_NAMES)},  # mapping for labels to id
     )
     model.to(device)
 
@@ -83,28 +83,29 @@ def train(
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     training_args = TrainingArguments(
-        output_dir=str(checkpoint_dir),
-        run_name=run_name,
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        logging_strategy="steps",
-        logging_steps=50,
-        learning_rate=learning_rate,
-        per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size * 2,
-        num_train_epochs=num_epochs,
-        weight_decay=0.01,
-        warmup_steps=500,
-        lr_scheduler_type="linear",
-        optim="adamw_torch",
-        load_best_model_at_end=True,
-        metric_for_best_model="accuracy",
-        greater_is_better=True,
-        save_total_limit=2,
-        report_to="none",
-        seed=seed,
-        dataloader_num_workers=0,
-        fp16=False,  # CPU-safe
+        output_dir=str(checkpoint_dir),  # where to save checkpoints
+        run_name=run_name,  # name for this training run 
+        eval_strategy="epoch",  # evaluate after each epoch
+        save_strategy="epoch",  # save checkpoint after each epoch
+        logging_strategy="steps",  # log metrics every N steps
+        logging_steps=50,  # log every 50 steps
+        learning_rate=learning_rate,  # peak learning rate
+        per_device_train_batch_size=batch_size,  # batch size per device during training
+        per_device_eval_batch_size=batch_size
+        * 2,  # eval batch size (larger = faster eval)
+        num_train_epochs=num_epochs,  # number of full passes through training data
+        weight_decay=0.01,  # L2 regularization to prevent overfitting
+        warmup_ration=0.1,  # LR linearly increases for first N steps
+        lr_scheduler_type="linear",  # LR decays linearly after warmup
+        optim="adamw_torch",  # optimizer: AdamW with decoupled weight decay
+        load_best_model_at_end=True,  # restore the best checkpoint after training
+        metric_for_best_model="accuracy",  # use accuracy to pick the best checkpoint
+        greater_is_better=True,  # higher accuracy = better model
+        save_total_limit=2,  # keep only the 2 most recent checkpoints
+        report_to="none",  # don't log to external services
+        seed=seed,  # random seed for reproducibility
+        dataloader_num_workers=0,  # data loading processes (0 = main process)
+        fp16=False,  # don't use half-precision (CPU-safe)
     )
 
     # ── Trainer ─────────────────────────────────────────────────
@@ -114,7 +115,7 @@ def train(
         train_dataset=tokenized["train"],
         eval_dataset=tokenized["validation"],
         compute_metrics=compute_metrics,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)],
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)], # This monitors the evaluation metric (accuracy) each epoch and stops training early if it stops improving. patience=2 means: if accuracy doesn't improve for 2 consecutive evaluations, stop training.
     )
 
     # ── Train ───────────────────────────────────────────────────

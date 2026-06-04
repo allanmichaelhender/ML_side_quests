@@ -53,7 +53,7 @@ def load_model_and_tokenizer(
         attn_implementation="eager",
     )
     model.to(device)
-    model.eval()
+    model.eval()  # Setting to eval mode, this disables dropout layers, uses running averages over batch statistics for normalisation, gradient calculations are disabled
     tokenizer = DistilBertTokenizerFast.from_pretrained(str(model_dir))
 
     print(f"Model loaded from {model_dir}")
@@ -70,8 +70,10 @@ def evaluate_model(
     max_length: int = 256,
     batch_size: int = 32,
 ):
-    """Run full evaluation on the test set."""
-    device = next(model.parameters()).device
+
+    device = (
+        next(model.parameters()).device
+    )  # safest way to get the device the model is on, works even if model is on GPU
 
     # Load only the test set directly (skip loading training data)
     import pandas as pd
@@ -80,12 +82,12 @@ def evaluate_model(
     test_path = DEFAULT_DATA / "test-00000-of-00001.parquet"
     if not test_path.exists():
         from data_utils import download_data
+
         download_data()
 
     test_df = pd.read_parquet(test_path)
     if max_samples and max_samples < len(test_df):
-        rng = np.random.default_rng(42)
-        test_df = test_df.sample(n=max_samples, random_state=rng.integers(0, 2**31)).reset_index(drop=True)
+        test_df = test_df.sample(n=max_samples, random_state=42).reset_index(drop=True)
 
     # Tokenize directly
     texts = [f"{t} {c}" for t, c in zip(test_df["title"], test_df["content"])]
@@ -117,12 +119,18 @@ def evaluate_model(
         labels = batch["labels"]
 
         outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-        all_logits.append(outputs.logits.cpu())
+        all_logits.append(
+            outputs.logits.cpu()
+        )  # Moves logits to CPU (if they are on GPU) to allow numpy operations later
         all_labels.append(labels)
 
+    # Concatenating together all the batches of logits and lables inot a single tensor
     logits = torch.cat(all_logits, dim=0)
     labels = torch.cat(all_labels, dim=0)
-    predictions = torch.argmax(logits, dim=-1).numpy()
+
+    predictions = torch.argmax(
+        logits, dim=-1
+    ).numpy()  # .numpy() converts the tensor into a numpy array for sklearn metrics
     labels_np = labels.numpy()
     probs = F.softmax(logits, dim=-1).numpy()
 
@@ -312,13 +320,18 @@ def visualize_attention(
         tokens = tokenizer.convert_ids_to_tokens(inputs["input_ids"][0])
         tokens = tokens[1:]  # skip [CLS]
 
+        # Filter out [SEP] tokens (attention sinks that dominate the scale)
+        keep = [i for i, t in enumerate(tokens) if t != "[SEP]"]
+        tokens = [tokens[i] for i in keep]
+        cls_attention = cls_attention[keep]
+
         # Get prediction
         probs = F.softmax(outputs.logits, dim=-1).squeeze(0)
         pred_idx = torch.argmax(probs).item()
         pred_label = LABEL_NAMES[pred_idx]
         confidence = probs[pred_idx].item()
 
-        # Normalise attention scores
+        # Normalise attention scores (now relative to content tokens only)
         cls_attention = (cls_attention - cls_attention.min()) / (
             cls_attention.max() - cls_attention.min() + 1e-8
         )
