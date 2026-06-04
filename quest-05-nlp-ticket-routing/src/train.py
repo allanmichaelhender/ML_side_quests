@@ -58,7 +58,7 @@ def train_tfidf(
     print(f"  TF-IDF matrix: {X_train.shape}")
     print(f"  Training Logistic Regression (max_iter=500, C=1.0)...")
 
-    clf = LogisticRegression(max_iter=500, C=1.0, multi_class="multinomial", n_jobs=-1)
+    clf = LogisticRegression(max_iter=500, C=1.0, n_jobs=-1)
     start = time.time()
     clf.fit(X_train, train_labels)
     elapsed = time.time() - start
@@ -190,6 +190,12 @@ def train_distilbert(
     elapsed = time.time() - start
     print(f"  Training completed in {elapsed / 60:.1f} minutes")
 
+    # Final evaluation on validation set
+    final_eval = trainer.evaluate()
+    val_accuracy = round(final_eval.get("eval_accuracy", 0), 4)
+    val_f1 = round(final_eval.get("eval_macro_f1", 0), 4)
+    print(f"  Final validation accuracy: {val_accuracy:.4f}  F1: {val_f1:.4f}")
+
     # Save model
     model_path = output_dir / "model"
     trainer.save_model(str(model_path))
@@ -198,8 +204,9 @@ def train_distilbert(
 
     return {
         "approach": "distilbert",
-        "train_accuracy": round(train_result.metrics.get("train_accuracy", 0), 4),
         "train_loss": round(train_result.metrics.get("train_loss", 0), 4),
+        "val_accuracy": val_accuracy,
+        "val_macro_f1": val_f1,
         "training_time_min": round(elapsed / 60, 2),
         "num_epochs": num_epochs,
         "batch_size": batch_size,

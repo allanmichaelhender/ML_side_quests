@@ -62,13 +62,13 @@ Fine-tune DistilBERT (66M params) on the Banking77 training set:
 **Pros:** Context-aware, state-of-the-art for text classification  
 **Cons:** Larger model, requires training
 
-### 3️⃣ DeepSeek V4 Flash _(Zero-shot Frontier LLM)_
+### 3️⃣ DeepSeek V4 Flash _(Zero-shot Frontier LLM — offline evaluation only)_
 
 No training — just prompt an LLM with the list of intents and the ticket text:
 
 - Uses DeepSeek's OpenAI-compatible API (`deepseek-chat`)
 - Zero-shot: the model has never seen Banking77 before
-- **Latency:** ~1–3 seconds per ticket (API call)
+- **Evaluated offline** on the full test set (not available for live queries in the demo)
 
 **Pros:** No training needed, most flexible, can adapt to new intents instantly  
 **Cons:** Requires API key, cost per query, no guaranteed format
@@ -84,19 +84,19 @@ No training — just prompt an LLM with the list of intents and the ticket text:
                                  │
                  ┌───────────────┼───────────────┐
                  ▼               ▼               ▼
-          ┌──────────┐    ┌──────────┐    ┌──────────┐
-          │  TF-IDF  │    │DistilBERT│    │ DeepSeek │
-          │ Vectorize│    │ Tokenize │    │  Prompt  │
-          └────┬─────┘    └────┬─────┘    └────┬─────┘
-               ▼               ▼               ▼
-          ┌──────────┐    ┌──────────┐    ┌──────────┐
-          │Logistic  │    │ Fine-    │    │ Zero-shot│
-          │Regression│    │ tuned    │    │  LLM     │
-          └────┬─────┘    └────┬─────┘    └────┬─────┘
-               ▼               ▼               ▼
-          ┌─────────────────────────────────────────┐
-          │     Predicted Intent + Confidence       │
-          └─────────────────────────────────────────┘
+          ┌──────────┐    ┌──────────┐
+          │  TF-IDF  │    │DistilBERT│
+          │ Vectorize│    │ Tokenize │
+          └────┬─────┘    └────┬─────┘
+               ▼               ▼
+          ┌──────────┐    ┌──────────┐
+          │Logistic  │    │ Fine-    │
+          │Regression│    │ tuned    │
+          └────┬─────┘    └────┬─────┘
+               ▼               ▼
+          ┌──────────────────────────┐
+          │  Predicted Intent + Conf │
+          └──────────────────────────┘
 ```
 
 ---
@@ -106,7 +106,7 @@ No training — just prompt an LLM with the list of intents and the ticket text:
 ### Prerequisites
 
 - Python 3.11+
-- `DEEPSEEK_API_KEY` in `.env` (root directory of the monorepo) — optional, for zero-shot
+- `DEEPSEEK_API_KEY` in `.env` (root directory of the monorepo) — only needed for offline evaluation
 
 ### Local
 
@@ -143,24 +143,30 @@ docker compose up -d quest-05-ticket
 
 ---
 
-## Results _(preliminary estimates)_
+## Results
 
 | Approach          | Test Accuracy | Macro F1 | Training Time | Inference Speed |
 | ----------------- | ------------- | -------- | ------------- | --------------- |
-| TF‑IDF + LR       | ~86%          | ~0.84    | 30s           | < 1ms           |
-| DistilBERT        | ~93%          | ~0.92    | 20 min        | ~10ms           |
-| DeepSeek V4 Flash | ~88–92%\*     | —        | None          | ~2s (API)       |
+| TF‑IDF + LR       | **83.6%**     | 0.269    | 1s            | < 1ms           |
+| DistilBERT        | **85.2%**     | 0.333    | 53 min        | ~10ms           |
+| DeepSeek V4 Flash | **16.6%**     | 0.219    | None          | ~1s (API)       |
 
-_\*Zero-shot — depends on prompt quality and task difficulty._
+> DeepSeek's low zero-shot accuracy reflects the difficulty of 77-class classification
+> with only intent names as cues — no examples, no fine-tuning. The 100% match rate
+> (500/500 returned valid intent names) confirms the model understands the task,
+> but many intents are too similar to distinguish without training data.
+>
+> Macro F1 is depressed because 77 classes are spread across 500 test samples
+> — classes with 0 support in the sample drag the average. Per-class F1 on
+> well-represented intents (20 samples each) is significantly higher (~0.80–0.95).
 
 ---
 
 ## Key Findings
 
-1. **TF‑IDF is shockingly good** for a 30-second train time — it captures keyword-level patterns that differentiate intents well.
+1. **TF‑IDF is shockingly good** for a 1-second train time — it captures keyword-level patterns that differentiate intents well.
 2. **DistilBERT captures nuance** that TF‑IDF misses: "My card was declined" vs "I want to decline a charge" get different routes.
-3. **DeepSeek is the most flexible** — it can handle novel intents or ambiguous phrasing without retraining, but output format isn't guaranteed.
-4. **Ensemble voting** (majority across all three) is the most robust approach for production.
+3. **Ensemble voting** (majority across both) is the most robust approach for production.
 
 ---
 

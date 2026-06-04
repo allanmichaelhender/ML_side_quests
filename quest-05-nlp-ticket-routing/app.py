@@ -1,13 +1,11 @@
 """Streamlit demo for Support Ticket Routing.
 
-Compares three approaches:
+Compares two trained approaches:
 1. TF-IDF + Logistic Regression
 2. DistilBERT fine-tuned
-3. DeepSeek V4 Flash zero-shot (optional, requires API key)
 """
 
 import json
-import os
 import pickle
 import sys
 from pathlib import Path
@@ -46,7 +44,7 @@ if not label_names:
     try:
         from datasets import load_dataset
 
-        ds = load_dataset("PolyAI/banking77", split="train")
+        ds = load_dataset("PolyAI/banking77", split="train", trust_remote_code=True)
         label_names = ds.features["label"].names
     except Exception:
         label_names = []
@@ -84,99 +82,6 @@ def load_distilbert():
     model.eval()
     tokenizer = DistilBertTokenizerFast.from_pretrained(str(MODEL_DIR))
     return model, tokenizer, device
-
-
-# ── DeepSeek integration ────────────────────────────────────
-def get_deepseek_client():
-    """Initialize DeepSeek client from .env or environment variables."""
-    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
-    if not api_key:
-        # Try loading from .env in root
-        try:
-            from dotenv import load_dotenv
-
-            # Look for .env in monorepo root
-            env_path = HERE.parent / ".env"
-            if env_path.exists():
-                load_dotenv(env_path)
-                api_key = os.environ.get("DEEPSEEK_API_KEY", "")
-        except ImportError:
-            pass
-    return api_key
-
-
-def deepseek_zero_shot(ticket_text: str, label_names: list, api_key: str) -> dict:
-    """Classify ticket using DeepSeek V4 Flash zero-shot.
-
-    Returns dict with predicted_category, confidence_text, and raw_response.
-    """
-    from openai import OpenAI
-
-    client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-
-    # Format the intent list for the prompt
-    intents_str = "\n".join(
-        f"{i}. {name.replace('_', ' ').title()}" for i, name in enumerate(label_names)
-    )
-
-    prompt = f"""You are a customer support ticket routing system. Classify the following customer ticket into exactly ONE of the {len(label_names)} intent categories.
-
-Available intents:
-{intents_str}
-
-Ticket: "{ticket_text}"
-
-Respond with ONLY the intent name (exactly as listed above, no explanation, no punctuation)."""
-
-    try:
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a precise ticket routing classifier. Respond only with the exact intent category name.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.0,
-            max_tokens=50,
-        )
-        raw = response.choices[0].message.content.strip()
-
-        # Try to match the response to a known label
-        # Normalize: lowercase, strip punctuation
-        raw_normalized = raw.lower().strip().rstrip(".,!?;:")
-        matched = None
-        matched_idx = None
-
-        for i, name in enumerate(label_names):
-            if name.lower() == raw_normalized:
-                matched = name
-                matched_idx = i
-                break
-
-        # Fuzzy match if exact fails
-        if matched is None:
-            for i, name in enumerate(label_names):
-                if raw_normalized in name.lower() or name.lower() in raw_normalized:
-                    matched = name
-                    matched_idx = i
-                    break
-
-        return {
-            "raw_response": raw,
-            "matched_intent": matched,
-            "matched_index": matched_idx,
-            "success": matched is not None,
-        }
-    except Exception as e:
-        return {
-            "raw_response": f"Error: {e}",
-            "matched_intent": None,
-            "matched_index": None,
-            "success": False,
-            "error": str(e),
-        }
 
 
 # ── Prediction functions ────────────────────────────────────
@@ -299,31 +204,29 @@ st.title("🎫 Support Ticket Routing")
 st.markdown(
     """
     Automatically route customer support tickets to the right team using
-    **three approaches**: classical TF‑IDF, fine‑tuned **DistilBERT**,
-    and zero‑shot **DeepSeek V4 Flash** (frontier LLM).
+    **TF‑IDF + Logistic Regression** and fine‑tuned **DistilBERT**.
 
     Trained on the **[Banking77](https://huggingface.co/datasets/PolyAI/banking77)**
     dataset — 77 fine-grained intent categories for banking queries.
+
+    > Sidebar shows test-set metrics for both models. DeepSeek V4 Flash
+    > has been evaluated offline for comparison (see README).
     """
 )
 
 # Load models
 vec_tfidf, clf_tfidf = load_tfidf()
 model_bert, tokenizer_bert, device_bert = load_distilbert()
-deepseek_key = get_deepseek_client()
 
 models_loaded = {
     "TF‑IDF": vec_tfidf is not None,
     "DistilBERT": model_bert is not None,
-    "DeepSeek": bool(deepseek_key),
 }
 
 st.sidebar.header("🔧 Models Available")
 for name, loaded in models_loaded.items():
     icon = "✅" if loaded else "❌"
     st.sidebar.markdown(f"{icon} **{name}**")
-    if not loaded and name == "DeepSeek":
-        st.sidebar.caption("Set DEEPSEEK_API_KEY in .env")
 
 if not any(models_loaded.values()):
     st.warning(
@@ -358,7 +261,7 @@ if ticket_text.strip():
     st.markdown("---")
     st.subheader("🔮 Predictions")
 
-    results_cols = st.columns(3 if models_loaded["DeepSeek"] else 2)
+    results_cols = st.columns(2)
 
     # ── TF-IDF ───────────────────────────────────────────────
     if vec_tfidf is not None:
@@ -382,7 +285,7 @@ if ticket_text.strip():
         result_bert = predict_distilbert(
             ticket_text, model_bert, tokenizer_bert, device_bert
         )
-        col_idx = 1 if models_loaded["DeepSeek"] else 1 if vec_tfidf is not None else 0
+        col_idx = 1 if vec_tfidf is not None else 0
         with results_cols[col_idx]:
             st.markdown("#### 🤖 DistilBERT")
             st.markdown(
@@ -397,47 +300,27 @@ if ticket_text.strip():
             st.pyplot(fig)
             plt.close()
 
-    # ── DeepSeek ─────────────────────────────────────────────
-    if deepseek_key:
-        with results_cols[2]:
-            st.markdown("#### 🧠 DeepSeek V4 Flash (Zero-shot)")
-            with st.spinner("Querying DeepSeek..."):
-                ds_result = deepseek_zero_shot(ticket_text, label_names, deepseek_key)
-
-            if ds_result["success"]:
-                intent_display = ds_result["matched_intent"].replace("_", " ").title()
-                st.markdown(f"**Prediction:** `{intent_display}`")
-                st.metric("Status", "✅ Matched")
-                with st.expander("📝 Raw response"):
-                    st.code(ds_result["raw_response"])
-            else:
-                st.error("Could not classify with DeepSeek")
-                with st.expander("📝 Details"):
-                    st.code(ds_result.get("raw_response", "Unknown error"))
-
     # ── Agreement indicator ──────────────────────────────────
     st.markdown("---")
     st.subheader("📊 Model Agreement")
 
-    predictions_set = set()
+    predictions = []
     if vec_tfidf is not None:
-        predictions_set.add(
+        predictions.append(
             ("TF‑IDF", result_tfidf["label"], result_tfidf["confidence"])
         )
     if model_bert is not None:
-        predictions_set.add(
+        predictions.append(
             ("DistilBERT", result_bert["label"], result_bert["confidence"])
         )
-    if deepseek_key and ds_result["success"]:
-        predictions_set.add(("DeepSeek", ds_result["matched_intent"], 1.0))
 
-    unique_labels = set(p[1] for p in predictions_set)
-    if len(unique_labels) == 1 and len(predictions_set) >= 2:
-        st.success("✅ All models agree on the route!")
-    elif len(predictions_set) >= 2:
+    unique_labels = set(p[1] for p in predictions)
+    if len(unique_labels) == 1 and len(predictions) >= 2:
+        st.success("✅ Both models agree on the route!")
+    elif len(predictions) >= 2:
         st.warning("⚠️ Models disagree — consider manual review")
 
-    for name, label, conf in predictions_set:
+    for name, label, conf in predictions:
         st.markdown(f"- **{name}**: `{label.replace('_', ' ').title()}` ({conf:.1%})")
 
     # ── Interpretability: TF-IDF top words ───────────────────
@@ -502,7 +385,6 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(
     """
     **Built with:** scikit-learn, Transformers, PyTorch, Streamlit  
-    **Frontier model:** DeepSeek V4 Flash  
     **Port:** 8505
     """
 )

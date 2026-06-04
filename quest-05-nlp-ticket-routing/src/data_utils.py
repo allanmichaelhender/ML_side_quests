@@ -32,7 +32,7 @@ def load_banking77(
     Labels are integers 0-76 mapped to intent categories.
     """
     print("Loading Banking77 dataset from Hugging Face...")
-    dataset = load_dataset("PolyAI/banking77")
+    dataset = load_dataset("PolyAI/banking77", trust_remote_code=True)
 
     # Get label names
     label_names = dataset["train"].features["label"].names

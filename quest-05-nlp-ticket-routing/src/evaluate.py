@@ -5,6 +5,7 @@ on the Banking77 test set. Generates comparison reports and plots.
 """
 
 import json
+import os
 import pickle
 from pathlib import Path
 
@@ -125,6 +126,9 @@ def evaluate_tfidf(vectorizer, clf, test_texts: list, test_labels: list):
     return predictions, np.array(test_labels), probs
 
 
+from llm_eval import evaluate_deepseek
+
+
 def compute_metrics_dict(
     predictions, labels_np, probs, label_names, approach_name: str
 ):
@@ -132,7 +136,12 @@ def compute_metrics_dict(
     acc = accuracy_score(labels_np, predictions)
     cm = confusion_matrix(labels_np, predictions)
     report = classification_report(
-        labels_np, predictions, target_names=label_names, digits=4, zero_division=0
+        labels_np,
+        predictions,
+        labels=range(len(label_names)),
+        target_names=label_names,
+        digits=4,
+        zero_division=0,
     )
     per_class = precision_recall_fscore_support(
         labels_np, predictions, labels=range(len(label_names)), zero_division=0
@@ -144,7 +153,7 @@ def compute_metrics_dict(
     print(report[:500])  # Truncated for readability
     print(f"  ... (full report saved to metrics.json)")
 
-    return {
+    result = {
         "approach": approach_name,
         "accuracy": round(acc, 4),
         "macro_f1": round(
@@ -162,6 +171,10 @@ def compute_metrics_dict(
             "support": per_class[3].tolist(),
         },
     }
+    # Save mean confidence if probs provided (e.g. from DeepSeek)
+    if probs is not None and len(probs) > 0:
+        result["mean_confidence"] = round(float(np.mean(probs)), 4)
+    return result
 
 
 def plot_confusion_matrix(cm, class_names, save_path: Path, title: str = ""):
@@ -255,6 +268,8 @@ def main(
     max_test_samples: int = 1_500,
     max_length: int = 128,
     batch_size: int = 32,
+    deepseek: bool = False,
+    deepseek_model: str = "deepseek-v4-flash",
 ):
     print("=" * 60)
     print("  Evaluation — Support Ticket Routing")
@@ -327,6 +342,64 @@ def main(
     except FileNotFoundError:
         print("  DistilBERT model not found. Run `python src/train.py` first.")
 
+    # ── 3. DeepSeek (optional) ─────────────────────────────────
+    if deepseek:
+        print("\n" + "-" * 40)
+        print(f"Evaluating DeepSeek ({deepseek_model})...")
+        print("-" * 40)
+
+        api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+        if not api_key:
+            try:
+                from dotenv import load_dotenv
+
+                env_path = PROJECT.parent / ".env"
+                if env_path.exists():
+                    load_dotenv(env_path)
+                    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+            except ImportError:
+                pass
+
+        if not api_key:
+            print("  DEEPSEEK_API_KEY not found — skipping DeepSeek eval")
+        else:
+            # Use smaller sample for DeepSeek (API cost)
+            ds_samples = min(500, max_test_samples)
+            ds_texts = test_texts[:ds_samples]
+            ds_labels = test_labels[:ds_samples]
+            print(f"  Evaluating on {ds_samples} samples (API cost ~$0.01-0.02)")
+
+            preds_ds, labels_ds, confs_ds = evaluate_deepseek(
+                ds_texts,
+                ds_labels,
+                label_names,
+                api_key,
+                model=deepseek_model,
+            )
+
+            # Filter out unmatched (-1)
+            valid_mask = preds_ds != -1
+            preds_valid = preds_ds[valid_mask]
+            labels_valid = labels_ds[valid_mask]
+            print(f"  Valid predictions: {len(preds_valid)}/{len(preds_ds)}")
+
+            if len(preds_valid) > 0:
+                # Pass confidence scores as probs for the valid subset
+                confs_valid = confs_ds[valid_mask]
+                m = compute_metrics_dict(
+                    preds_valid,
+                    labels_valid,
+                    confs_valid,
+                    label_names,
+                    f"DeepSeek ({deepseek_model})",
+                )
+                # Adjust accuracy to include unmatched as errors
+                total = len(preds_ds)
+                matched = len(preds_valid)
+                m["accuracy"] = round(m["accuracy"] * matched / total, 4)
+                m["match_rate"] = round(matched / total, 4)
+                all_metrics.append(m)
+
     # ── Comparison plot ────────────────────────────────────────
     if len(all_metrics) >= 2:
         plot_comparison_bar(all_metrics, figures_dir / "model_comparison.png")
@@ -357,4 +430,22 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Evaluate ticket routing models")
+    parser.add_argument("--max-samples", type=int, default=1_500)
+    parser.add_argument("--max-length", type=int, default=128)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument(
+        "--deepseek", action="store_true", help="Evaluate DeepSeek zero-shot"
+    )
+    parser.add_argument("--deepseek-model", default="deepseek-v4-flash")
+    args = parser.parse_args()
+
+    main(
+        max_test_samples=args.max_samples,
+        max_length=args.max_length,
+        batch_size=args.batch_size,
+        deepseek=args.deepseek,
+        deepseek_model=args.deepseek_model,
+    )
