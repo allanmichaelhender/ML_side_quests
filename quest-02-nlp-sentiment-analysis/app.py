@@ -77,7 +77,7 @@ def predict_sentiment(text: str, model, tokenizer, device):
     pred_label = LABEL_NAMES[pred_idx]
     confidence = float(probs[pred_idx])
 
-    return pred_label, confidence, probs
+    return pred_label, confidence, probs, pred_idx
 
 
 def plot_confidence_bars(probs):
@@ -246,7 +246,7 @@ analyze_btn = st.button(
 # ── Results ──────────────────────────────────────────────────
 if analyze_btn and text.strip() and model is not None:
     with st.spinner("Analysing sentiment..."):
-        pred_label, confidence, probs = predict_sentiment(
+        pred_label, confidence, probs, pred_idx = predict_sentiment(
             text, model, tokenizer, device
         )
 
