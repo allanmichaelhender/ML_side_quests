@@ -39,7 +39,7 @@ DEFAULT_OUTPUT_DIR = PROJECT / "results"
 
 MODEL_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
-
+# Metrics function called by the Hugging Face trainer
 def compute_metrics(eval_pred):
     """Compute perplexity for evaluation.
 
@@ -91,7 +91,7 @@ def train(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[DEVICE] Device: {device}")
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True) # exist_ok means do not raise an error if directory already exists
     (output_dir / "checkpoints").mkdir(parents=True, exist_ok=True)
 
     # ════════════════════════════════════════════════════════════
@@ -174,7 +174,7 @@ def train(
         task_type=TaskType.CAUSAL_LM,
     )
 
-    model = get_peft_model(model, lora_config)
+    model = get_peft_model(model, lora_config) # PERF = parameter efficient fine tuning
     model.print_trainable_parameters()
     # Expected: ~1.1M trainable params out of ~1.1B (0.1%)
 

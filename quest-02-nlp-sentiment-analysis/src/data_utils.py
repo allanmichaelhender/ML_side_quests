@@ -23,21 +23,27 @@ PARQUET_FILES = {
     "test": ["test-00000-of-00001.parquet"],
 }
 
+
 # Download the Amazon Polarity Parquet shards from HuggingFace Hub and save them locally
 def download_data(data_dir: Path = DEFAULT_DATA):
-    data_dir.mkdir(parents=True, exist_ok=True) # Ensure the directoy exists
+    data_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directoy exists
 
     local_files = {}
-    for split, filenames in PARQUET_FILES.items(): # Looping over the file names using the Parquet dict
+    for (
+        split,
+        filenames,
+    ) in PARQUET_FILES.items():  # Looping over the file names using the Parquet dict
         split_files = []
         for fname in filenames:
             local_path = data_dir / fname
-            if not local_path.exists(): # Check if each file is already downloaded
+            if not local_path.exists():  # Check if each file is already downloaded
                 url = f"{HF_BASE}/{fname}"
                 print(f"Downloading {url}...")
                 resp = requests.get(url, stream=True, timeout=300)
                 resp.raise_for_status()
-                with open(local_path, "wb") as f: # Stream and save the file in chunks to avoid memory issues
+                with open(
+                    local_path, "wb"
+                ) as f:  # Stream and save the file in chunks to avoid memory issues
                     for chunk in resp.iter_content(chunk_size=8192):
                         f.write(chunk)
                 print(
@@ -79,15 +85,21 @@ def load_amazon_reviews(
     train_df = pd.read_parquet(train_files[0])
     test_df = pd.read_parquet(data_dir / "test-00000-of-00001.parquet")
 
+    # Sample test set to a manageable size (it's 400k rows)
+    test_max = min(len(test_df), 5_000)
+    test_df = _stratified_sample_df(test_df, test_max, seed)
+
     print(f"  Train: {len(train_df)} samples (from {train_files[0].name})")
-    print(f"  Test:  {len(test_df)} samples")
+    print(f"  Test:  {len(test_df)} samples (sampled from test parquet)")
 
     # Build train/validation splits
     rng = np.random.default_rng(seed)
-    indices = rng.permutation(len(train_df)) # Creates a random permutation of the indices for shuffling
+    indices = rng.permutation(
+        len(train_df)
+    )  # Creates a random permutation of the indices for shuffling
     val_size = len(train_df) // 10
-    val_idx = indices[:val_size] # Creating validation split
-    train_idx = indices[val_size:] # Creating training split
+    val_idx = indices[:val_size]  # Creating validation split
+    train_idx = indices[val_size:]  # Creating training split
 
     train_df_part = train_df.iloc[train_idx].reset_index(drop=True)
     val_df = train_df.iloc[val_idx].reset_index(drop=True)
@@ -129,6 +141,7 @@ def load_amazon_reviews(
 
     return dataset
 
+
 # Function used to stratify the samples, _ is used to indiciate internal function
 def _stratified_sample_df(df: pd.DataFrame, n: int, seed: int = 42) -> pd.DataFrame:
     """Stratified subsample a DataFrame to n rows while keeping class balance."""
@@ -146,13 +159,16 @@ def _stratified_sample_df(df: pd.DataFrame, n: int, seed: int = 42) -> pd.DataFr
         drop=True
     )
 
+
 # DistilBERT is a distilled version of BERT, BERT is a large transformer model, DistilBERT mimics behavior at a fraction of the size
+
 
 def get_tokenizer():
     """Load DistilBERT tokenizer."""
     return DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
 
-# Remember, tokenization converts raw text into input integer ID's that the model can understand. The tokenizer also needs to match the model architecture 
+
+# Remember, tokenization converts raw text into input integer ID's that the model can understand. The tokenizer also needs to match the model architecture
 
 
 def tokenize_dataset(
@@ -162,7 +178,7 @@ def tokenize_dataset(
 ) -> DatasetDict:
     """Tokenize the dataset with the given tokenizer."""
 
-    # nested function to tokenize the content, we use max length and padding to make every entry the same shape 
+    # nested function to tokenize the content, we use max length and padding to make every entry the same shape
     def tokenize_fn(examples):
         # Combine title and content for richer context
         texts = [f"{t} {c}" for t, c in zip(examples["title"], examples["content"])]
@@ -172,15 +188,16 @@ def tokenize_dataset(
             truncation=True,
             max_length=max_length,
         )
-    
+
     # The tokenizer returns the input ids and attention masks for each row, the attention mask has 1 for real tokens and 0 for padded tokens
 
     print(f"Tokenizing with max_length={max_length}...")
-    tokenized = dataset.map(tokenize_fn, batched=True) # Adds the tokenizer columns
+    tokenized = dataset.map(tokenize_fn, batched=True)  # Adds the tokenizer columns
     tokenized = tokenized.remove_columns(["title", "content"])
     tokenized = tokenized.rename_column("label", "labels")
     tokenized.set_format("torch", columns=["input_ids", "attention_mask", "labels"])
-    return tokenized # Dataset with input_ids, attention_mask, and labels ready for model training
+    return tokenized  # Dataset with input_ids, attention_mask, and labels ready for model training
+
 
 # Functions for saving and loading back in the str versions of the labels (positive and negative)
 def save_label_info(output_dir: Path):

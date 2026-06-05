@@ -151,7 +151,97 @@ if pairs:
             st.markdown(f"**A:** {pair['response']}")
 
 # ════════════════════════════════════════════════════════════════
-# 4. FIGURES (if any)
+# 4. PROMPT FORMAT EXPLAINER
+# ════════════════════════════════════════════════════════════════
+st.header("🧠 Prompt Format: How the Model Is Trained & Used")
+
+st.markdown(
+    "The model is a **decoder-only** transformer (TinyLlama). "
+    "It sees everything as one continuous text stream and learns to predict the **next token**. "
+    "Below are three views of the same Q&A to illustrate training vs. inference."
+)
+
+MOCK_FILING_EXCERPT = (
+    "For the fiscal year ended December 31, 2024, Exxon Mobil Corporation "
+    "reported total revenues and other income of $344,582,000,000, compared to "
+    "$413,680,000,000 for the prior year. Net income attributable to ExxonMobil "
+    "was $36,010,000,000. Earnings per share (diluted) were $8.89."
+)
+
+tab1, tab2, tab3 = st.tabs(["🎓 Training", "🤖 Inference", "💡 What the Model Learns"])
+
+with tab1:
+    st.subheader("Training — Full Sequence (Model Sees Everything)")
+    st.markdown(
+        "During training the **complete** prompt + expected response is fed in. "
+        "The causal mask hides future tokens, so the model must predict each "
+        "response token **one at a time** using only the preceding context. "
+        "Loss is computed **only** on the assistant's tokens."
+    )
+    train_prompt = f"""<|system|>
+You are a financial analyst specializing in energy company earnings. Answer questions accurately based on SEC filing data.</s>
+<|user|>
+What was Exxon Mobil's revenue for FY2024?
+
+{MOCK_FILING_EXCERPT}</s>
+<|assistant|>
+For FY2024, Exxon Mobil (XOM) reported revenue of $344.58B.</s>"""
+    st.code(train_prompt, language="text")
+
+    st.info(
+        "The model sees the **question, filing text, and correct answer**. "
+        "It learns to trace the value from the document to the response format."
+    )
+
+with tab2:
+    st.subheader("Inference — Prompt Only (Model Generates the Answer)")
+    st.markdown(
+        "At inference time we **omit** the response. "
+        "The model auto-regressively generates one token at a time until it "
+        "produces `</s>` or reaches the max length."
+    )
+    infer_prompt = f"""<|system|>
+You are a financial analyst specializing in energy company earnings. Answer questions accurately based on SEC filing data.</s>
+<|user|>
+What was Exxon Mobil's revenue for FY2024?
+
+{MOCK_FILING_EXCERPT}</s>
+<|assistant|>"""
+    st.code(infer_prompt, language="text")
+
+    st.success(
+        "The model receives **only the filing text + question** — "
+        "no pre-computed metrics, no hidden answers. It must extract "
+        "`$344.58B` from the raw document on its own."
+    )
+
+with tab3:
+    st.subheader("What the Model Learns to Infer")
+    st.markdown(
+        "Through repeated exposure to pairs like these, the model learns a "
+        "**generalizable skill**:"
+    )
+
+    st.markdown(
+        """
+1. **Pattern**: `"For {period}, {company} ({ticker}) reported {metric} of {value}."`
+2. **Extraction**: Locate the requested metric (revenue, net income, EPS, etc.) within the filing text
+3. **Formatting**: Convert raw values (`$344,582,000,000`) into human-readable form (`$344.58B`)
+4. **Mapping**: Associate company names with tickers (Exxon Mobil → XOM) and periods with fiscal years
+
+**It does NOT memorize a lookup table.** It learns to **read the document** and extract answers —
+which means it can generalize to new filings, new companies, or new questions it hasn't seen before.
+"""
+    )
+
+    st.code(
+        'The model learns: "Find the revenue number in this document → '
+        'format it as a currency → output the standard response template."',
+        language="text",
+    )
+
+# ════════════════════════════════════════════════════════════════
+# 5. FIGURES (if any)
 # ════════════════════════════════════════════════════════════════
 fig_dir = RESULTS / "figures"
 figures = sorted(fig_dir.glob("*.png")) if fig_dir.exists() else []
@@ -162,7 +252,7 @@ if figures:
         st.image(str(fig_path), use_container_width=True)
 
 # ════════════════════════════════════════════════════════════════
-# FOOTER
+# 6. FOOTER
 # ════════════════════════════════════════════════════════════════
 st.divider()
 st.caption(

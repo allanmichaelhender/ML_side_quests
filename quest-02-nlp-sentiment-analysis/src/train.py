@@ -84,7 +84,7 @@ def train(
 
     training_args = TrainingArguments(
         output_dir=str(checkpoint_dir),  # where to save checkpoints
-        run_name=run_name,  # name for this training run 
+        run_name=run_name,  # name for this training run
         eval_strategy="epoch",  # evaluate after each epoch
         save_strategy="epoch",  # save checkpoint after each epoch
         logging_strategy="steps",  # log metrics every N steps
@@ -95,7 +95,7 @@ def train(
         * 2,  # eval batch size (larger = faster eval)
         num_train_epochs=num_epochs,  # number of full passes through training data
         weight_decay=0.01,  # L2 regularization to prevent overfitting
-        warmup_ration=0.1,  # LR linearly increases for first N steps
+        warmup_ratio=0.1,  # LR linearly increases for first N steps
         lr_scheduler_type="linear",  # LR decays linearly after warmup
         optim="adamw_torch",  # optimizer: AdamW with decoupled weight decay
         load_best_model_at_end=True,  # restore the best checkpoint after training
@@ -115,7 +115,9 @@ def train(
         train_dataset=tokenized["train"],
         eval_dataset=tokenized["validation"],
         compute_metrics=compute_metrics,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)], # This monitors the evaluation metric (accuracy) each epoch and stops training early if it stops improving. patience=2 means: if accuracy doesn't improve for 2 consecutive evaluations, stop training.
+        callbacks=[
+            EarlyStoppingCallback(early_stopping_patience=2)
+        ],  # This monitors the evaluation metric (accuracy) each epoch and stops training early if it stops improving. patience=2 means: if accuracy doesn't improve for 2 consecutive evaluations, stop training.
     )
 
     # ── Train ───────────────────────────────────────────────────

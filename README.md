@@ -8,14 +8,14 @@ Each quest is independently containerised with Docker and has its own Streamlit 
 
 ## Quests
 
-| #   | Quest                               | Domain          | Model                               | Demo                                                |
-| --- | ----------------------------------- | --------------- | ----------------------------------- | --------------------------------------------------- |
-| 1   | 🌱 **Plant Disease Classification** | Computer Vision | MobileNetV2 (ONNX)                  | [streamlit](https://ml-sidequests-01.streamlit.app) |
-| 2   | 📝 **Sentiment Analysis**           | NLP             | DistilBERT                          | [streamlit](https://ml-sidequests-02.streamlit.app) |
-| 3   | 📊 **Energy Earnings Call Analyst** | GenAI           | TinyLlama / Phi-2 (LoRA)            | —                                                   |
-| 4   | 🔍 **RAG Retrieval Pipeline**       | RAG             | MiniLM + Cross-Encoder              | —                                                   |
-| 5   | 🎫 **Support Ticket Routing**       | NLP             | TF-IDF / DistilBERT / Zero-shot LLM | —                                                   |
-| 6   | ⚡ **Energy Grid Load Balancing**   | RL              | PPO (Stable Baselines3)             | [streamlit](https://ml-sidequests-06.streamlit.app) |
+| #   | Quest                               | Domain          | Model                               | Key Result                          | Demo                                                |
+| --- | ----------------------------------- | --------------- | ----------------------------------- | ----------------------------------- | --------------------------------------------------- |
+| 1   | 🌱 **Plant Disease Classification** | Computer Vision | MobileNetV2 (ONNX)                  | **96.1% accuracy** (38 classes)     | [streamlit](https://ml-sidequests-01.streamlit.app) |
+| 2   | 📝 **Sentiment Analysis**           | NLP             | DistilBERT                          | **84.2% accuracy** · **0.84 F1**    | [streamlit](https://ml-sidequests-02.streamlit.app) |
+| 3   | 📊 **Energy Earnings Call Analyst** | GenAI           | TinyLlama 1.1B (LoRA, r=4)          | **Loss 1.98** · context-based QA    | —                                                   |
+| 4   | 🔍 **RAG Retrieval Pipeline**       | RAG             | MiniLM + Cross-Encoder              | **Hit@5 74.5%** · **MRR 0.57**      | —                                                   |
+| 5   | 🎫 **Support Ticket Routing**       | NLP             | TF-IDF / DistilBERT / Zero-shot LLM | **85.2% accuracy** (DistilBERT)     | —                                                   |
+| 6   | ⚡ **Energy Grid Load Balancing**   | RL              | PPO (Stable Baselines3)             | **-29.9M reward** · beats baselines | [streamlit](https://ml-sidequests-06.streamlit.app) |
 
 > Click into any quest folder for the full walkthrough: problem statement, pipeline steps, training instructions, results, and key findings.
 
@@ -113,14 +113,14 @@ streamlit run app.py
 
 All quests are designed to train and run on CPU (no GPU required).
 
-| Quest                 | Estimated CPU Training Time        |
-| --------------------- | ---------------------------------- |
-| 1 — Plant Disease CV  | 1–3 hours                          |
-| 2 — Sentiment BERT    | 1–2 hours                          |
-| 3 — Earnings Call LLM | 2–3 hours (LoRA, r=4, 500 samples) |
-| 4 — RAG Pipeline      | No training — indexing ~30 min     |
-| 5 — Ticket Routing    | < 30 minutes                       |
-| 6 — Grid RL Agent     | 30–60 minutes                      |
+| Quest                 | Actual CPU Training Time            | Key Metric                            |
+| --------------------- | ----------------------------------- | ------------------------------------- |
+| 1 — Plant Disease CV  | ~2 hours                            | **96.1%** accuracy                    |
+| 2 — Sentiment BERT    | **~25 min** (3 epochs, 5k samples)  | **84.2%** accuracy, **0.84** macro F1 |
+| 3 — Earnings Call LLM | **~63 min** (2 epochs, 500 samples) | **1.98** train loss (LoRA r=4)        |
+| 4 — RAG Pipeline      | ~30 min (indexing only)             | **74.5%** Hit@5, **0.57** MRR         |
+| 5 — Ticket Routing    | **< 30 min** per model              | **85.2%** accuracy (DistilBERT)       |
+| 6 — Grid RL Agent     | **30–60 min**                       | **-30.0M** reward (vs -414M random)   |
 
 ---
 

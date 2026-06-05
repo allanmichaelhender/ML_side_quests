@@ -62,6 +62,11 @@ SUMMARY_TEMPLATES = [
     "Analyze {company}'s financial performance for {period}.",
 ]
 
+# TinyLlama prompt format, for training we specify the three response field, for inference we leave it blank and the model generates the end of the sequence/response
+# We do not need to specify a response format since our training uses a set format and the model will learn to match it
+# {input} is for the SEC filing text excerpt that provides context for the question.
+# During training, the model learns to extract the answer from the provided filing text.
+# For inference, we would similarly provide the relevant filing text as context.
 TINYLLAMA_PROMPT = """<|system|>
 You are a financial analyst specializing in energy company earnings. Answer questions accurately based on SEC filing data.</s>
 <|user|>
@@ -182,8 +187,14 @@ def fetch_financial_data(
         pass
 
     # Use mock data if API returned nothing
+    # Commented out — uncomment to fall back to random mock data for testing
+    # if not all_records:
+    #     return _generate_mock_data(companies, metrics, max_fiscal_years)
+
     if not all_records:
-        return _generate_mock_data(companies, metrics, max_fiscal_years)
+        print(
+            "  [WARN]  No financial data returned from SEC API. Ensure edgar_sec is installed and try again."
+        )
 
     # Cache
     if cache_dir is not None:
@@ -304,11 +315,15 @@ def create_instruction_pairs(
     financial_records: List[Dict],
     max_samples: int = 500,
     seed: int = 42,
+    filing_texts_by_company: Optional[Dict[str, List[str]]] = None,
 ) -> List[Dict]:
     """
     Convert financial records into instruction-response pairs.
 
     Each pair is: {instruction, input, response, company, ticker, metric, period}
+    If filing_texts_by_company is provided, the relevant filing excerpt
+    is placed in the {input} field so the model learns to extract answers
+    from the document context rather than just memorizing values.
     """
     rng = np.random.default_rng(seed)
     pairs: List[Dict] = []
@@ -335,10 +350,17 @@ def create_instruction_pairs(
         formatted_value = _format_currency(value)
         response = f"For {period_label}, {company} ({ticker}) reported {metric.lower()} of {formatted_value}."
 
+        # Pick a relevant SEC filing text excerpt as context for this Q&A pair
+        input_text = ""
+        if filing_texts_by_company and company in filing_texts_by_company:
+            company_texts = filing_texts_by_company[company]
+            if company_texts:
+                input_text = rng.choice(company_texts)
+
         pairs.append(
             {
                 "instruction": instruction,
-                "input": "",
+                "input": input_text,
                 "response": response,
                 "company": company,
                 "ticker": ticker,
@@ -372,10 +394,18 @@ def create_instruction_pairs(
                 )
 
         response = "\n".join(lines)
+
+        # Pick a relevant SEC filing text excerpt as context for this summary pair
+        summary_input = ""
+        if filing_texts_by_company and company in filing_texts_by_company:
+            company_texts = filing_texts_by_company[company]
+            if company_texts:
+                summary_input = rng.choice(company_texts)
+
         pairs.append(
             {
                 "instruction": instruction,
-                "input": "",
+                "input": summary_input,
                 "response": response,
                 "company": company,
                 "ticker": ticker,
@@ -447,10 +477,12 @@ def download_filing_texts(
     form_types: Tuple[str, ...] = ("10-K", "10-Q", "8-K"),
     max_filings_per_company: int = 2,
     cache_dir: Optional[Path] = None,
-) -> List[str]:
+) -> List[Dict]:
     """
     Download raw SEC filing text for domain-adaptive pretraining.
     Uses direct SEC EDGAR URLs.
+
+    Returns a list of dicts: {company, ticker, text}
     """
     if companies is None:
         companies = ENERGY_COMPANIES
@@ -527,7 +559,14 @@ def download_filing_texts(
                             if len(clean) > 1000:
                                 # Split into ~512-token chunks
                                 chunks = _chunk_text(clean, chunk_size=2000)
-                                all_texts.extend(chunks)
+                                for chunk in chunks:
+                                    all_texts.append(
+                                        {
+                                            "company": company["name"],
+                                            "ticker": company["ticker"],
+                                            "text": chunk,
+                                        }
+                                    )
                                 count += 1
                                 break
 
@@ -587,30 +626,31 @@ def prepare_dataset(
     print("\n1️⃣  Fetching financial data for energy companies...")
     records = fetch_financial_data(cache_dir=cache_dir)
 
-    # Step 2: Add filing text examples for domain adaptation
-    print("\n2️⃣  Downloading filing texts...")
+    # Step 2: Download filing texts for context
+    print("\n2️⃣  Downloading filing texts for context...")
+    filing_texts_by_company: Dict[str, List[str]] = {}
     try:
         filing_texts = download_filing_texts(cache_dir=cache_dir)
         if filing_texts:
-            # Create simple next-token prediction examples
-            for text in filing_texts[: max(50, max_samples // 4)]:
-                records.append(
-                    {
-                        "company": "SEC Filing",
-                        "ticker": "N/A",
-                        "metric": "filing_excerpt",
-                        "period": "",
-                        "value": 0,
-                        "unit": "",
-                        "_text": text,
-                    }
-                )
+            for item in filing_texts:
+                company_name = item["company"]
+                if company_name not in filing_texts_by_company:
+                    filing_texts_by_company[company_name] = []
+                filing_texts_by_company[company_name].append(item["text"])
+            print(f"   Grouped texts for {len(filing_texts_by_company)} companies")
     except Exception as e:
         print(f"  [WARN]  Could not download filing texts: {e}")
 
     # Step 3: Create instruction pairs
     print("\n3️⃣  Creating instruction-response pairs...")
-    pairs = create_instruction_pairs(records, max_samples=max_samples, seed=seed)
+    pairs = create_instruction_pairs(
+        records,
+        max_samples=max_samples,
+        seed=seed,
+        filing_texts_by_company=filing_texts_by_company
+        if filing_texts_by_company
+        else None,
+    )
 
     # Save raw pairs for inspection
     pairs_path = output_dir / "instruction_pairs.json"
