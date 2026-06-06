@@ -32,6 +32,7 @@ from transformers import (
 from data_utils import (
     load_banking77,
     load_label_info,
+    _stratified_sample_df,
 )
 from data_utils import DEFAULT_OUTPUT
 
@@ -270,6 +271,7 @@ def main(
     batch_size: int = 32,
     deepseek: bool = False,
     deepseek_model: str = "deepseek-v4-flash",
+    deepseek_only: bool = False,
 ):
     print("=" * 60)
     print("  Evaluation — Support Ticket Routing")
@@ -282,8 +284,14 @@ def main(
     # Load test data directly
     print("\nLoading test set...")
     dataset_raw, _ = load_banking77(max_samples=None)  # load full dataset
-    test_texts = dataset_raw["test"]["text"][:max_test_samples]
-    test_labels = dataset_raw["test"]["label"][:max_test_samples]
+
+    # Stratified subsample the test set so all classes are represented
+    test_df = dataset_raw["test"].to_pandas()
+    test_df = _stratified_sample_df(
+        test_df, max_test_samples, seed=42, label_col="label"
+    )
+    test_texts = test_df["text"].tolist()
+    test_labels = test_df["label"].tolist()
     print(f"  Evaluating on {len(test_texts)} test samples")
 
     all_metrics = []
@@ -291,56 +299,58 @@ def main(
     figures_dir.mkdir(parents=True, exist_ok=True)
 
     # ── 1. TF-IDF ──────────────────────────────────────────────
-    print("\n" + "-" * 40)
-    print("Evaluating TF-IDF...")
-    print("-" * 40)
-    try:
-        vectorizer, clf = load_tfidf_model()
-        preds_tfidf, labels_tfidf, probs_tfidf = evaluate_tfidf(
-            vectorizer, clf, test_texts, test_labels
-        )
-        m = compute_metrics_dict(
-            preds_tfidf, labels_tfidf, probs_tfidf, label_names, "TF-IDF"
-        )
-        all_metrics.append(m)
+    if not deepseek_only:
+        print("\n" + "-" * 40)
+        print("Evaluating TF-IDF...")
+        print("-" * 40)
+        try:
+            vectorizer, clf = load_tfidf_model()
+            preds_tfidf, labels_tfidf, probs_tfidf = evaluate_tfidf(
+                vectorizer, clf, test_texts, test_labels
+            )
+            m = compute_metrics_dict(
+                preds_tfidf, labels_tfidf, probs_tfidf, label_names, "TF-IDF"
+            )
+            all_metrics.append(m)
 
-        plot_confusion_matrix(
-            np.array(m["confusion_matrix"]),
-            label_names,
-            figures_dir / "confusion_matrix_tfidf.png",
-            title="TF-IDF + Logistic Regression",
-        )
-    except FileNotFoundError:
-        print("  TF-IDF model not found. Run `python src/train.py` first.")
+            plot_confusion_matrix(
+                np.array(m["confusion_matrix"]),
+                label_names,
+                figures_dir / "confusion_matrix_tfidf.png",
+                title="TF-IDF + Logistic Regression",
+            )
+        except FileNotFoundError:
+            print("  TF-IDF model not found. Run `python src/train.py` first.")
 
     # ── 2. DistilBERT ──────────────────────────────────────────
-    print("\n" + "-" * 40)
-    print("Evaluating DistilBERT...")
-    print("-" * 40)
-    try:
-        model, tokenizer = load_distilbert_model()
-        preds_bert, labels_bert, probs_bert = evaluate_distilbert(
-            model,
-            tokenizer,
-            test_texts,
-            test_labels,
-            label_names,
-            max_length=max_length,
-            batch_size=batch_size,
-        )
-        m = compute_metrics_dict(
-            preds_bert, labels_bert, probs_bert, label_names, "DistilBERT"
-        )
-        all_metrics.append(m)
+    if not deepseek_only:
+        print("\n" + "-" * 40)
+        print("Evaluating DistilBERT...")
+        print("-" * 40)
+        try:
+            model, tokenizer = load_distilbert_model()
+            preds_bert, labels_bert, probs_bert = evaluate_distilbert(
+                model,
+                tokenizer,
+                test_texts,
+                test_labels,
+                label_names,
+                max_length=max_length,
+                batch_size=batch_size,
+            )
+            m = compute_metrics_dict(
+                preds_bert, labels_bert, probs_bert, label_names, "DistilBERT"
+            )
+            all_metrics.append(m)
 
-        plot_confusion_matrix(
-            np.array(m["confusion_matrix"]),
-            label_names,
-            figures_dir / "confusion_matrix_distilbert.png",
-            title="DistilBERT",
-        )
-    except FileNotFoundError:
-        print("  DistilBERT model not found. Run `python src/train.py` first.")
+            plot_confusion_matrix(
+                np.array(m["confusion_matrix"]),
+                label_names,
+                figures_dir / "confusion_matrix_distilbert.png",
+                title="DistilBERT",
+            )
+        except FileNotFoundError:
+            print("  DistilBERT model not found. Run `python src/train.py` first.")
 
     # ── 3. DeepSeek (optional) ─────────────────────────────────
     if deepseek:
@@ -382,6 +392,32 @@ def main(
             preds_valid = preds_ds[valid_mask]
             labels_valid = labels_ds[valid_mask]
             print(f"  Valid predictions: {len(preds_valid)}/{len(preds_ds)}")
+
+            # ── Save raw per-sample predictions for later analysis ──
+            raw_records = []
+            for i in range(len(ds_texts)):
+                raw_records.append(
+                    {
+                        "ticket": ds_texts[i],
+                        "true_label": int(ds_labels[i]),
+                        "true_label_name": label_names[int(ds_labels[i])],
+                        "predicted_label": int(preds_ds[i])
+                        if preds_ds[i] != -1
+                        else None,
+                        "predicted_label_name": label_names[int(preds_ds[i])]
+                        if preds_ds[i] != -1
+                        else None,
+                        "confidence": float(confs_ds[i]),
+                        "matched": bool(valid_mask[i]),
+                    }
+                )
+            raw_path = (
+                output_dir
+                / f"deepseek_predictions_{deepseek_model.replace('.', '-')}.json"
+            )
+            with open(raw_path, "w") as f:
+                json.dump(raw_records, f, indent=2)
+            print(f"  Raw predictions saved to {raw_path}")
 
             if len(preds_valid) > 0:
                 # Pass confidence scores as probs for the valid subset
@@ -440,12 +476,18 @@ if __name__ == "__main__":
         "--deepseek", action="store_true", help="Evaluate DeepSeek zero-shot"
     )
     parser.add_argument("--deepseek-model", default="deepseek-v4-flash")
+    parser.add_argument(
+        "--deepseek-only",
+        action="store_true",
+        help="Skip TF-IDF and DistilBERT, evaluate DeepSeek only",
+    )
     args = parser.parse_args()
 
     main(
         max_test_samples=args.max_samples,
         max_length=args.max_length,
         batch_size=args.batch_size,
-        deepseek=args.deepseek,
+        deepseek=args.deepseek or args.deepseek_only,
         deepseek_model=args.deepseek_model,
+        deepseek_only=args.deepseek_only,
     )

@@ -1,11 +1,11 @@
 """
-Visualization utilities for the grid load-balancing project.
+Visualization utilities for the data center resource scheduling project.
 
 Produces:
   - Learning curves (reward vs timestep)
-  - 24-hour dispatch schedule plots
+  - 24-hour allocation schedule plots
   - Reward breakdown pie/bar charts
-  - Cost vs emissions tradeoff curves (ablation)
+  - Cost vs energy tradeoff curves (ablation)
   - Comparison bar charts vs baselines
 """
 
@@ -17,18 +17,18 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from data_utils import SOURCE_DEFS, GridParams, generate_scenario_sequence
+from data_utils import MACHINE_DEFS, ClusterParams, generate_workload_sequence
 
 matplotlib.rcParams["figure.dpi"] = 120
 matplotlib.rcParams["font.size"] = 11
 
-# Colour palette for generation sources
-SOURCE_COLORS = {
-    "coal": "#333333",
-    "gas": "#E69F00",
-    "solar": "#F0E442",
-    "wind": "#56B4E9",
-    "hydro": "#009E73",
+# Colour palette for machine types
+MACHINE_COLORS = {
+    "general": "#0072B2",
+    "compute_opt": "#D55E00",
+    "memory_opt": "#CC79A7",
+    "gpu": "#F0E442",
+    "storage_opt": "#009E73",
 }
 
 HERE = Path(__file__).resolve().parent
@@ -74,61 +74,52 @@ def plot_learning_curve(
     plt.close(fig)
 
 
-def plot_dispatch_schedule(
-    dispatch_history: List[Dict[str, float]],
-    demand_history: List[float],
+def plot_allocation_schedule(
+    allocation_history: List[Dict[str, float]],
+    cpu_demand_history: List[float],
+    mem_demand_history: Optional[List[float]] = None,
     save_path: Optional[Path] = None,
-    title: str = "24-Hour Dispatch Schedule",
+    title: str = "24-Hour Resource Allocation Schedule",
 ):
     """
-    Plot stacked bar chart of dispatch decisions over a 24-hour period.
+    Plot stacked bar chart of machine allocation over a period.
 
     Parameters
     ----------
-    dispatch_history : list of dict
-        Each dict maps source name -> MW dispatched.
-        Length should be 24 for one day.
-    demand_history : list of float
-        Demand MW for each hour.
+    allocation_history : list of dict
+        Each dict maps machine type name -> instances allocated.
+    cpu_demand_history : list of float
+        CPU demand (vCPU cores) for each timestep.
+    mem_demand_history : list of float, optional
+        Memory demand (GB) for each timestep.
     """
-    n_hours = len(dispatch_history)
+    n_hours = len(allocation_history)
     hours = np.arange(n_hours)
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Stacked bars
+    # Stacked bars (instances allocated)
     bottom = np.zeros(n_hours)
-    source_names = [s["name"] for s in SOURCE_DEFS]
+    type_names = [m["name"] for m in MACHINE_DEFS]
 
-    for src_name in source_names:
-        values = np.array([d.get(src_name, 0.0) for d in dispatch_history])
+    for type_name in type_names:
+        values = np.array([d.get(type_name, 0.0) for d in allocation_history])
         ax.bar(
             hours,
             values,
             bottom=bottom,
-            label=src_name.capitalize(),
-            color=SOURCE_COLORS.get(src_name, "#888888"),
+            label=type_name.replace("_", " ").title(),
+            color=MACHINE_COLORS.get(type_name, "#888888"),
             width=0.8,
+            alpha=0.85,
         )
         bottom += values
 
-    # Demand line
-    ax.plot(
-        hours,
-        demand_history,
-        color="red",
-        linewidth=2.5,
-        marker="o",
-        markersize=4,
-        label="Demand",
-        linestyle="--",
-    )
-
-    ax.set_xlabel("Hour of Day")
-    ax.set_ylabel("MW")
+    ax.set_xlabel("Hour")
+    ax.set_ylabel("Instances Allocated")
     ax.set_title(title)
     ax.set_xticks(hours)
-    ax.set_xticklabels([f"{h:02d}:00" for h in hours], rotation=45)
+    ax.set_xticklabels([f"{h % 24:02d}:00" for h in hours], rotation=45)
     ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
     ax.grid(True, alpha=0.3, axis="y")
     fig.tight_layout()
@@ -136,7 +127,7 @@ def plot_dispatch_schedule(
     if save_path:
         save_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"Saved dispatch schedule to {save_path}")
+        print(f"Saved allocation schedule to {save_path}")
     plt.close(fig)
 
 
@@ -152,15 +143,20 @@ def plot_reward_breakdown(
 
     # Subplot 1: Stacked area of individual components
     ax = axes[0]
-    components = ["cost", "emissions", "unmet", "overgen"]
-    colors = ["#D55E00", "#009E73", "#CC79A7", "#999999"]
+    components = ["cost", "energy", "unmet_cpu", "unmet_mem", "stranded"]
+    colors = ["#D55E00", "#009E73", "#CC79A7", "#56B4E9", "#999999"]
     x = np.arange(len(reward_breakdown[components[0]]))
     bottom = np.zeros_like(x, dtype=float)
 
     for comp, color in zip(components, colors):
         vals = np.array(reward_breakdown[comp])
         ax.fill_between(
-            x, bottom, bottom + vals, label=comp.capitalize(), alpha=0.7, color=color
+            x,
+            bottom,
+            bottom + vals,
+            label=comp.replace("_", " ").title(),
+            alpha=0.7,
+            color=color,
         )
         bottom += vals
 
@@ -305,27 +301,35 @@ def generate_all_figures(
         )
         plot_comparison(
             metrics,
-            "mean_reliability",
-            "Supply Reliability",
-            save_path=results_dir / "comparison_reliability.png",
+            "mean_cpu_reliability",
+            "CPU Reliability",
+            save_path=results_dir / "comparison_cpu_reliability.png",
         )
         plot_comparison(
             metrics,
-            "mean_cost_per_mwh",
-            "Cost ($/MWh)",
+            "mean_cost_per_hour",
+            "Cost ($/hr)",
             save_path=results_dir / "comparison_cost.png",
         )
         plot_comparison(
             metrics,
-            "mean_emissions_per_mwh",
-            "Emissions (kg CO₂/MWh)",
-            save_path=results_dir / "comparison_emissions.png",
+            "mean_energy_kw",
+            "Energy (kW)",
+            save_path=results_dir / "comparison_energy.png",
         )
 
     print("All figures generated.")
 
 
 if __name__ == "__main__":
-    generate_all_figures(
-        eval_log_path=Path(__file__).parent.parent / "results" / "eval_logs",
+    # Quick test
+    from data_utils import generate_workload_sequence
+
+    scenarios = generate_workload_sequence(24, seed=42)
+    cpu = [s.cpu_demand for s in scenarios]
+    mem = [s.mem_demand for s in scenarios]
+    print(
+        f"Sample workload — CPU: {cpu[0]:.0f} ± {np.std(cpu):.0f} vCores, "
+        f"Mem: {mem[0]:.0f} ± {np.std(mem):.0f} GB"
     )
+    print("Data center visualization utilities ready.")

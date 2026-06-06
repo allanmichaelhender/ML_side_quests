@@ -23,7 +23,7 @@ DEFAULT_OUTPUT = PROJECT / "results"
 
 
 def load_banking77(
-    max_samples: int = 10_000,
+    max_samples: int = 10_003,
     seed: int = 42,
 ) -> DatasetDict:
     """Load Banking77 dataset from Hugging Face.

@@ -1,9 +1,9 @@
 """
-Train a PPO agent for energy grid load balancing using Stable Baselines3.
+Train a PPO agent for data center resource scheduling using Stable Baselines3.
 
 Usage:
-    python src/train.py                    # train with default params
-    python src/train.py --total-timesteps 200000  # shorter run for testing
+    python src/train.py                           # train with default params
+    python src/train.py --total-timesteps 200000   # shorter run for testing
 """
 
 import argparse
@@ -31,9 +31,9 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from data_utils import (
     DEFAULT_DATA,
     DEFAULT_RESULTS,
-    generate_scenario_sequence,
+    generate_workload_sequence,
 )
-from grid_env import GridDispatchEnv, make_env
+from cluster_env import ClusterDispatchEnv, make_env
 
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
@@ -50,7 +50,9 @@ N_ENVS = 4  # parallel environments
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train PPO grid dispatch agent")
+    parser = argparse.ArgumentParser(
+        description="Train PPO data center resource scheduler"
+    )
     parser.add_argument(
         "--total-timesteps",
         type=int,
@@ -87,7 +89,7 @@ def main():
     args = parse_args()
 
     print("=" * 60)
-    print("Energy Grid Load Balancing — PPO Training")
+    print("Data Center Resource Scheduling — PPO Training")
     print("=" * 60)
     print(f"Total timesteps: {args.total_timesteps:,}")
     print(f"Parallel envs:   {args.n_envs}")
@@ -95,13 +97,13 @@ def main():
     print(f"Seed:            {args.seed}")
     print()
 
-    # ── Generate scenarios ─────────────────────────────────────────────────
-    print("Generating training scenarios...")
-    train_scenarios = generate_scenario_sequence(
+    # ── Generate workload scenarios ─────────────────────────────────────────
+    print("Generating training workload scenarios...")
+    train_scenarios = generate_workload_sequence(
         n_hours=args.total_timesteps // args.n_envs + 1000,
         seed=args.seed,
     )
-    eval_scenarios = generate_scenario_sequence(
+    eval_scenarios = generate_workload_sequence(
         n_hours=24 * 30,  # 30 days for eval
         seed=args.seed + 1,
     )
@@ -111,7 +113,7 @@ def main():
         """Create a single training environment."""
         offset = rank * (len(train_scenarios) // args.n_envs)
         env = make_env(
-            scenario_sequence=train_scenarios[offset:],
+            workload_sequence=train_scenarios[offset:],
             episode_length=24 * 7,  # 1 week episodes
             seed=args.seed + rank,
         )
@@ -130,7 +132,7 @@ def main():
     eval_env = DummyVecEnv(
         [
             lambda: make_env(
-                scenario_sequence=eval_scenarios,
+                workload_sequence=eval_scenarios,
                 episode_length=24 * 7,
                 seed=args.seed + 999,
             )
@@ -168,7 +170,7 @@ def main():
     checkpoint_callback = CheckpointCallback(
         save_freq=max(CHECKPOINT_FREQ // args.n_envs, 1),
         save_path=str(RESULTS_DIR / "checkpoints"),
-        name_prefix="ppo_grid",
+        name_prefix="ppo_cluster",
         save_replay_buffer=False,
         save_vecnormalize=True,
     )
@@ -234,7 +236,7 @@ def main():
     raw_eval_env = DummyVecEnv(
         [
             lambda: make_env(
-                scenario_sequence=eval_scenarios,
+                workload_sequence=eval_scenarios,
                 episode_length=24 * 7,
                 seed=args.seed + 999,
             )

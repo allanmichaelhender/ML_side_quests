@@ -20,7 +20,6 @@ from transformers import (
     DistilBertForSequenceClassification,
     Trainer,
     TrainingArguments,
-    EarlyStoppingCallback,
     set_seed,
 )
 
@@ -109,9 +108,9 @@ def train_distilbert(
     label_names: list,
     output_dir: Path,
     max_length: int = 128,
-    batch_size: int = 16,
+    batch_size: int = 32,
     learning_rate: float = 2e-5,
-    num_epochs: int = 3,
+    num_epochs: int = 10,
     seed: int = 42,
 ):
     """Fine-tune DistilBERT for ticket routing."""
@@ -152,8 +151,8 @@ def train_distilbert(
         run_name=run_name,
         eval_strategy="epoch",
         save_strategy="epoch",
-        logging_strategy="steps",
-        logging_steps=50,
+        logging_strategy="epoch",
+        log_level="info",
         learning_rate=learning_rate,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size * 2,
@@ -178,7 +177,6 @@ def train_distilbert(
         train_dataset=tokenized["train"],
         eval_dataset=tokenized["validation"],
         compute_metrics=compute_metrics_fn,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)],
     )
 
     # Train
@@ -216,9 +214,11 @@ def train_distilbert(
 def main(
     data_dir: Path = DEFAULT_DATA,
     output_dir: Path = DEFAULT_OUTPUT,
-    max_samples: int = 8_000,
+    max_samples: int = 10_003,
     max_length: int = 128,
-    batch_size: int = 16,
+    batch_size: int = 32,
+    learning_rate: float = 2e-5,
+    num_epochs: int = 10,
     seed: int = 42,
     skip_distilbert: bool = False,
 ):
@@ -260,6 +260,8 @@ def main(
             output_dir,
             max_length=max_length,
             batch_size=batch_size,
+            learning_rate=learning_rate,
+            num_epochs=num_epochs,
             seed=seed,
         )
         all_metrics["distilbert"] = bert_metrics
@@ -296,10 +298,19 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Train ticket routing classifiers")
     parser.add_argument(
-        "--max-samples", type=int, default=8_000, help="Max training samples"
+        "--max-samples",
+        type=int,
+        default=10_003,
+        help="Max training samples (10_003 = full set)",
     )
     parser.add_argument("--max-length", type=int, default=128)
-    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument(
+        "--learning-rate", type=float, default=2e-5, help="Learning rate"
+    )
+    parser.add_argument(
+        "--num-epochs", type=int, default=10, help="Number of training epochs"
+    )
     parser.add_argument(
         "--skip-distilbert", action="store_true", help="Skip DistilBERT training"
     )
@@ -310,6 +321,8 @@ if __name__ == "__main__":
         max_samples=args.max_samples,
         max_length=args.max_length,
         batch_size=args.batch_size,
+        learning_rate=args.learning_rate,
+        num_epochs=args.num_epochs,
         skip_distilbert=args.skip_distilbert,
         seed=args.seed,
     )

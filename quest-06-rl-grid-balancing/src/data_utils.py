@@ -1,17 +1,9 @@
-"""
-Data utilities for the grid load-balancing simulation.
-
-Generates synthetic (but realistic) demand, generation availability,
-and pricing data parameterised by real-world distributions from
-EIA / NREL. This is used to drive the GridDispatchEnv environment.
-"""
-
 import json
 import pickle
 import sys
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -20,278 +12,261 @@ PROJECT = HERE.parent
 DEFAULT_DATA = PROJECT / "data"
 DEFAULT_RESULTS = PROJECT / "results"
 
-# Ensure src/ is on the path for sibling imports
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
-# ── Source definitions ──────────────────────────────────────────────────────
-
-# Each generation source has:
-#   name        – display name
-#   min_cap     – minimum stable generation (MW)
-#   max_cap     – nameplate capacity (MW)
-#   opex_var    – variable operating cost ($/MWh)
-#   co2_rate    – CO₂ emissions (kg/MWh)
-#   renew       – whether it's a renewable source (availability varies)
-SOURCE_DEFS = [
+MACHINE_DEFS = [
     {
-        "name": "coal",
-        "min_cap": 100,
-        "max_cap": 1200,
-        "opex_var": 35.0,
-        "co2_rate": 900.0,
-        "renew": False,
+        "name": "general",
+        "min_instances": 50,
+        "max_instances": 2000,
+        "cpu_per_instance": 8,
+        "mem_per_instance": 32,
+        "cost_per_hour": 0.32,
+        "power_watts": 180,
+        "co2_rate": 0.00018,
+        "gpu": False,
     },
     {
-        "name": "gas",
-        "min_cap": 50,
-        "max_cap": 1000,
-        "opex_var": 55.0,
-        "co2_rate": 450.0,
-        "renew": False,
+        "name": "compute_opt",
+        "min_instances": 20,
+        "max_instances": 1000,
+        "cpu_per_instance": 16,
+        "mem_per_instance": 32,
+        "cost_per_hour": 0.48,
+        "power_watts": 220,
+        "co2_rate": 0.00022,
+        "gpu": False,
     },
     {
-        "name": "solar",
-        "min_cap": 0,
-        "max_cap": 600,
-        "opex_var": 5.0,
-        "co2_rate": 0.0,
-        "renew": True,
+        "name": "memory_opt",
+        "min_instances": 10,
+        "max_instances": 500,
+        "cpu_per_instance": 8,
+        "mem_per_instance": 128,
+        "cost_per_hour": 0.64,
+        "power_watts": 200,
+        "co2_rate": 0.00020,
+        "gpu": False,
     },
     {
-        "name": "wind",
-        "min_cap": 0,
-        "max_cap": 800,
-        "opex_var": 8.0,
-        "co2_rate": 0.0,
-        "renew": True,
+        "name": "gpu",
+        "min_instances": 5,
+        "max_instances": 200,
+        "cpu_per_instance": 16,
+        "mem_per_instance": 64,
+        "cost_per_hour": 3.50,
+        "power_watts": 550,
+        "co2_rate": 0.00055,
+        "gpu": True,
     },
     {
-        "name": "hydro",
-        "min_cap": 20,
-        "max_cap": 500,
-        "opex_var": 12.0,
-        "co2_rate": 10.0,
-        "renew": True,
+        "name": "storage_opt",
+        "min_instances": 10,
+        "max_instances": 300,
+        "cpu_per_instance": 8,
+        "mem_per_instance": 64,
+        "cost_per_hour": 0.40,
+        "power_watts": 260,
+        "co2_rate": 0.00026,
+        "gpu": False,
     },
 ]
 
-# Seasonal demand multipliers
-SEASONAL_PROFILES = {
-    "spring": {"base_demand": 1500, "peak_demand": 2300, "temp_factor": 0.0},
-    "summer": {"base_demand": 1700, "peak_demand": 2800, "temp_factor": 0.15},
-    "fall": {"base_demand": 1500, "peak_demand": 2400, "temp_factor": 0.0},
-    "winter": {"base_demand": 1800, "peak_demand": 2600, "temp_factor": 0.10},
-}
-
-# Hourly demand shape (normalised 0..1) — typical double-peak pattern
-HOURLY_DEMAND_SHAPE = np.array(
+HOURLY_WORKLOAD_SHAPE = np.array(
     [
-        0.55,
+        0.25,
+        0.22,
+        0.20,
+        0.18,
+        0.18,
+        0.20,
+        0.30,
         0.50,
-        0.48,
-        0.47,
-        0.48,
-        0.52,  # 00–05
-        0.60,
-        0.72,
+        0.70,
         0.85,
         0.92,
         0.95,
-        0.97,  # 06–11
-        0.93,
         0.90,
         0.88,
-        0.87,
-        0.89,
-        0.94,  # 12–17
-        1.00,
-        0.98,
-        0.92,
-        0.82,
-        0.72,
-        0.62,  # 18–23
-    ]
-)
-
-# Solar availability by hour (normalised 0..1)
-SOLAR_HOURLY_SHAPE = np.array(
-    [
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.02,  # 00–05
-        0.10,
-        0.30,
-        0.55,
-        0.75,
-        0.88,
-        0.95,  # 06–11
-        0.97,
-        0.93,
         0.85,
-        0.72,
+        0.82,
+        0.85,
+        0.90,
+        0.95,
+        0.85,
+        0.70,
         0.55,
-        0.35,  # 12–17
-        0.15,
-        0.05,
-        0.0,
-        0.0,
-        0.0,
-        0.0,  # 18–23
+        0.42,
+        0.32,
     ]
 )
 
-# Wind availability varies by season (normalised 0..1)
-WIND_SEASONAL_FACTOR = {
-    "spring": 0.40,
-    "summer": 0.25,
-    "fall": 0.45,
-    "winter": 0.55,
-}
+WEEKEND_CPU_SCALE = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 0.95, 5: 0.60, 6: 0.50}
+WEEKEND_MEM_SCALE = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 0.95, 5: 0.65, 6: 0.55}
+
+BASE_CPU_DEMAND = 4000
+BASE_MEM_DEMAND = 12000
+
+FAILURE_RATE = 0.005
+REPAIR_RATE = 0.3
 
 
 @dataclass
-class GridParams:
-    """Parameters that define a single grid scenario."""
-
-    season: str
-    hour: int  # 0–23
-    day_of_week: int  # 0=Monday
-    demand_mw: float
-    source_availability: Dict[str, float]  # fraction of max_cap available
-    source_prices: Dict[str, float]  # $/MWh (can differ from opex_var for spot)
+class ClusterParams:
+    hour: int
+    day_of_week: int
+    cpu_demand: float
+    mem_demand: float
+    machine_availability: Dict[str, float]
+    machine_prices: Dict[str, float]
 
 
-def sample_hourly_demand(season: str, hour: int, noise_std: float = 50.0) -> float:
-    """Sample a realistic demand value for a given season and hour."""
-    profile = SEASONAL_PROFILES[season]
-    base = profile["base_demand"]
-    peak = profile["peak_demand"]
-    shape_val = HOURLY_DEMAND_SHAPE[hour]
-    demand = base + (peak - base) * shape_val
-    demand += np.random.normal(0, noise_std)
-    return max(demand, profile["base_demand"] * 0.6)
-
-
-def sample_renewable_availability(
-    season: str,
-    hour: int,
-    source_name: str,
-) -> float:
-    """Return fraction (0..1) of max capacity available for a renewable source."""
-    if source_name == "solar":
-        base = SOLAR_HOURLY_SHAPE[hour]
-        # Add cloud noise
-        cloud_factor = np.random.beta(2, 5) * 0.3  # occasional clouds
-        return max(0.0, base - cloud_factor)
-    elif source_name == "wind":
-        seasonal = WIND_SEASONAL_FACTOR[season]
-        # Wind is stochastic — Weibull-ish
-        gust = np.random.weibull(2.0) * 0.25
-        return np.clip(seasonal + gust, 0.05, 1.0)
-    elif source_name == "hydro":
-        # Hydro is fairly stable but slightly seasonal
-        seasonal_factor = {"spring": 0.90, "summer": 0.70, "fall": 0.80, "winter": 0.85}
-        base = seasonal_factor[season]
-        return np.clip(base + np.random.normal(0, 0.05), 0.5, 1.0)
-    return 1.0  # dispatchable
-
-
-def sample_grid_params(
-    season: str,
+def sample_workload_demand(
     hour: int,
     day_of_week: int,
-) -> GridParams:
-    """Sample a full set of grid parameters for one timestep."""
-    demand = sample_hourly_demand(season, hour)
+    noise_std: float = 0.08,
+) -> Tuple[float, float]:
+    shape_val = HOURLY_WORKLOAD_SHAPE[hour]
+    cpu_demand = BASE_CPU_DEMAND * shape_val * WEEKEND_CPU_SCALE[day_of_week]
+    mem_demand = BASE_MEM_DEMAND * shape_val * WEEKEND_MEM_SCALE[day_of_week]
+    cpu_demand *= np.random.lognormal(0, noise_std)
+    mem_demand *= np.random.lognormal(0, noise_std)
+    return max(cpu_demand, 100), max(mem_demand, 500)
+
+
+def sample_machine_availability(
+    machine_type: Dict,
+    prev_available: Optional[float] = None,
+) -> float:
+    n_max = machine_type["max_instances"]
+    if prev_available is None:
+        steady_state = 1.0 - FAILURE_RATE / (FAILURE_RATE + REPAIR_RATE)
+        noise = np.random.normal(0, 0.02)
+        return np.clip(steady_state + noise, 0.85, 1.0)
+    n_available = int(prev_available * n_max)
+    n_failed = n_max - n_available
+    new_failures = np.random.binomial(n_available, FAILURE_RATE)
+    repairs = np.random.binomial(n_failed, REPAIR_RATE)
+    n_available = n_available - new_failures + repairs
+    frac = n_available / n_max
+    return np.clip(frac, 0.0, 1.0)
+
+
+def sample_cluster_params(
+    hour: int,
+    day_of_week: int,
+    prev_availability: Optional[Dict[str, float]] = None,
+) -> ClusterParams:
+    cpu_demand, mem_demand = sample_workload_demand(hour, day_of_week)
     avail = {}
     prices = {}
-    for src in SOURCE_DEFS:
-        if src["renew"]:
-            avail[src["name"]] = sample_renewable_availability(
-                season, hour, src["name"]
-            )
-        else:
-            avail[src["name"]] = 1.0  # fully dispatchable
-        # Spot price = opex_var + small noise
-        prices[src["name"]] = src["opex_var"] + np.random.normal(0, 3.0)
-    return GridParams(
-        season=season,
+    for m in MACHINE_DEFS:
+        prev = prev_availability.get(m["name"]) if prev_availability else None
+        avail[m["name"]] = sample_machine_availability(m, prev)
+        prices[m["name"]] = m["cost_per_hour"] + np.random.normal(0, 0.02)
+    return ClusterParams(
         hour=hour,
         day_of_week=day_of_week,
-        demand_mw=demand,
-        source_availability=avail,
-        source_prices=prices,
+        cpu_demand=cpu_demand,
+        mem_demand=mem_demand,
+        machine_availability=avail,
+        machine_prices=prices,
     )
 
 
-def generate_scenario_sequence(
+def generate_workload_sequence(
     n_hours: int,
     seed: int = 42,
-    start_season: str = "summer",
-) -> List[GridParams]:
-    """
-    Generate a contiguous sequence of hourly grid scenarios
-    spanning the given number of hours, cycling through seasons.
-    """
-    rng = np.random.default_rng(seed)
-    seasons = ["spring", "summer", "fall", "winter"]
-    season_idx = seasons.index(start_season)
-
+) -> List[ClusterParams]:
+    np.random.seed(seed)
     scenarios = []
+    prev_avail = None
     for i in range(n_hours):
         hour = i % 24
-        # Season changes every ~90 days (2160 hours)
-        if i > 0 and i % 2160 == 0:
-            season_idx = (season_idx + 1) % 4
-        season = seasons[season_idx]
         day_of_week = (i // 24) % 7
-        scenarios.append(sample_grid_params(season, hour, day_of_week))
+        sp = sample_cluster_params(hour, day_of_week, prev_avail)
+        scenarios.append(sp)
+        prev_avail = sp.machine_availability
     return scenarios
 
 
-def save_scenario_sequence(
-    scenarios: List[GridParams],
-    path: Path = DEFAULT_DATA / "scenarios.pkl",
+def estimate_total_cpu_capacity() -> float:
+    return float(sum(m["max_instances"] * m["cpu_per_instance"] for m in MACHINE_DEFS))
+
+
+def estimate_total_mem_capacity() -> float:
+    return float(sum(m["max_instances"] * m["mem_per_instance"] for m in MACHINE_DEFS))
+
+
+def save_workload_sequence(
+    scenarios: List[ClusterParams],
+    path: Path = DEFAULT_DATA / "workload.pkl",
 ):
-    """Save generated scenarios to disk."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "wb") as f:
         pickle.dump(scenarios, f)
-    print(f"Saved {len(scenarios)} scenarios to {path}")
+    print(f"Saved {len(scenarios)} timesteps to {path}")
 
 
-def load_scenario_sequence(
-    path: Path = DEFAULT_DATA / "scenarios.pkl",
-) -> List[GridParams]:
-    """Load scenarios from disk."""
+def load_workload_sequence(
+    path: Path = DEFAULT_DATA / "workload.pkl",
+) -> List[ClusterParams]:
     with open(path, "rb") as f:
         return pickle.load(f)
 
 
 def generate_sample_data(num_hours: int = 24 * 7):
-    """Generate and save a small sample dataset (one week by default)."""
-    scenarios = generate_scenario_sequence(num_hours, seed=42)
-    save_scenario_sequence(scenarios, DEFAULT_DATA / "sample" / "scenarios.pkl")
-    # Also save a human-readable JSON summary
+    scenarios = generate_workload_sequence(num_hours, seed=42)
+    save_workload_sequence(scenarios, DEFAULT_DATA / "sample" / "workload.pkl")
     summary = []
     for s in scenarios:
         d = asdict(s)
-        d["source_availability"] = {
-            k: round(v, 3) for k, v in d["source_availability"].items()
+        d["machine_availability"] = {
+            k: round(v, 3) for k, v in d["machine_availability"].items()
         }
-        d["source_prices"] = {k: round(v, 1) for k, v in d["source_prices"].items()}
-        d["demand_mw"] = round(d["demand_mw"], 1)
+        d["machine_prices"] = {k: round(v, 3) for k, v in d["machine_prices"].items()}
+        d["cpu_demand"] = round(d["cpu_demand"], 1)
+        d["mem_demand"] = round(d["mem_demand"], 1)
         summary.append(d)
-    json_path = DEFAULT_DATA / "sample" / "scenarios_sample.json"
+    json_path = DEFAULT_DATA / "sample" / "workload_sample.json"
     with open(json_path, "w") as f:
         json.dump(summary, f, indent=2)
     print(f"Sample data saved to {json_path}")
 
 
+def download_google_cluster_data(
+    output_dir: Path = DEFAULT_DATA / "google_cluster",
+):
+    import urllib.request
+
+    base_url = "https://commondatastorage.googleapis.com/clusterdata-2011-2"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Downloading Google Cluster Data sample to {output_dir}...")
+    print("  Downloading machine events...")
+    machine_url = f"{base_url}/machine_events/part-00000-of-00001.csv.gz"
+    local_path = output_dir / "machine_events.csv.gz"
+    try:
+        urllib.request.urlretrieve(machine_url, local_path)
+        print(f"  Saved {local_path}")
+    except Exception as e:
+        print(f"  Download failed: {e}")
+        print("  Falling back to synthetic data generator.")
+        return None
+    print("  Downloading task events (sample)...")
+    task_url = f"{base_url}/task_events/part-00000-of-00500.csv.gz"
+    local_path = output_dir / "task_events_sample.csv.gz"
+    try:
+        urllib.request.urlretrieve(task_url, local_path)
+        print(f"  Saved {local_path}")
+    except Exception as e:
+        print(f"  Task events download failed: {e}")
+    print("Done.")
+    return output_dir
+
+
 if __name__ == "__main__":
     generate_sample_data()
-    print("Data utilities ready.")
+    print(f"Total CPU capacity: {estimate_total_cpu_capacity():.0f} vCores")
+    print(f"Total memory capacity: {estimate_total_mem_capacity():.0f} GB")
+    print("Data center data utilities ready.")

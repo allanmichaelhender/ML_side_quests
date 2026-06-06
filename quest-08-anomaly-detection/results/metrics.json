@@ -1,0 +1,69 @@
+{
+  "dataset": "synthetic_2000",
+  "n_train": 1200,
+  "n_val": 400,
+  "n_test": 400,
+  "n_features": 6,
+  "total_time_s": 12.88,
+  "per_detector": {
+    "Isolation Forest": {
+      "fit_time_s": 0.239,
+      "score_time_s": 0.0099,
+      "threshold": 0.563183,
+      "precision": 0.6087,
+      "recall": 0.7,
+      "f1": 0.6512,
+      "n_test": 400,
+      "n_anomalies_test": 20,
+      "anomaly_rate_test": 0.05
+    },
+    "LOF": {
+      "fit_time_s": 0.021,
+      "score_time_s": 0.0099,
+      "threshold": 3.061272,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "n_test": 400,
+      "n_anomalies_test": 20,
+      "anomaly_rate_test": 0.05
+    },
+    "One-Class SVM": {
+      "fit_time_s": 0.012,
+      "score_time_s": 0.0051,
+      "threshold": -9.148158,
+      "precision": 0.9524,
+      "recall": 1.0,
+      "f1": 0.9756,
+      "n_test": 400,
+      "n_anomalies_test": 20,
+      "anomaly_rate_test": 0.05
+    },
+    "DBSCAN": {
+      "fit_time_s": 0.021,
+      "score_time_s": 0.0193,
+      "threshold": 1.0,
+      "precision": 0.05,
+      "recall": 1.0,
+      "f1": 0.0952,
+      "n_test": 400,
+      "n_anomalies_test": 20,
+      "anomaly_rate_test": 0.05
+    },
+    "Autoencoder": {
+      "fit_time_s": 7.258,
+      "score_time_s": 0.0173,
+      "threshold": 5.249376,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "n_test": 400,
+      "n_anomalies_test": 20,
+      "anomaly_rate_test": 0.05
+    }
+  },
+  "best_f1": [
+    1.0,
+    "LOF"
+  ]
+}

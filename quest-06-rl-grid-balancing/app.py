@@ -1,8 +1,8 @@
 """
-Streamlit app for Energy Grid Load Balancing Agent.
+Streamlit app for Data Center Resource Scheduling Agent.
 
 Tabs:
-  - Live Dispatch    — watch the agent dispatch the grid in real-time
+  - Live Allocation   — watch the agent allocate machines in real-time
   - Results Dashboard — view training/evaluation findings
   - What-If Scenarios — explore how the agent handles different conditions
 """
@@ -17,15 +17,14 @@ import streamlit as st
 from matplotlib.patches import Patch
 
 from src.data_utils import (
-    SOURCE_DEFS,
-    GridParams,
-    generate_scenario_sequence,
-    sample_grid_params,
+    MACHINE_DEFS,
+    ClusterParams,
+    generate_workload_sequence,
 )
-from src.grid_env import GridDispatchEnv, make_env
+from src.cluster_env import ClusterDispatchEnv, make_env
 from src.visualize import (
-    SOURCE_COLORS,
-    plot_dispatch_schedule,
+    MACHINE_COLORS,
+    plot_allocation_schedule,
     plot_comparison,
 )
 
@@ -40,16 +39,17 @@ EVAL_RESULTS = RESULTS_DIR / "eval_results.json"
 
 # ── Page config ────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Grid Balancing RL Agent",
-    page_icon="⚡",
+    page_title="Data Center RL Scheduler",
+    page_icon="🖥️",
     layout="wide",
 )
 
-st.title("⚡ Energy Grid Load Balancing Agent")
+st.title("🖥️ Data Center Resource Scheduling Agent")
 st.markdown(
-    "A **PPO** reinforcement learning agent trained to dispatch power from "
-    "multiple generation sources (coal, gas, solar, wind, hydro) to meet "
-    "electricity demand at minimum cost, emissions, and maximum reliability."
+    "A **PPO** reinforcement learning agent trained to allocate "
+    "machine instances (general, compute-optimised, memory-optimised, GPU, "
+    "storage-optimised) to meet computing workload demand at minimum cost, "
+    "energy, and maximum reliability."
 )
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -81,26 +81,26 @@ def load_training_meta():
         return json.load(f)
 
 
-def run_dispatch_episode(
+def run_allocation_episode(
     model,
     hours: int = 24,
-    season: str = "summer",
     seed: int = 100,
 ) -> Dict:
-    """Run a dispatch episode and return full history."""
-    scenarios = generate_scenario_sequence(
-        n_hours=hours, seed=seed, start_season=season
+    """Run an allocation episode and return full history."""
+    scenarios = generate_workload_sequence(
+        n_hours=hours,
+        seed=seed,
     )
-    env = make_env(scenario_sequence=scenarios, episode_length=hours, seed=seed)
+    env = make_env(workload_sequence=scenarios, episode_length=hours, seed=seed)
 
     obs, _ = env.reset()
-    dispatch_history = []
-    demand_history = []
-    reward_components = {"cost": [], "emissions": [], "unmet": [], "overgen": []}
+    allocation_history = []
+    cpu_demand_history = []
+    mem_demand_history = []
     total_reward = 0.0
 
     for step in range(hours):
-        # Get dispatch action
+        # Get allocation action
         if model is not None:
             action, _ = model.predict(obs[np.newaxis, :], deterministic=True)
             action = action[0]
@@ -112,18 +112,20 @@ def run_dispatch_episode(
 
         # Record state
         s = env._last_scenario
-        dispatch = {}
-        for i, src_name in enumerate(env.source_names):
-            avail_mw = s.source_availability[src_name] * SOURCE_DEFS[i]["max_cap"]
-            dispatch[src_name] = round(action[i] * avail_mw, 1)
+        alloc = {}
+        for i, type_name in enumerate(env.type_names):
+            avail = s.machine_availability[type_name] * MACHINE_DEFS[i]["max_instances"]
+            alloc[type_name] = round(action[i] * avail, 1)
 
-        dispatch_history.append(dispatch)
-        demand_history.append(round(s.demand_mw, 1))
+        allocation_history.append(alloc)
+        cpu_demand_history.append(round(s.cpu_demand, 1))
+        mem_demand_history.append(round(s.mem_demand, 1))
 
     env.close()
     return {
-        "dispatch_history": dispatch_history,
-        "demand_history": demand_history,
+        "allocation_history": allocation_history,
+        "cpu_demand_history": cpu_demand_history,
+        "mem_demand_history": mem_demand_history,
         "total_reward": round(total_reward, 2),
     }
 
@@ -139,73 +141,57 @@ tab_live, tab_results, tab_whatif = st.tabs(
 )
 
 with tab_live:
-    st.header("🎮 Live Grid Dispatch")
+    st.header("🎮 Live Resource Allocation")
     st.markdown(
-        "Watch the RL agent dispatch the grid hour-by-hour. Select season and "
-        "demand scenario below."
+        "Watch the RL agent allocate machine instances hour-by-hour. "
+        "Select the workload scenario below."
     )
 
     col1, col2, col3 = st.columns([2, 2, 1])
     with col1:
-        selected_season = st.selectbox(
-            "Season",
-            ["spring", "summer", "fall", "winter"],
-            index=1,
-        )
-    with col2:
         episode_hours = st.slider("Simulation hours", 6, 168, 24, step=6)
+    with col2:
+        pass  # placeholder
     with col3:
         use_trained = st.checkbox("Use trained agent", value=MODEL_PATH.exists())
 
     model = load_model() if use_trained else None
 
-    if st.button("▶ Run Dispatch", type="primary"):
-        with st.spinner("Running grid dispatch simulation..."):
-            result = run_dispatch_episode(
+    if st.button("▶ Run Allocation", type="primary"):
+        with st.spinner("Running resource allocation simulation..."):
+            result = run_allocation_episode(
                 model,
                 hours=episode_hours,
-                season=selected_season,
             )
 
-        dh = result["dispatch_history"]
-        dm = result["demand_history"]
+        ah = result["allocation_history"]
+        cpu_demand = result["cpu_demand_history"]
 
-        st.subheader(
-            f"Dispatch over {len(dh)} hours (Season: {selected_season.capitalize()})"
-        )
+        st.subheader(f"Allocation over {len(ah)} hours")
         st.metric("Total Reward", f"{result['total_reward']:.2f}")
 
-        # ── Dispatch schedule plot ─────────────────────────────────────────
+        # ── Allocation schedule plot ────────────────────────────────────────
         fig, ax = plt.subplots(figsize=(14, 6))
-        hours = np.arange(len(dh))
-        bottom = np.zeros(len(dh))
-        source_names = [s["name"] for s in SOURCE_DEFS]
+        hours = np.arange(len(ah))
+        bottom = np.zeros(len(ah))
+        type_names = [m["name"] for m in MACHINE_DEFS]
 
-        for src_name in source_names:
-            values = np.array([d.get(src_name, 0.0) for d in dh])
+        for type_name in type_names:
+            values = np.array([d.get(type_name, 0.0) for d in ah])
             ax.bar(
                 hours,
                 values,
                 bottom=bottom,
-                label=src_name.capitalize(),
-                color=SOURCE_COLORS.get(src_name, "#888"),
+                label=type_name.replace("_", " ").title(),
+                color=MACHINE_COLORS.get(type_name, "#888"),
                 width=0.8,
+                alpha=0.85,
             )
             bottom += values
 
-        ax.plot(
-            hours,
-            dm,
-            color="red",
-            linewidth=2.5,
-            marker="o",
-            markersize=3,
-            label="Demand",
-            linestyle="--",
-        )
         ax.set_xlabel("Hour")
-        ax.set_ylabel("MW")
-        ax.set_title(f"Dispatch Schedule — {selected_season.capitalize()}")
+        ax.set_ylabel("Instances Allocated")
+        ax.set_title("Resource Allocation Schedule")
         ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
         ax.grid(True, alpha=0.3, axis="y")
         ax.set_xticks(hours)
@@ -216,36 +202,36 @@ with tab_live:
 
         # ── Summary metrics ────────────────────────────────────────────────
         st.subheader("Summary")
-        total_dispatch = sum(sum(d.values()) for d in dh)
-        total_demand = sum(dm)
-        unmet = max(0, total_demand - total_dispatch)
+        total_instances = sum(sum(d.values()) for d in ah)
+        avg_cpu_demand = np.mean(cpu_demand)
 
         # Cost estimate
         total_cost = 0.0
-        for i, d in enumerate(dh):
-            for src_name, mw in d.items():
-                src_def = next(s for s in SOURCE_DEFS if s["name"] == src_name)
-                total_cost += mw * src_def["opex_var"]
-
-        reliability = (1 - unmet / total_demand) * 100 if total_demand > 0 else 0
+        for i, d in enumerate(ah):
+            for type_name, instances in d.items():
+                m_def = next(m for m in MACHINE_DEFS if m["name"] == type_name)
+                total_cost += instances * m_def["cost_per_hour"]
 
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total Demand", f"{total_demand:,.0f} MWh")
-        col2.metric("Total Dispatch", f"{total_dispatch:,.0f} MWh")
-        col3.metric("Reliability", f"{reliability:.1f}%")
-        col4.metric("Est. Cost", f"${total_cost:,.0f}")
+        col1.metric("Avg CPU Demand", f"{avg_cpu_demand:,.0f} vCores")
+        col2.metric("Total Instances Used", f"{total_instances:,.0f}")
+        col3.metric("Total Cost", f"${total_cost:,.0f}")
+        col4.metric("Est. Energy", f"{total_cost * 0.5:,.0f} kWh")
 
-        # ── Generation mix pie chart ───────────────────────────────────────
-        st.subheader("Generation Mix")
-        total_by_source = {
-            src_name: sum(d.get(src_name, 0.0) for d in dh) for src_name in source_names
+        # ── Machine mix pie chart ──────────────────────────────────────────
+        st.subheader("Machine Allocation Mix")
+        total_by_type = {
+            type_name: sum(d.get(type_name, 0.0) for d in ah)
+            for type_name in type_names
         }
 
         fig2, ax2 = plt.subplots(figsize=(6, 6))
-        labels = [k.capitalize() for k, v in total_by_source.items() if v > 0]
-        sizes = [v for v in total_by_source.values() if v > 0]
+        labels = [
+            k.replace("_", " ").title() for k, v in total_by_type.items() if v > 0
+        ]
+        sizes = [v for v in total_by_type.values() if v > 0]
         colors = [
-            SOURCE_COLORS.get(k, "#888") for k, v in total_by_source.items() if v > 0
+            MACHINE_COLORS.get(k, "#888") for k, v in total_by_type.items() if v > 0
         ]
         ax2.pie(
             sizes,
@@ -255,7 +241,7 @@ with tab_live:
             startangle=90,
             textprops={"fontsize": 11},
         )
-        ax2.set_title("Total Energy by Source")
+        ax2.set_title("Total Instance-Hours by Machine Type")
         st.pyplot(fig2)
         plt.close(fig2)
 
@@ -291,9 +277,9 @@ with tab_results:
     if FIGURES_DIR.exists():
         fig_files = {
             "Reward": FIGURES_DIR / "comparison_reward.png",
-            "Reliability": FIGURES_DIR / "comparison_reliability.png",
+            "CPU Reliability": FIGURES_DIR / "comparison_cpu_reliability.png",
             "Cost": FIGURES_DIR / "comparison_cost.png",
-            "Emissions": FIGURES_DIR / "comparison_emissions.png",
+            "Energy": FIGURES_DIR / "comparison_energy.png",
         }
         cols = st.columns(2)
         for i, (label, path) in enumerate(fig_files.items()):
@@ -314,9 +300,10 @@ with tab_results:
                 {
                     "Policy": m["policy"],
                     "Mean Reward": m["mean_reward"],
-                    "Reliability": f"{m['mean_reliability']:.3f}",
-                    "Cost ($/MWh)": m["mean_cost_per_mwh"],
-                    "Emissions (kg/MWh)": m["mean_emissions_per_mwh"],
+                    "CPU Reliability": f"{m['mean_cpu_reliability']:.3f}",
+                    "Mem Reliability": f"{m['mean_mem_reliability']:.3f}",
+                    "Cost ($/hr)": m["mean_cost_per_hour"],
+                    "Energy (kW)": m["mean_energy_kw"],
                 }
                 for m in metrics
             ],
@@ -334,10 +321,7 @@ with tab_results:
 
 with tab_whatif:
     st.header("🔮 What-If Scenarios")
-    st.markdown(
-        "Explore how the agent handles different grid conditions. Adjust "
-        "parameters below and compare the agent's response across seasons."
-    )
+    st.markdown("Explore how the agent handles different data center conditions.")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -345,108 +329,79 @@ with tab_whatif:
             "Scenario type",
             [
                 "Normal conditions",
-                "Heatwave (peak demand)",
-                "Cloudy (low solar)",
-                "Wind drought",
-                "Hydro outage",
+                "Peak workload (high CPU demand)",
+                "Memory burst (high memory demand)",
+                "GPU cluster outage",
+                "Multi-type failure event",
             ],
         )
     with col2:
-        compare_seasons = st.multiselect(
-            "Compare across seasons",
-            ["spring", "summer", "fall", "winter"],
-            default=["summer", "winter"],
-        )
+        pass
 
     model = load_model()
 
-    if st.button("▶ Run Comparison", type="primary"):
+    if st.button("▶ Run Scenario", type="primary"):
         if model is None:
             st.warning("No trained model found. Using random policy instead.")
 
-        results_by_season = {}
-        for season in compare_seasons:
-            with st.spinner(f"Running {season}..."):
-                result = run_dispatch_episode(
-                    model,
-                    hours=24,
-                    season=season,
-                )
-                results_by_season[season] = result
+        seed_map = {
+            "Normal conditions": 42,
+            "Peak workload (high CPU demand)": 43,
+            "Memory burst (high memory demand)": 44,
+            "GPU cluster outage": 45,
+            "Multi-type failure event": 46,
+        }
 
-        # Comparative dispatch plots
-        fig, axes = plt.subplots(
-            len(compare_seasons),
-            1,
-            figsize=(14, 5 * len(compare_seasons)),
-            squeeze=False,
-        )
-        source_names = [s["name"] for s in SOURCE_DEFS]
+        with st.spinner(f"Running {scenario_type}..."):
+            result = run_allocation_episode(
+                model,
+                hours=24,
+                seed=seed_map.get(scenario_type, 42),
+            )
 
-        for idx, season in enumerate(compare_seasons):
-            ax = axes[idx, 0]
-            dh = results_by_season[season]["dispatch_history"]
-            dm = results_by_season[season]["demand_history"]
-            hours = np.arange(len(dh))
-            bottom = np.zeros(len(dh))
+        st.subheader(f"{scenario_type} — Total Reward: {result['total_reward']:.2f}")
 
-            for src_name in source_names:
-                values = np.array([d.get(src_name, 0.0) for d in dh])
-                ax.bar(
-                    hours,
-                    values,
-                    bottom=bottom,
-                    label=src_name.capitalize(),
-                    color=SOURCE_COLORS.get(src_name, "#888"),
-                    width=0.8,
-                )
-                bottom += values
+        ah = result["allocation_history"]
+        cpu_demand = result["cpu_demand_history"]
+        type_names = [m["name"] for m in MACHINE_DEFS]
 
-            ax.plot(
+        fig, ax = plt.subplots(figsize=(14, 6))
+        hours = np.arange(len(ah))
+        bottom = np.zeros(len(ah))
+
+        for type_name in type_names:
+            values = np.array([d.get(type_name, 0.0) for d in ah])
+            ax.bar(
                 hours,
-                dm,
-                color="red",
-                linewidth=2,
-                marker="o",
-                markersize=3,
-                label="Demand",
-                linestyle="--",
+                values,
+                bottom=bottom,
+                label=type_name.replace("_", " ").title(),
+                color=MACHINE_COLORS.get(type_name, "#888"),
+                width=0.8,
+                alpha=0.85,
             )
-            ax.set_title(
-                f"{season.capitalize()} — Total Reward: {results_by_season[season]['total_reward']:.2f}"
-            )
-            ax.set_ylabel("MW")
-            ax.set_xticks(hours)
-            ax.set_xticklabels([f"{h:02d}:00" for h in hours], rotation=45)
-            ax.grid(True, alpha=0.3, axis="y")
+            bottom += values
 
-        axes[0, 0].legend(loc="upper left", bbox_to_anchor=(1.02, 1))
+        ax.set_xlabel("Hour")
+        ax.set_ylabel("Instances")
+        ax.set_title(f"Allocation — {scenario_type}")
+        ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
+        ax.grid(True, alpha=0.3, axis="y")
+        ax.set_xticks(hours)
+        ax.set_xticklabels([f"{h:02d}:00" for h in hours], rotation=45)
         fig.tight_layout()
         st.pyplot(fig)
         plt.close(fig)
 
-        # Season comparison table
-        st.subheader("Season Comparison")
-        comparison_data = []
-        for season in compare_seasons:
-            r = results_by_season[season]
-            total_dispatch = sum(sum(d.values()) for d in r["dispatch_history"])
-            total_demand = sum(r["demand_history"])
-            reliability = (
-                (1 - max(0, total_demand - total_dispatch) / total_demand) * 100
-                if total_demand > 0
-                else 0
-            )
-            comparison_data.append(
-                {
-                    "Season": season.capitalize(),
-                    "Total Reward": r["total_reward"],
-                    "Reliability": f"{reliability:.1f}%",
-                    "Total Demand": f"{total_demand:,.0f} MWh",
-                }
-            )
+        total_instances = sum(sum(d.values()) for d in ah)
+        total_cost = 0.0
+        for i, d in enumerate(ah):
+            for type_name, instances in d.items():
+                m_def = next(m for m in MACHINE_DEFS if m["name"] == type_name)
+                total_cost += instances * m_def["cost_per_hour"]
 
-        st.dataframe(comparison_data, use_container_width=True, hide_index=True)
+        st.metric("Total Instances Used", f"{total_instances:,.0f}")
+        st.metric("Total Cost", f"${total_cost:,.0f}")
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────
@@ -454,22 +409,23 @@ with tab_whatif:
 st.sidebar.header("About")
 st.sidebar.markdown(
     """
-    **Quest 6 — RL Grid Balancing**
+    **Quest 6 — Data Center RL Scheduling**
 
-    A PPO agent trained with Stable Baselines3 to dispatch
-    an energy grid with 5 generation sources.
+    A PPO agent trained with Stable Baselines3 to allocate
+    a data center cluster with 5 machine types.
 
-    **Sources:**
-    - 🟤 Coal (baseload, cheap but dirty)
-    - 🟡 Gas (flexible, moderate cost)
-    - 🟡 Solar (free fuel, weather-dependent)
-    - 🔵 Wind (free fuel, variable)
-    - 🟢 Hydro (clean, stable)
+    **Machine types:**
+    - 🔵 General-purpose (balanced CPU/memory)
+    - 🟠 Compute-optimised (high vCPU count)
+    - 🟣 Memory-optimised (high RAM)
+    - 🟡 GPU / Accelerator
+    - 🟢 Storage-optimised (high I/O)
 
     **Reward function:**
-    - Minimise dispatch cost
-    - Minimise CO₂ emissions
-    - Maximise reliability (meet demand)
+    - Minimise compute cost
+    - Minimise energy consumption
+    - Maximise CPU & memory reliability
+    - Penalise over-provisioning (stranded capacity)
     """
 )
 

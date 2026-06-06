@@ -1,10 +1,10 @@
 """
-Evaluation script for grid load-balancing agents.
+Evaluation script for data center resource scheduling agents.
 
 Compares PPO-trained agent against baselines:
   - Random policy
-  - Merit-order dispatch (cheapest source first)
-  - Equal-split dispatch (all sources equally)
+  - Cost-first policy (cheapest machine type first)
+  - Equal-split policy (all types equally)
 
 Generates metrics and comparison plots.
 """
@@ -12,7 +12,7 @@ Generates metrics and comparison plots.
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -22,13 +22,13 @@ if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
 from data_utils import (
-    SOURCE_DEFS,
+    MACHINE_DEFS,
     DEFAULT_DATA,
     DEFAULT_RESULTS,
-    generate_scenario_sequence,
-    load_scenario_sequence,
+    generate_workload_sequence,
+    load_workload_sequence,
 )
-from grid_env import GridDispatchEnv, make_env
+from cluster_env import ClusterDispatchEnv, make_env
 
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
@@ -39,55 +39,75 @@ FIGURES_DIR = RESULTS_DIR / "figures"
 # ── Baseline policies ──────────────────────────────────────────────────────
 
 
-def random_policy(obs: np.ndarray, env: GridDispatchEnv) -> np.ndarray:
-    """Random dispatch: sample uniform fractions."""
+def random_policy(obs: np.ndarray, env: ClusterDispatchEnv) -> np.ndarray:
+    """Random allocation: sample uniform fractions."""
     return env.action_space.sample()
 
 
-def merit_order_policy(obs: np.ndarray, env: GridDispatchEnv) -> np.ndarray:
+def cost_first_policy(obs: np.ndarray, env: ClusterDispatchEnv) -> np.ndarray:
     """
-    Merit-order dispatch: dispatch cheapest available sources first
-    until demand is met. This mimics real-world economic dispatch.
+    Cost-first allocation: allocate cheapest machine types first
+    until CPU demand is met. Simple greedy heuristic.
     """
     s = env._last_scenario
-    # Sort sources by price (cheapest first)
+    # Sort machine types by price (cheapest first)
     priced = sorted(
         [
-            (s.source_prices[src["name"]], src, s.source_availability[src["name"]])
-            for src in SOURCE_DEFS
+            (s.machine_prices[m["name"]], m, s.machine_availability[m["name"]])
+            for m in MACHINE_DEFS
         ],
         key=lambda x: x[0],
     )
 
-    action = np.zeros(len(SOURCE_DEFS), dtype=np.float32)
-    remaining = s.demand_mw
+    action = np.zeros(len(MACHINE_DEFS), dtype=np.float32)
+    remaining_cpu = s.cpu_demand
+    remaining_mem = s.mem_demand
 
-    for price, src, avail_frac in priced:
-        idx = next(i for i, s2 in enumerate(SOURCE_DEFS) if s2["name"] == src["name"])
-        avail_mw = avail_frac * src["max_cap"]
-        if remaining <= 0:
+    for price, m, avail_frac in priced:
+        idx = next(i for i, m2 in enumerate(MACHINE_DEFS) if m2["name"] == m["name"])
+        avail = avail_frac * m["max_instances"]
+        if remaining_cpu <= 0 and remaining_mem <= 0:
             break
-        take = min(avail_mw, remaining)
-        action[idx] = take / avail_mw if avail_mw > 0 else 0.0
-        remaining -= take
+
+        # How many instances needed to meet remaining demand
+        need_cpu = (
+            max(0, remaining_cpu / m["cpu_per_instance"])
+            if m["cpu_per_instance"] > 0
+            else 0
+        )
+        need_mem = (
+            max(0, remaining_mem / m["mem_per_instance"])
+            if m["mem_per_instance"] > 0
+            else 0
+        )
+        need = max(need_cpu, need_mem)
+
+        take = min(avail, need)
+        action[idx] = take / avail if avail > 0 else 0.0
+        remaining_cpu -= take * m["cpu_per_instance"]
+        remaining_mem -= take * m["mem_per_instance"]
 
     return action
 
 
-def equal_split_policy(obs: np.ndarray, env: GridDispatchEnv) -> np.ndarray:
+def equal_split_policy(obs: np.ndarray, env: ClusterDispatchEnv) -> np.ndarray:
     """
-    Equal-split dispatch: dispatch all sources at equal fraction,
-    scaled to meet demand.
+    Equal-split allocation: allocate all machine types at equal fraction,
+    scaled to meet CPU demand.
     """
     s = env._last_scenario
-    total_avail = sum(
-        s.source_availability[src["name"]] * src["max_cap"] for src in SOURCE_DEFS
+    total_avail_instances = sum(
+        s.machine_availability[m["name"]] * m["max_instances"] for m in MACHINE_DEFS
     )
-    if total_avail <= 0:
-        return np.zeros(len(SOURCE_DEFS), dtype=np.float32)
+    if total_avail_instances <= 0:
+        return np.zeros(len(MACHINE_DEFS), dtype=np.float32)
 
-    fraction = min(1.0, s.demand_mw / total_avail)
-    action = np.full(len(SOURCE_DEFS), fraction, dtype=np.float32)
+    total_avail_cpu = sum(
+        s.machine_availability[m["name"]] * m["max_instances"] * m["cpu_per_instance"]
+        for m in MACHINE_DEFS
+    )
+    fraction = min(1.0, s.cpu_demand / total_avail_cpu) if total_avail_cpu > 0 else 0.0
+    action = np.full(len(MACHINE_DEFS), fraction, dtype=np.float32)
     return action
 
 
@@ -95,11 +115,10 @@ def equal_split_policy(obs: np.ndarray, env: GridDispatchEnv) -> np.ndarray:
 
 
 def evaluate_policy(
-    policy_fn,
-    env: GridDispatchEnv,
+    policy_fn: Callable,
+    env: ClusterDispatchEnv,
     n_episodes: int = 10,
     policy_name: str = "policy",
-    deterministic: bool = True,
 ) -> Dict:
     """Run a policy for multiple episodes and aggregate metrics."""
     all_rewards = []
@@ -122,19 +141,20 @@ def evaluate_policy(
     # Aggregate
     mean_reward = np.mean(all_rewards)
     std_reward = np.std(all_rewards)
-    reliabilities = [inf.get("reliability", 0.0) for inf in all_info]
-    costs = [inf.get("avg_cost_per_mwh", 0.0) for inf in all_info]
-    emissions = [inf.get("avg_emissions_per_mwh", 0.0) for inf in all_info]
+    cpu_reliabilities = [inf.get("cpu_reliability", 0.0) for inf in all_info]
+    mem_reliabilities = [inf.get("mem_reliability", 0.0) for inf in all_info]
+    costs = [inf.get("avg_cost_per_hour", 0.0) for inf in all_info]
+    energy = [inf.get("avg_energy_kw", 0.0) for inf in all_info]
 
     results = {
         "policy": policy_name,
         "n_episodes": n_episodes,
         "mean_reward": round(float(mean_reward), 2),
         "std_reward": round(float(std_reward), 2),
-        "mean_reliability": round(float(np.mean(reliabilities)), 4),
-        "std_reliability": round(float(np.std(reliabilities)), 4),
-        "mean_cost_per_mwh": round(float(np.mean(costs)), 2),
-        "mean_emissions_per_mwh": round(float(np.mean(emissions)), 2),
+        "mean_cpu_reliability": round(float(np.mean(cpu_reliabilities)), 4),
+        "mean_mem_reliability": round(float(np.mean(mem_reliabilities)), 4),
+        "mean_cost_per_hour": round(float(np.mean(costs)), 2),
+        "mean_energy_kw": round(float(np.mean(energy)), 2),
     }
     return results
 
@@ -152,7 +172,7 @@ def load_trained_model(model_path: Path, vec_norm_path: Optional[Path] = None):
         dummy_venv = DummyVecEnv(
             [
                 lambda: make_env(
-                    scenario_sequence=generate_scenario_sequence(1, seed=0),
+                    workload_sequence=generate_workload_sequence(1, seed=0),
                     episode_length=1,
                     seed=0,
                 )
@@ -188,19 +208,19 @@ def main():
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 60)
-    print("Grid Load Balancing — Evaluation")
+    print("Data Center Resource Scheduling — Evaluation")
     print("=" * 60)
 
     # ── Generate evaluation scenarios ──────────────────────────────────────
-    print("\nGenerating evaluation scenarios...")
-    eval_scenarios = generate_scenario_sequence(
+    print("\nGenerating evaluation workload scenarios...")
+    eval_scenarios = generate_workload_sequence(
         n_hours=24 * 365,  # 1 year
         seed=42,
     )
 
     # ── Create environments ────────────────────────────────────────────────
     env = make_env(
-        scenario_sequence=eval_scenarios,
+        workload_sequence=eval_scenarios,
         episode_length=24 * 7,  # 1 week episodes
         seed=42,
     )
@@ -209,7 +229,7 @@ def main():
     print("\nEvaluating baselines...")
     baseline_policies = {
         "Random": random_policy,
-        "Merit Order": merit_order_policy,
+        "Cost First": cost_first_policy,
         "Equal Split": equal_split_policy,
     }
 
@@ -224,30 +244,40 @@ def main():
         )
         all_results.append(results)
         print(f"    Reward: {results['mean_reward']:.2f} ± {results['std_reward']:.2f}")
-        print(f"    Reliability: {results['mean_reliability']:.4f}")
-        print(f"    Cost: ${results['mean_cost_per_mwh']:.2f}/MWh")
-        print(f"    Emissions: {results['mean_emissions_per_mwh']:.2f} kg/MWh")
+        print(f"    CPU Reliability: {results['mean_cpu_reliability']:.4f}")
+        print(f"    Cost: ${results['mean_cost_per_hour']:.2f}/hr")
+        print(f"    Energy: {results['mean_energy_kw']:.2f} kW")
 
     # ── Trained model ──────────────────────────────────────────────────────
     model_path = RESULTS_DIR / "model.zip"
     vec_norm_path = RESULTS_DIR / "vecnormalize.pkl"
     if model_path.exists():
         print(f"\nLoading trained model from {model_path}...")
-        model, vec_norm = load_trained_model(model_path, vec_norm_path)
-        policy_fn = trained_agent_policy(model, vec_norm)
+        try:
+            model, vec_norm = load_trained_model(model_path, vec_norm_path)
+        except (AssertionError, ValueError, RuntimeError) as e:
+            print(f"  Could not load model (likely trained on different env): {e}")
+            print(
+                "  Skipping PPO evaluation. Train a new model with: python src/train.py"
+            )
+            model = None
 
-        print("Evaluating PPO agent...")
-        results = evaluate_policy(
-            policy_fn,
-            env,
-            n_episodes=10,
-            policy_name="PPO",
-        )
-        all_results.append(results)
-        print(f"    Reward: {results['mean_reward']:.2f} ± {results['std_reward']:.2f}")
-        print(f"    Reliability: {results['mean_reliability']:.4f}")
-        print(f"    Cost: ${results['mean_cost_per_mwh']:.2f}/MWh")
-        print(f"    Emissions: {results['mean_emissions_per_mwh']:.2f} kg/MWh")
+        if model is not None:
+            policy_fn = trained_agent_policy(model, vec_norm)
+            print("Evaluating PPO agent...")
+            results = evaluate_policy(
+                policy_fn,
+                env,
+                n_episodes=10,
+                policy_name="PPO",
+            )
+            all_results.append(results)
+            print(
+                f"    Reward: {results['mean_reward']:.2f} ± {results['std_reward']:.2f}"
+            )
+            print(f"    CPU Reliability: {results['mean_cpu_reliability']:.4f}")
+            print(f"    Cost: ${results['mean_cost_per_hour']:.2f}/hr")
+            print(f"    Energy: {results['mean_energy_kw']:.2f} kW")
     else:
         print(f"\nNo trained model found at {model_path}. Skipping PPO evaluation.")
         print("Train a model first with: python src/train.py")
@@ -262,15 +292,19 @@ def main():
     print("\n" + "=" * 60)
     print("Summary Comparison")
     print("=" * 60)
-    header = f"{'Policy':<20} {'Reward':>10} {'Reliability':>12} {'Cost($)':>10} {'CO₂(kg)':>10}"
+    header = (
+        f"{'Policy':<20} {'Reward':>10} {'CPU Rel':>8} "
+        f"{'Mem Rel':>8} {'Cost($)':>10} {'Energy':>8}"
+    )
     print(header)
     print("-" * len(header))
     for r in all_results:
         print(
             f"{r['policy']:<20} {r['mean_reward']:>8.0f} ±{r['std_reward']:>5.0f} "
-            f"{r['mean_reliability']:>10.3f}  "
-            f"{r['mean_cost_per_mwh']:>7.1f}  "
-            f"{r['mean_emissions_per_mwh']:>7.1f}"
+            f"{r['mean_cpu_reliability']:>7.3f}  "
+            f"{r['mean_mem_reliability']:>7.3f}  "
+            f"{r['mean_cost_per_hour']:>7.1f}  "
+            f"{r['mean_energy_kw']:>7.1f}"
         )
 
 
