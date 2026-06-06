@@ -103,6 +103,34 @@ python src/evaluate.py
 - FAISS `IndexFlatIP` with L2-normalized embeddings gives cosine similarity search with exact results (no approximation loss)
 - For large-scale deployments, consider `IndexIVFFlat` for faster search at the cost of some accuracy
 
+## Potential Improvements
+
+The current pipeline is entirely **zero-shot inference** — both MiniLM and the cross-encoder are used off-the-shelf with no fine-tuning. There are several avenues to improve retrieval performance:
+
+### 1. Fine-tune the embedding model (highest impact)
+
+The 86k query-answer pairs in `data/queries.json` are only used for evaluation. They can be repurposed for **contrastive learning** (e.g. `MultipleNegativesRankingLoss` from `sentence-transformers`) to pull query embeddings closer to their correct documents and push them away from incorrect ones. Estimated gain: **+10–15% Hit Rate@5**.
+
+### 2. Hard negative mining
+
+Use the current retriever to find top-ranked-but-wrong documents per query, then retrain with those as explicit negatives. This forces the model to learn finer-grained distinctions.
+
+### 3. Enable document chunking
+
+A `chunk_text()` function exists in `src/data_utils.py` but is never called. Currently each SQuAD context is stored as a single document, but some are long paragraphs. Chunking into overlapping word windows (256 words, 32 overlap) would improve precision by matching queries to specific passage snippets rather than whole paragraphs.
+
+### 4. Fine-tune the cross-encoder re-ranker
+
+The cross-encoder was trained on MS MARCO (Bing search data). Fine-tuning it on your own query-document pairs — especially with hard negatives from the FAISS index — would make re-ranking scores more discriminative for this corpus.
+
+### 5. Hybrid retrieval (dense + sparse)
+
+Adding a BM25/TF-IDF sparse retriever alongside MiniLM and fusing results captures exact keyword matches that dense retrieval can miss. The SQuAD data is ideal for learning the optimal fusion weight.
+
+### 6. Query expansion
+
+Use the top initial retrieval results to extract key terms and re-query, improving recall without any model changes.
+
 ## Files
 
 ```

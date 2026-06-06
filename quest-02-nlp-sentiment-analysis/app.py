@@ -342,7 +342,22 @@ if analyze_btn and text.strip() and model is not None:
         except Exception as e:
             st.warning(f"Could not generate attribution plot: {e}")
         except Exception as e:
-            st.warning(f"Could not generate attention plot: {e}")
+            st.warning(f"Could not generate attribution plot: {e}")
+
+    # ── Model comparison ─────────────────────────────────────
+    st.markdown("### 📊 Model Comparison: 5k vs 20k Training Samples")
+    st.markdown(
+        """
+        | Metric | 5k model | 20k model |
+        |---|---|---|
+        | **Training samples** | 5,000 | 20,000 |
+        | **Training time** | ~25 min | ~5h 19min |
+        | **Test accuracy** | 84.20% | **94.36%** |
+        | **Macro F1** | 84.19% | **94.36%** |
+        | **Negative F1** | 84.59% | 94.30% |
+        | **Positive F1** | 83.78% | 94.42% |
+        """
+    )
 
 elif analyze_btn:
     st.warning("Please enter some text to analyze.")

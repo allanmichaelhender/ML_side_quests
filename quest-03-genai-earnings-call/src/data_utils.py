@@ -27,10 +27,14 @@ ENERGY_COMPANIES: List[Dict[str, str | int]] = [
     {"name": "Chevron", "ticker": "CVX", "cik": 93410},
     {"name": "ConocoPhillips", "ticker": "COP", "cik": 1163165},
     {"name": "EOG Resources", "ticker": "EOG", "cik": 821189},
-    {"name": "Pioneer Natural Resources", "ticker": "PXD", "cik": 1017788},
+    {"name": "Devon Energy", "ticker": "DVN", "cik": 1090012},  # Replaces Pioneer (404)
     {"name": "Occidental Petroleum", "ticker": "OXY", "cik": 797468},
     {"name": "Schlumberger", "ticker": "SLB", "cik": 87347},
-    {"name": "Baker Hughes", "ticker": "BKR", "cik": 1702280},
+    {
+        "name": "Halliburton",
+        "ticker": "HAL",
+        "cik": 45012,
+    },  # Replaces Baker Hughes (404)
 ]
 
 # ── Financial metrics to extract (GAAP tags) ─────────────────────
@@ -91,6 +95,12 @@ def _format_currency(value: float) -> str:
         return f"${value:.2f}"
 
 
+SEC_HEADERS = {
+    "User-Agent": "ML_side_quests/1.0 (allan.example@email.com)",
+    "Accept-Encoding": "gzip, deflate",
+}
+
+
 def fetch_financial_data(
     companies: List[Dict] = None,
     metrics: Dict[str, str] = None,
@@ -98,8 +108,9 @@ def fetch_financial_data(
     cache_dir: Optional[Path] = None,
 ) -> List[Dict]:
     """
-    Fetch XBRL financial data for energy companies using edgar-sec.
+    Fetch XBRL financial data for energy companies directly from SEC EDGAR API.
 
+    Uses the public SEC company facts API (no external library required).
     Returns a list of records: {company, ticker, metric, period, value, unit}
     """
     if companies is None:
@@ -122,81 +133,72 @@ def fetch_financial_data(
                 )
                 return cached["records"]
 
-    # Try live SEC API; fall back to realistic mock data on any failure
-    try:
-        from edgar_sec import EdgarAPI
+    # ── Fetch from SEC public API ─────────────────────────────
+    for company in companies:
+        cik_padded = str(company["cik"]).zfill(10)
+        url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik_padded}.json"
 
-        edgar = EdgarAPI(cache_mode=True)
-
-        for company in companies:
-            try:
-                company_facts = edgar.get_company_facts(ticker=company["ticker"])
-            except Exception:
+        try:
+            resp = requests.get(url, headers=SEC_HEADERS, timeout=30)
+            if resp.status_code != 200:
+                print(f"  [SKIP] {company['ticker']}: HTTP {resp.status_code}")
+                time.sleep(0.2)
                 continue
 
+            data = resp.json()
+            us_gaap = data.get("facts", {}).get("us-gaap", {})
+
             for metric_name, gaap_tag in metrics.items():
-                try:
-                    tag_parts = gaap_tag.split(":")
-                    taxonomy = tag_parts[0]
-                    tag = tag_parts[1]
+                tag = gaap_tag.split(":")[
+                    1
+                ]  # e.g. "RevenueFromContractWithCustomerExcludingAssessedTax"
+                concept = us_gaap.get(tag, {})
+                units = concept.get("units", {})
 
-                    concept = edgar.get_company_concept(
-                        taxonomy, tag, ticker=company["ticker"]
-                    )
-
-                    if not concept or not concept.units:
+                for unit_name, values in units.items():
+                    # Only take USD-denominated values
+                    if "USD" not in unit_name and unit_name != "USD":
                         continue
 
-                    for unit_name, values in concept.units.items():
-                        if "USD" not in unit_name and unit_name != "USD":
+                    # Sort by end date descending, take most recent
+                    sorted_vals = sorted(
+                        values, key=lambda v: v.get("end", ""), reverse=True
+                    )
+                    years_seen = 0
+                    for v in sorted_vals:
+                        if "end" not in v:
                             continue
+                        if years_seen >= max_fiscal_years:
+                            break
 
-                        sorted_vals = sorted(
-                            values, key=lambda v: v.get("end", ""), reverse=True
+                        all_records.append(
+                            {
+                                "company": company["name"],
+                                "ticker": company["ticker"],
+                                "metric": metric_name,
+                                "period": v["end"],
+                                "fy": v.get("fy", int(v["end"][:4])),
+                                "fp": v.get("fp", "FY"),
+                                "value": v.get("val", 0),
+                                "unit": unit_name,
+                            }
                         )
-                        years_seen = 0
-                        for v in sorted_vals:
-                            if "end" not in v:
-                                continue
-                            year = v["end"][:4]
-                            if years_seen >= max_fiscal_years:
-                                break
+                        years_seen += 1
 
-                            all_records.append(
-                                {
-                                    "company": company["name"],
-                                    "ticker": company["ticker"],
-                                    "metric": metric_name,
-                                    "period": v["end"],
-                                    "fy": v.get("fy", int(year)),
-                                    "fp": v.get("fp", "FY"),
-                                    "value": v.get("val", 0),
-                                    "unit": unit_name,
-                                }
-                            )
-                            years_seen += 1
+            print(f"  [OK] {company['ticker']}: fetched facts")
+            time.sleep(0.15)  # Rate limit: ~6 req/s max
 
-                except Exception:
-                    continue
+        except requests.exceptions.RequestException as e:
+            print(f"  [WARN] {company['ticker']}: {e}")
+            time.sleep(0.2)
+            continue
 
-            time.sleep(0.5)
+    if all_records:
+        print(f"  [OK] Fetched {len(all_records)} records from SEC EDGAR")
+    else:
+        print("  [WARN]  No financial data returned from SEC API.")
 
-        if all_records:
-            print(f"  [OK] Fetched {len(all_records)} records from SEC EDGAR")
-    except Exception:
-        pass
-
-    # Use mock data if API returned nothing
-    # Commented out — uncomment to fall back to random mock data for testing
-    # if not all_records:
-    #     return _generate_mock_data(companies, metrics, max_fiscal_years)
-
-    if not all_records:
-        print(
-            "  [WARN]  No financial data returned from SEC API. Ensure edgar_sec is installed and try again."
-        )
-
-    # Cache
+    # Cache results (even if empty, to avoid hammering API)
     if cache_dir is not None:
         with open(cache_path, "w") as f:
             json.dump(
@@ -480,7 +482,7 @@ def download_filing_texts(
 ) -> List[Dict]:
     """
     Download raw SEC filing text for domain-adaptive pretraining.
-    Uses direct SEC EDGAR URLs.
+    Uses the SEC submissions API (no external library required).
 
     Returns a list of dicts: {company, ticker, text}
     """
@@ -494,89 +496,100 @@ def download_filing_texts(
                 return json.load(f)
 
     all_texts = []
-    headers = {
-        "User-Agent": "ML_side_quests/1.0 (your@email.com)",
-    }
 
     for company in companies:
         print(f"  Downloading filings for {company['name']}...")
         cik_padded = str(company["cik"]).zfill(10)
 
         try:
-            # Get submissions index
-            idx_url = (
-                f"https://www.sec.gov/cgi-bin/browse-edgar?"
-                f"action=getcompany&CIK={company['cik']}&type=&dateb=&owner=exclude&count=40"
-                f"&output=json"
-            )
-            resp = requests.get(idx_url, headers=headers, timeout=30)
-            if resp.status_code != 200:
+            # ── Step 1: Get recent submissions via SEC API ──────
+            sub_url = f"https://data.sec.gov/submissions/CIK{cik_padded}.json"
+            sub_resp = requests.get(sub_url, headers=SEC_HEADERS, timeout=30)
+            if sub_resp.status_code != 200:
+                print(f"    [SKIP] HTTP {sub_resp.status_code}")
+                time.sleep(0.2)
                 continue
 
-            data = resp.json()
-            filings = []
-            for row in data.get("filings", {}).get("recent", {}).get("form", []):
-                pass  # This API has a different structure
+            sub_data = sub_resp.json()
+            recent = sub_data.get("filings", {}).get("recent", {})
+            forms = recent.get("form", [])
+            accession_numbers = recent.get("accessionNumber", [])
+            primary_docs = recent.get("primaryDocument", [])
+            filing_dates = recent.get("filingDate", [])
 
-            # Alternative: use the EDGAR full-index feed
+            # ── Step 2: Filter by form type ─────────────────────
+            download_targets = []
+            for i, form in enumerate(forms):
+                if (
+                    form in form_types
+                    and len(download_targets) < max_filings_per_company
+                ):
+                    acc_no = accession_numbers[i] if i < len(accession_numbers) else ""
+                    primary = primary_docs[i] if i < len(primary_docs) else ""
+                    fdate = filing_dates[i] if i < len(filing_dates) else ""
+                    download_targets.append(
+                        {
+                            "accession": acc_no,
+                            "primary": primary,
+                            "date": fdate,
+                            "form": form,
+                        }
+                    )
+
+            if not download_targets:
+                print(f"    [SKIP] No matching filings found")
+                time.sleep(0.15)
+                continue
+
+            # ── Step 3: Download each filing ────────────────────
             base_url = f"https://www.sec.gov/Archives/edgar/data/{company['cik']}"
-            index_url = f"{base_url}/index.json"
-            idx_resp = requests.get(index_url, headers=headers, timeout=30)
-            if idx_resp.status_code != 200:
-                continue
-
-            dirs = idx_resp.json().get("directory", {}).get("item", [])
             count = 0
-            for d in sorted(dirs, key=lambda x: x.get("name", ""), reverse=True):
-                if count >= max_filings_per_company:
-                    break
+            for target in download_targets:
+                acc_clean = target["accession"].replace("-", "")
+                doc_url = f"{base_url}/{acc_clean}/{target['primary']}"
 
-                dir_name = d.get("name", "")
-                if not dir_name.isdigit():
-                    continue
+                doc_resp = requests.get(doc_url, headers=SEC_HEADERS, timeout=60)
+                if doc_resp.status_code != 200:
+                    # Fallback: try the .txt version of the primary document
+                    txt_name = (
+                        target["primary"].rsplit(".", 1)[0] + ".txt"
+                        if "." in target["primary"]
+                        else target["primary"] + ".txt"
+                    )
+                    doc_url = f"{base_url}/{acc_clean}/{txt_name}"
+                    doc_resp = requests.get(doc_url, headers=SEC_HEADERS, timeout=60)
 
-                # Get filing detail
-                detail_url = f"{base_url}/{dir_name}/index.json"
-                det_resp = requests.get(detail_url, headers=headers, timeout=30)
-                if det_resp.status_code != 200:
-                    continue
-
-                items = det_resp.json().get("directory", {}).get("item", [])
-                for item in items:
-                    fname = item.get("name", "")
-                    # Look for the main filing document (txt format)
-                    if fname.endswith(".txt") or fname.endswith(".htm"):
-                        filing_url = f"{base_url}/{dir_name}/{fname}"
-                        filing_resp = requests.get(
-                            filing_url, headers=headers, timeout=60
+                if doc_resp.status_code == 200:
+                    text = doc_resp.text
+                    # Clean HTML tags
+                    clean = re.sub(r"<[^>]+>", " ", text)
+                    clean = re.sub(r"\s+", " ", clean).strip()
+                    # Only keep substantial chunks
+                    if len(clean) > 1000:
+                        chunks = _chunk_text(clean, chunk_size=2000)
+                        for chunk in chunks:
+                            all_texts.append(
+                                {
+                                    "company": company["name"],
+                                    "ticker": company["ticker"],
+                                    "text": chunk,
+                                }
+                            )
+                        count += 1
+                        print(
+                            f"    [OK] {target['form']} {target['date']} ({len(chunks)} chunks)"
                         )
-                        if filing_resp.status_code == 200:
-                            text = filing_resp.text
-                            # Clean HTML tags
-                            clean = re.sub(r"<[^>]+>", " ", text)
-                            clean = re.sub(r"\s+", " ", clean).strip()
-                            # Only keep substantial chunks
-                            if len(clean) > 1000:
-                                # Split into ~512-token chunks
-                                chunks = _chunk_text(clean, chunk_size=2000)
-                                for chunk in chunks:
-                                    all_texts.append(
-                                        {
-                                            "company": company["name"],
-                                            "ticker": company["ticker"],
-                                            "text": chunk,
-                                        }
-                                    )
-                                count += 1
-                                break
 
                 time.sleep(0.2)  # Rate limit
 
+            if count == 0:
+                print(f"    [SKIP] Could not download any filing documents")
+
         except Exception as e:
-            print(f"    [WARN]  Error: {e}")
+            print(f"    [WARN]  {company['ticker']}: {e}")
             continue
 
-    print(f"  Downloaded {len(all_texts)} text chunks")
+    print(f"  Downloaded {len(all_texts)} text chunks total")
 
     if cache_dir is not None:
         with open(cache_path, "w") as f:

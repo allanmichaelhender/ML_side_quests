@@ -4,20 +4,20 @@
     "Chevron",
     "ConocoPhillips",
     "EOG Resources",
-    "Pioneer Natural Resources",
+    "Devon Energy",
     "Occidental Petroleum",
     "Schlumberger",
-    "Baker Hughes"
+    "Halliburton"
   ],
   "tickers": [
     "XOM",
     "CVX",
     "COP",
     "EOG",
-    "PXD",
+    "DVN",
     "OXY",
     "SLB",
-    "BKR"
+    "HAL"
   ],
   "metrics": [
     "Revenue",
@@ -31,7 +31,7 @@
     "Gross Profit",
     "Research and Development"
   ],
-  "total_records": 240,
-  "total_pairs": 264,
+  "total_records": 174,
+  "total_pairs": 210,
   "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 }
