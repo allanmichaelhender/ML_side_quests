@@ -43,3 +43,4 @@ dist/
 .vscode/
 *.swp
 *.swo
+quest-08-anomaly-detection/data/kaggle/
