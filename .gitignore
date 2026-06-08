@@ -26,6 +26,7 @@ quest-*/results/*
 !quest-*/results/metrics.json
 !quest-*/results/metrics_5k.json
 !quest-*/results/metrics_20k.json
+!quest-*/results/eval_results.json
 !quest-*/results/label_info.json
 !quest-*/results/gradcam/
 !quest-*/results/gradcam/**

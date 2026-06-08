@@ -1,0 +1,31 @@
+{
+  "perplexity": 1.6246,
+  "num_test_prompts": 5,
+  "generations": [
+    {
+      "instruction": "What was Exxon Mobil's revenue for FY2024?",
+      "response": "Exxon Mobil's revenue for FY2024 was $370.8 billion.",
+      "generation_time_s": 7.71
+    },
+    {
+      "instruction": "Summarize the key financial results for Chevron for FY2024 based on their SEC filing.",
+      "response": "Chevron reported $4.1 billion in net income for FY2024. They earned $0.80 per share, which is a decrease of 17% from the previous year. The company's net income was primarily driven by lower production and lower cost of production, as well as lower gains on investments. Chevron also reported lower oil and gas sales volumes, primarily due to the decline in oil prices. The company's total production was 1.93 million barrels of oil equivalent per day, which is a decrease of 10% from the previous year. Chevron's capital expenditures were $13.2 billion, which includes $5.7 billion for exploration and development. The company expects to incur $1.4 billion of capital expenditures in 2024.\n\nChevron reported a $0.47 per share",
+      "generation_time_s": 37.6
+    },
+    {
+      "instruction": "Analyze the financial performance of ConocoPhillips, including revenue, net income, and total assets.",
+      "response": "ConocoPhillips reported net income of $4.7 billion for the first quarter of 2021, a 28% decrease from the same period in 2020. This decrease was due to lower oil and gas prices, higher production costs, and a decrease in cash flow from operating activities. Total assets as of March 31, 2021, were $396.2 billion, an increase of $24.3 billion compared to $141.9 billion at the end of 2020.\n\nNet income for the first quarter of 2021 was $4.7 billion, or $0.22 per diluted share, compared to net income of $12.1 billion, or $0.65 per diluted share, for the same period in 2020. The decrease in net income was primarily due to lower oil and gas",
+      "generation_time_s": 36.22
+    },
+    {
+      "instruction": "Compare the revenue and net income of Exxon Mobil and Chevron.",
+      "response": "Exxon Mobil and Chevron reported the following financial data for their 2029 Q2 results:\n\n2029 Q2 Earnings $13,064M $6,145M 149% 25%\n2029 Q2 Revenue $23,312M $12,179M 75% 87%\n2029 Q2 Net Income $1,107M $607M 127% 129%\n2029 Q2 Earnings $13,064M $6,145M 149% 25%\n2029 Q2 Revenue $23,312M $12,179M 75% 87%\n2029 Q2",
+      "generation_time_s": 36.82
+    },
+    {
+      "instruction": "What are the key financial metrics I should look at when evaluating an energy company?",
+      "response": "Key financial metrics to evaluate an energy company are:\n\n1. EBITDA: Earnings before interest, taxes, depreciation, and amortization.\n\n2. EBIT: Earnings before interest and taxes.\n\n3. Gross margin: Gross profit less interest expense.\n\n4. Operating expenses: Total operating expenses, excluding depreciation, amortization, and stock-based compensation.\n\n5. Net income: Earnings before interest and taxes.\n\n6. Debt-to-equity: Debt divided by total equity.\n\n7. Net debt: Total debt less cash and cash equivalents.\n\n8. Cash flow: Operating cash flow less capital expenditures.\n\n9. Free cash flow: Cash flow less capital expenditures.\n\n10.",
+      "generation_time_s": 36.82
+    }
+  ]
+}
