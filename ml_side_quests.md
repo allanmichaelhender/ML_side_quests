@@ -6,8 +6,7 @@
 | --- | ------------------------------- | ------------------------------- | ---------------------- | --------------------------------------------------------------- |
 | 1   | 🌱 Plant Disease Classification | MobileNetV2 (ONNX)              | ~2 hours CPU           | **96.1%** accuracy across 38 plant disease classes              |
 | 2   | 📝 Sentiment Analysis           | DistilBERT                      | **~25 min** (3 epochs) | **84.2%** accuracy, **0.84** macro F1 on 5k reviews             |
-| 3   | 📊 Energy Earnings Call Analyst | TinyLlama 1.1B + LoRA (r=4)     | **~63 min** (2 epochs) | **1.98** train loss — context-based Q&A on SEC filings          |
-| 4   | 🔍 RAG Retrieval Pipeline       | MiniLM + Cross-Encoder          | ~30 min (indexing)     | **74.5%** Hit@5, **0.57** MRR over 200 queries                  |
+| 3   | RAG Retrieval Pipeline          | MiniLM + Cross-Encoder          | ~30 min (indexing)     | **74.5%** Hit@5, **0.57** MRR over 200 queries                  |
 | 5   | 🎫 Support Ticket Routing       | TF-IDF / DistilBERT / Zero-shot | **< 30 min** per model | **85.2%** accuracy (DistilBERT) across 77 intent classes        |
 | 6   | ⚡ Energy Grid Load Balancing   | PPO (Stable Baselines3)         | **30–60 min**          | **-30.0M** reward (beats random -414M and rule-based baselines) |
 
@@ -66,7 +65,6 @@ The model learns to **extract** the metric from the provided filing text context
 ml_side_quests/
 ├── quest-01-cv-plant-disease/       # Computer Vision — MobileNetV2
 ├── quest-02-nlp-sentiment-analysis/ # NLP — DistilBERT fine-tuning
-├── quest-03-genai-earnings-call/    # GenAI — TinyLlama + LoRA
 ├── quest-04-rag-pipeline/           # RAG — MiniLM + FAISS
 ├── quest-05-nlp-ticket-routing/     # NLP — Multi-model comparison
 ├── quest-06-rl-grid-balancing/      # RL — PPO energy grid agent
@@ -106,12 +104,12 @@ quest-name/
 docker compose up -d
 
 # Or individual quest in a venv
-cd quest-03-genai-earnings-call
+cd quest-04-rag-pipeline
 python -m venv .venv
 source .venv/bin/activate
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
-python src/train.py      # fine-tune
+python src/embed_and_index.py
 streamlit run app.py     # view results
 ```
 

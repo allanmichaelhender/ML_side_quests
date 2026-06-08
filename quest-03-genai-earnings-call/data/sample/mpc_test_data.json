@@ -1,0 +1,165 @@
+{
+  "filing_text": "mpc-20260331 0001510295 12/31 2026 Q1 FALSE http://fasb.org/us-gaap/2025#ValuationTechniqueDiscountedCashFlowMember http://fasb.org/us-gaap/2025#ValuationTechniqueDiscountedCashFlowMember P5Y http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold http://fasb.org/us-gaap/2025#CostOfGoodsAndServicesSold xbrli:shares iso4217:USD iso4217:USD xbrli:shares xbrli:pure mpc:Segment iso4217:USD utr:gal utr:bbl 0001510295 2026-01-01 2026-03-31 0001510295 2026-04-30 0001510295 2025-01-01 2025-03-31 0001510295 us-gaap:AccumulatedDefinedBenefitPlansAdjustmentNetGainLossIncludingPortionAttributableToNoncontrollingInterestMember 2026-01-01 2026-03-31 0001510295 us-gaap:AccumulatedDefinedBenefitPlansAdjustmentNetGainLossIncludingPortionAttributableToNoncontrollingInterestMember 2025-01-01 2025-03-31 0001510295 us-gaap:AccumulatedDefinedBenefitPlansAdjustmentNetPriorServiceIncludingPortionAttributableToNoncontrollingInterestMember 2026-01-01 2026-03-31 0001510295 us-gaap:AccumulatedDefinedBenefitPlansAdjustmentNetPriorServiceIncludingPortionAttributableToNoncontrollingInterestMember 2025-01-01 2025-03-31 0001510295 mpc:AccumulatedGainLossOtherMember 2026-01-01 2026-03-31 0001510295 mpc:AccumulatedGainLossOtherMember 2025-01-01 2025-03-31 0001510295 2026-03-31 0001510295 2025-12-31 0001510295 2024-12-31 0001510295 2025-03-31 0001510295 us-gaap:CommonStockMember 2025-12-31 0001510295 us-gaap:TreasuryStockCommonMember 2025-12-31 0001510295 us-gaap:AdditionalPaidInCapitalMember 2025-12-31 0001510295 us-gaap:RetainedEarningsMember 2025-12-31 0001510295 us-gaap:AccumulatedOtherComprehensiveIncomeMember 2025-12-31 0001510295 us-gaap:NoncontrollingInterestMembe",
+  "records": [
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Revenue",
+      "period": "2026-03-31",
+      "fy": 2026,
+      "fp": "Q1",
+      "value": 34200000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Revenue",
+      "period": "2025-12-31",
+      "fy": 2025,
+      "fp": "FY",
+      "value": 132699000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Net Income",
+      "period": "2026-03-31",
+      "fy": 2026,
+      "fp": "Q1",
+      "value": 511000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Net Income",
+      "period": "2025-12-31",
+      "fy": 2025,
+      "fp": "FY",
+      "value": 4047000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Total Assets",
+      "period": "2026-03-31",
+      "fy": 2026,
+      "fp": "Q1",
+      "value": 88187000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Total Assets",
+      "period": "2025-12-31",
+      "fy": 2025,
+      "fp": "FY",
+      "value": 83955000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Total Liabilities",
+      "period": "2026-03-31",
+      "fy": 2026,
+      "fp": "Q1",
+      "value": 64760000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Total Liabilities",
+      "period": "2025-12-31",
+      "fy": 2025,
+      "fp": "FY",
+      "value": 59869000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Operating Income",
+      "period": "2026-03-31",
+      "fy": 2026,
+      "fp": "Q1",
+      "value": 1404000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Operating Income",
+      "period": "2025-12-31",
+      "fy": 2025,
+      "fp": "FY",
+      "value": 8291000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Earnings Per Share",
+      "period": "2026-03-31",
+      "fy": 2026,
+      "fp": "Q1",
+      "value": 1.73,
+      "unit": "USD/shares"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Earnings Per Share",
+      "period": "2025-12-31",
+      "fy": 2025,
+      "fp": "FY",
+      "value": 13.24,
+      "unit": "USD/shares"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Cash and Equivalents",
+      "period": "2026-03-31",
+      "fy": 2026,
+      "fp": "Q1",
+      "value": 2151000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Cash and Equivalents",
+      "period": "2025-12-31",
+      "fy": 2025,
+      "fp": "FY",
+      "value": 3672000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Long Term Debt",
+      "period": "2012-03-31",
+      "fy": 2012,
+      "fp": "Q1",
+      "value": 3311000000,
+      "unit": "USD"
+    },
+    {
+      "company": "Marathon Petroleum",
+      "ticker": "MPC",
+      "metric": "Long Term Debt",
+      "period": "2011-12-31",
+      "fy": 2012,
+      "fp": "Q1",
+      "value": 3299000000,
+      "unit": "USD"
+    }
+  ]
+}
