@@ -77,6 +77,7 @@ def run_evaluation(
     # Optional scaling — critical for Credit Card Fraud (Amount, Time unscaled)
     if scale:
         from sklearn.preprocessing import StandardScaler
+
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         if len(X_val) > 0:
