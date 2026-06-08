@@ -294,7 +294,7 @@ Evaluation + Visualization
 ### Project structure
 
 ```
-quest-08-anomaly-detection/
+quest-03-anomaly-detection/
 ├── README.md
 ├── requirements.txt
 ├── Dockerfile

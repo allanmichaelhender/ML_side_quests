@@ -66,20 +66,20 @@ python src/evaluate.py --data nab --nab-dataset machine_temp
 
 ```bash
 # Build
-docker build -t quest-08-anomaly .
+docker build -t quest-03-anomaly .
 
 # Run Streamlit dashboard
-docker run --rm -p 8508:8508 quest-08-anomaly
+docker run --rm -p 8503:8503 quest-03-anomaly
 
 # Or run headless evaluation (mount results volume)
-docker run --rm -v "$(pwd)/results:/app/results" quest-08-anomaly \
+docker run --rm -v "$(pwd)/results:/app/results" quest-03-anomaly \
   python src/evaluate.py --sample 0.1
 ```
 
 ## Project Structure
 
 ```
-quest-08-anomaly-detection/
+quest-03-anomaly-detection/
 ├── README.md
 ├── requirements.txt
 ├── Dockerfile

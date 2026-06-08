@@ -65,6 +65,7 @@ The model learns to **extract** the metric from the provided filing text context
 ml_side_quests/
 ├── quest-01-cv-plant-disease/       # Computer Vision — MobileNetV2
 ├── quest-02-nlp-sentiment-analysis/ # NLP — DistilBERT fine-tuning
+├── quest-03-anomaly-detection/      # Anomaly Detection
 ├── quest-04-rag-pipeline/           # RAG — MiniLM + FAISS
 ├── quest-05-nlp-ticket-routing/     # NLP — Multi-model comparison
 ├── quest-06-rl-grid-balancing/      # RL — PPO energy grid agent
