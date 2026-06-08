@@ -27,5 +27,111 @@
       "response": "Key financial metrics to evaluate an energy company are:\n\n1. EBITDA: Earnings before interest, taxes, depreciation, and amortization.\n\n2. EBIT: Earnings before interest and taxes.\n\n3. Gross margin: Gross profit less interest expense.\n\n4. Operating expenses: Total operating expenses, excluding depreciation, amortization, and stock-based compensation.\n\n5. Net income: Earnings before interest and taxes.\n\n6. Debt-to-equity: Debt divided by total equity.\n\n7. Net debt: Total debt less cash and cash equivalents.\n\n8. Cash flow: Operating cash flow less capital expenditures.\n\n9. Free cash flow: Cash flow less capital expenditures.\n\n10.",
       "generation_time_s": 36.82
     }
-  ]
+  ],
+  "generalization_test": {
+    "test_company": "Marathon Petroleum (MPC)",
+    "num_test_cases": 7,
+    "accuracy_within_15pct": 0.0,
+    "accuracy_within_5pct": 0.0,
+    "details": [
+      {
+        "company": "Marathon Petroleum",
+        "ticker": "MPC",
+        "metric": "Revenue",
+        "period": "FY2025",
+        "instruction": "What was Marathon Petroleum's revenue for FY2025?",
+        "expected_answer": "For FY2025, Marathon Petroleum (MPC) reported revenue of $132.70B.",
+        "model_response": "Marathon Petroleum Corporation reported revenue of $11.9 billion for FY2025.",
+        "expected_value": 132699000000,
+        "extracted_value": 11900000000.0,
+        "relative_error": 0.9103,
+        "is_correct": false,
+        "generation_time_s": 10.5
+      },
+      {
+        "company": "Marathon Petroleum",
+        "ticker": "MPC",
+        "metric": "Net Income",
+        "period": "FY2025",
+        "instruction": "What was Marathon Petroleum's net income for FY2025?",
+        "expected_answer": "For FY2025, Marathon Petroleum (MPC) reported net income of $4.05B.",
+        "model_response": "Marathon Petroleum Corporation reported net income of $1.3 billion for FY2025.",
+        "expected_value": 4047000000,
+        "extracted_value": 1300000000.0,
+        "relative_error": 0.6788,
+        "is_correct": false,
+        "generation_time_s": 9.71
+      },
+      {
+        "company": "Marathon Petroleum",
+        "ticker": "MPC",
+        "metric": "Total Assets",
+        "period": "FY2025",
+        "instruction": "What was Marathon Petroleum's total assets for FY2025?",
+        "expected_answer": "For FY2025, Marathon Petroleum (MPC) reported total assets of $83.95B.",
+        "model_response": "Marathon Petroleum Corporation (XOM) reported total assets of $202.6 billion for FY2025.",
+        "expected_value": 83955000000,
+        "extracted_value": 202600000000.0,
+        "relative_error": 1.4132,
+        "is_correct": false,
+        "generation_time_s": 11.17
+      },
+      {
+        "company": "Marathon Petroleum",
+        "ticker": "MPC",
+        "metric": "Total Liabilities",
+        "period": "FY2025",
+        "instruction": "What was Marathon Petroleum's total liabilities for FY2025?",
+        "expected_answer": "For FY2025, Marathon Petroleum (MPC) reported total liabilities of $59.87B.",
+        "model_response": "Marathon Petroleum Corporation (XOM) reported FY2025 total liabilities of $202.6 billion.",
+        "expected_value": 59869000000,
+        "extracted_value": 202600000000.0,
+        "relative_error": 2.3841,
+        "is_correct": false,
+        "generation_time_s": 11.22
+      },
+      {
+        "company": "Marathon Petroleum",
+        "ticker": "MPC",
+        "metric": "Operating Income",
+        "period": "FY2025",
+        "instruction": "What was Marathon Petroleum's operating income for FY2025?",
+        "expected_answer": "For FY2025, Marathon Petroleum (MPC) reported operating income of $8.29B.",
+        "model_response": "Marathon Petroleum Corporation reported operating income of $1.02 billion for FY2025.",
+        "expected_value": 8291000000,
+        "extracted_value": 1020000000.0,
+        "relative_error": 0.877,
+        "is_correct": false,
+        "generation_time_s": 10.05
+      },
+      {
+        "company": "Marathon Petroleum",
+        "ticker": "MPC",
+        "metric": "Earnings Per Share",
+        "period": "FY2025",
+        "instruction": "What was Marathon Petroleum's earnings per share for FY2025?",
+        "expected_answer": "For FY2025, Marathon Petroleum (MPC) reported earnings per share of $13.24.",
+        "model_response": "Marathon Petroleum Corporation reported earnings per share of $0.00 for FY2025.",
+        "expected_value": 13.24,
+        "extracted_value": 0.0,
+        "relative_error": null,
+        "is_correct": null,
+        "generation_time_s": 10.36
+      },
+      {
+        "company": "Marathon Petroleum",
+        "ticker": "MPC",
+        "metric": "Cash and Equivalents",
+        "period": "FY2025",
+        "instruction": "What was Marathon Petroleum's cash and equivalents for FY2025?",
+        "expected_answer": "For FY2025, Marathon Petroleum (MPC) reported cash and equivalents of $3.67B.",
+        "model_response": "Marathon Petroleum reported cash and equivalents of $12.1 billion for FY2025.",
+        "expected_value": 3672000000,
+        "extracted_value": 12100000000.0,
+        "relative_error": 2.2952,
+        "is_correct": false,
+        "generation_time_s": 10.51
+      }
+    ]
+  }
 }
