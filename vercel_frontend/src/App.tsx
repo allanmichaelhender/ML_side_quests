@@ -30,11 +30,11 @@ const QUESTS: Quest[] = [
   },
   {
     id: 3,
-    title: "Energy Earnings Call Analyst",
+    title: "Anomaly Detection",
     description:
-      "LoRA fine-tuned LLM extracting sentiment and structured claims from SEC EDGAR earnings transcripts.",
-    emoji: "📊",
-    tags: ["GenAI", "LoRA", "PEFT", "EDGAR"],
+      "5-method comparison (Isolation Forest, LOF, One-Class SVM, DBSCAN, Autoencoder) on credit card fraud data.",
+    emoji: "🕵️",
+    tags: ["Anomaly", "Sklearn", "PyTorch", "Fraud Detection"],
     streamlitUrl: "https://ml-sidequests-03.streamlit.app",
   },
   {
@@ -98,7 +98,7 @@ export default function App() {
         <h1>ML Side Quests</h1>
         <p className="app-subtitle">
           Industry application focused ML projects spanning Computer Vision,
-          NLP, LLM fine-tuning, RAG retrieval, and Reinforcement Learning.
+          NLP, Anomaly Detection, RAG retrieval, and Reinforcement Learning.
         </p>
       </header>
 
