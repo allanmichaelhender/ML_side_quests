@@ -1,69 +1,69 @@
 {
-  "dataset": "synthetic_2000",
-  "n_train": 1200,
-  "n_val": 400,
-  "n_test": 400,
-  "n_features": 6,
-  "total_time_s": 12.88,
+  "dataset": "credit_card_0.1",
+  "n_train": 17088,
+  "n_val": 5696,
+  "n_test": 5696,
+  "n_features": 30,
+  "total_time_s": 15.14,
   "per_detector": {
     "Isolation Forest": {
-      "fit_time_s": 0.239,
-      "score_time_s": 0.0099,
-      "threshold": 0.563183,
-      "precision": 0.6087,
-      "recall": 0.7,
-      "f1": 0.6512,
-      "n_test": 400,
-      "n_anomalies_test": 20,
-      "anomaly_rate_test": 0.05
+      "fit_time_s": 0.149,
+      "score_time_s": 0.0202,
+      "threshold": 0.683827,
+      "precision": 0.8,
+      "recall": 0.4,
+      "f1": 0.5333,
+      "n_test": 5696,
+      "n_anomalies_test": 10,
+      "anomaly_rate_test": 0.0018
     },
     "LOF": {
-      "fit_time_s": 0.021,
-      "score_time_s": 0.0099,
-      "threshold": 3.061272,
+      "fit_time_s": 2.3,
+      "score_time_s": 0.1366,
+      "threshold": 4.081943,
       "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
-      "n_test": 400,
-      "n_anomalies_test": 20,
-      "anomaly_rate_test": 0.05
+      "recall": 0.1,
+      "f1": 0.1818,
+      "n_test": 5696,
+      "n_anomalies_test": 10,
+      "anomaly_rate_test": 0.0018
     },
     "One-Class SVM": {
-      "fit_time_s": 0.012,
-      "score_time_s": 0.0051,
-      "threshold": -9.148158,
-      "precision": 0.9524,
-      "recall": 1.0,
-      "f1": 0.9756,
-      "n_test": 400,
-      "n_anomalies_test": 20,
-      "anomaly_rate_test": 0.05
+      "fit_time_s": 1.933,
+      "score_time_s": 0.6657,
+      "threshold": -0.103418,
+      "precision": 0.375,
+      "recall": 0.3,
+      "f1": 0.3333,
+      "n_test": 5696,
+      "n_anomalies_test": 10,
+      "anomaly_rate_test": 0.0018
     },
     "DBSCAN": {
-      "fit_time_s": 0.021,
-      "score_time_s": 0.0193,
+      "fit_time_s": 0.204,
+      "score_time_s": 0.0405,
       "threshold": 1.0,
-      "precision": 0.05,
+      "precision": 0.0018,
       "recall": 1.0,
-      "f1": 0.0952,
-      "n_test": 400,
-      "n_anomalies_test": 20,
-      "anomaly_rate_test": 0.05
+      "f1": 0.0035,
+      "n_test": 5696,
+      "n_anomalies_test": 10,
+      "anomaly_rate_test": 0.0018
     },
     "Autoencoder": {
-      "fit_time_s": 7.258,
-      "score_time_s": 0.0173,
-      "threshold": 5.249376,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
-      "n_test": 400,
-      "n_anomalies_test": 20,
-      "anomaly_rate_test": 0.05
+      "fit_time_s": 8.301,
+      "score_time_s": 0.0187,
+      "threshold": 4.655779,
+      "precision": 0.6667,
+      "recall": 0.8,
+      "f1": 0.7273,
+      "n_test": 5696,
+      "n_anomalies_test": 10,
+      "anomaly_rate_test": 0.0018
     }
   },
   "best_f1": [
-    1.0,
-    "LOF"
+    0.7273,
+    "Autoencoder"
   ]
 }

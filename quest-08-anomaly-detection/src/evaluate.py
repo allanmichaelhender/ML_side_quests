@@ -59,6 +59,7 @@ def run_evaluation(
     y_val: np.ndarray,
     y_test: np.ndarray,
     data_name: str = "credit_card",
+    scale: bool = True,
     verbose: bool = True,
 ) -> Dict[str, dict]:
     """Run all detectors and collect metrics.
@@ -67,11 +68,23 @@ def run_evaluation(
         X_train, X_val, X_test: Data splits.
         y_train, y_val, y_test: Ground-truth labels.
         data_name: Label for the dataset (for metrics).
+        scale: If True, fit StandardScaler on X_train and transform all splits.
         verbose: Print progress.
 
     Returns:
         metrics: Nested dict with per-detector results.
     """
+    # Optional scaling — critical for Credit Card Fraud (Amount, Time unscaled)
+    if scale:
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        if len(X_val) > 0:
+            X_val = scaler.transform(X_val)
+        X_test = scaler.transform(X_test)
+        if verbose:
+            print("  Applied StandardScaler to features")
+
     # Use only normal data for training autoencoder
     X_train_normal = X_train[y_train == 0] if len(y_train) > 0 else X_train
 
@@ -264,6 +277,11 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         default=0.05,
         help="Anomaly ratio for synthetic data (default: 0.05)",
     )
+    parser.add_argument(
+        "--no-scale",
+        action="store_true",
+        help="Disable StandardScaler preprocessing (not recommended for credit_card)",
+    )
     return parser.parse_args(argv)
 
 
@@ -326,6 +344,7 @@ def main(argv: Optional[List[str]] = None):
         y_val,
         y_test,
         data_name=data_name,
+        scale=not args.no_scale,
         verbose=True,
     )
 

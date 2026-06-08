@@ -181,77 +181,26 @@ def plot_integrated_gradients(text: str, model, tokenizer, device, target_class:
 
 
 # ── UI ───────────────────────────────────────────────────────
-st.title("📝 Sentiment Analysis with DistilBERT")
+st.title("Sentiment Analysis - DistilBERT")
 st.markdown(
     """
-    Fine-tuned on **Amazon Polarity** — classifies product reviews as
-    **Negative** 😠 or **Positive** 😊.
-
-    *Powered by DistilBERT*
+    DistilBERT fine-tuned on **Amazon Polarity** — classifies product reviews as
+    **Negative**  or **Positive**.
     """
 )
-
-# ── Sidebar: evaluation metrics ──────────────────────────────
-metrics_path = HERE / "results" / "metrics.json"
-if metrics_path.exists():
-    import json
-
-    with open(metrics_path) as f:
-        metrics = json.load(f)
-    if "accuracy" in metrics:
-        with st.sidebar:
-            st.header("📊 Test Set Performance")
-            st.metric("Accuracy", f"{metrics['accuracy']:.2%}")
-            st.metric("Macro F1", f"{metrics['macro_f1']:.2%}")
-
-            st.subheader("Per Class")
-            cols = st.columns(2)
-            for i, name in enumerate(LABEL_NAMES):
-                with cols[i]:
-                    st.markdown(f"**{name}**")
-                    st.markdown(
-                        f"Precision: {metrics['per_class']['precision'][i]:.2%}  \n"
-                        f"Recall:    {metrics['per_class']['recall'][i]:.2%}  \n"
-                        f"F1:        {metrics['per_class']['f1'][i]:.2%}"
-                    )
-
-            # Confusion matrix
-            cm = np.array(metrics["confusion_matrix"])
-            fig_cm, ax_cm = plt.subplots(figsize=(4, 3.5))
-            im = ax_cm.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-            ax_cm.set_xticks(range(len(LABEL_NAMES)))
-            ax_cm.set_yticks(range(len(LABEL_NAMES)))
-            ax_cm.set_xticklabels(LABEL_NAMES, fontsize=9)
-            ax_cm.set_yticklabels(LABEL_NAMES, fontsize=9)
-            for i in range(cm.shape[0]):
-                for j in range(cm.shape[1]):
-                    ax_cm.text(
-                        j,
-                        i,
-                        str(cm[i, j]),
-                        ha="center",
-                        va="center",
-                        fontsize=10,
-                        color="white" if cm[i, j] > cm.max() / 2 else "black",
-                    )
-            ax_cm.set_xlabel("Predicted", fontsize=9)
-            ax_cm.set_ylabel("True", fontsize=9)
-            plt.tight_layout()
-            st.pyplot(fig_cm)
-            plt.close()
 
 model, tokenizer, device = load_model()
 
 if model is None:
     st.warning(
         "Model not found. Run `python src/train.py` locally to train it. "
-        "The results sidebar will still show evaluation metrics if available."
+        "Evaluation metrics will still be shown below if available."
     )
 
 # ── Input ────────────────────────────────────────────────────
 st.subheader("Enter a review")
 input_mode = st.radio(
-    "Input mode:", ["Type a review", "Example reviews"], horizontal=True
+    "Input mode:", ["Example reviews", "Custom review"], horizontal=True
 )
 
 example_reviews = [
@@ -280,7 +229,7 @@ if input_mode == "Example reviews":
     text = example_reviews[idx][0]
 else:
     text = st.text_area(
-        "Write your review:",
+        "Write your custom review:",
         height=120,
         placeholder="e.g. This product is amazing! I love it.",
     )
@@ -291,8 +240,9 @@ analyze_btn = st.button(
     use_container_width=True,
     disabled=(model is None),
 )
-
 # ── Results ──────────────────────────────────────────────────
+
+
 if analyze_btn and text.strip() and model is not None:
     with st.spinner("Analysing sentiment..."):
         pred_label, confidence, probs, pred_idx = predict_sentiment(
@@ -346,59 +296,164 @@ if analyze_btn and text.strip() and model is not None:
 
     # ── Model comparison ─────────────────────────────────────
     st.markdown("### 📊 Model Comparison: 5k vs 20k Training Samples")
-    st.markdown(
-        """
-        | Metric | 5k model | 20k model |
-        |---|---|---|
-        | **Training samples** | 5,000 | 20,000 |
-        | **Training time** | ~25 min | ~5h 19min |
-        | **Test accuracy** | 84.20% | **94.36%** |
-        | **Macro F1** | 84.19% | **94.36%** |
-        | **Negative F1** | 84.59% | 94.30% |
-        | **Positive F1** | 83.78% | 94.42% |
-        """
-    )
+
+    metrics_5k_path = HERE / "results" / "metrics_5k.json"
+    metrics_20k_path = HERE / "results" / "metrics_20k.json"
+
+    if metrics_5k_path.exists() and metrics_20k_path.exists():
+        import json
+
+        with open(metrics_5k_path) as f:
+            m5 = json.load(f)
+        with open(metrics_20k_path) as f:
+            m20 = json.load(f)
+
+        st.markdown(
+            f"""
+            | Metric | 5k model | 20k model |
+            |---|---|---|
+            | **Training samples** | {m5["max_samples"]:,} | {m20["max_samples"]:,} |
+            | **Training time** | ~{m5["train_duration_min"]:.0f} min | ~{m20["train_duration_min"]:.0f} min |
+            | **Test accuracy** | {m5["accuracy"]:.2%} | **{m20["accuracy"]:.2%}** |
+            | **Macro F1** | {m5["macro_f1"]:.2%} | **{m20["macro_f1"]:.2%}** |
+            | **Negative F1** | {m5["per_class"]["f1"][0]:.2%} | {m20["per_class"]["f1"][0]:.2%} |
+            | **Positive F1** | {m5["per_class"]["f1"][1]:.2%} | {m20["per_class"]["f1"][1]:.2%} |
+            """
+        )
+    else:
+        st.caption("Load both metrics files to see the comparison.")
 
 elif analyze_btn:
     st.warning("Please enter some text to analyze.")
 
-# ── Sidebar info ─────────────────────────────────────────────
-with st.sidebar:
-    st.header("About the Model")
-    st.markdown(
-        """
-        **Architecture**: DistilBERT (`distilbert-base-uncased`)
-        - 6 transformer layers (vs BERT's 12)
-        - 12 attention heads per layer
-        - ~67M parameters
+# ── Evaluation Metrics: 5k vs 20k Comparison ──────────────
+st.markdown("---")
+st.markdown(
+    "We trained DistilBERT on **5,000** and **20,000** Amazon reviews to compare "
+    "how dataset size affects performance. Scroll down to see the results."
+)
+st.header("📊 Test Set Performance: 20k vs 5k")
 
-        **Training**:
-        - Dataset: Amazon Polarity
-        - 10,000 stratified samples
-        - 3 epochs, batch size 16
-        - AdamW optimiser, linear warmup
+metrics_5k_path = HERE / "results" / "metrics_5k.json"
+metrics_20k_path = HERE / "results" / "metrics_20k.json"
 
-        **Classes**:
-        - **Negative** 😠
-        - **Positive** 😊 
-        """
-    )
+if metrics_5k_path.exists() and metrics_20k_path.exists():
+    import json
 
-    st.header("Results")
-    results_dir = HERE / "results"
-    if (results_dir / "metrics.json").exists():
-        import json
+    with open(metrics_5k_path) as f:
+        m5 = json.load(f)
+    with open(metrics_20k_path) as f:
+        m20 = json.load(f)
 
-        with open(results_dir / "metrics.json") as f:
-            metrics = json.load(f)
-        if "accuracy" in metrics:
-            st.metric("Accuracy", f"{metrics['accuracy']:.2%}")
-        if "macro_f1" in metrics:
-            st.metric("Macro F1", f"{metrics['macro_f1']:.4f}")
-
-    if (results_dir / "figures" / "confusion_matrix.png").exists():
-        st.image(
-            str(results_dir / "figures" / "confusion_matrix.png"),
-            caption="Confusion Matrix",
-            use_container_width=True,
+    # Summary metrics side by side
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(
+            "Macro F1 (20k)",
+            f"{m20['macro_f1']:.2%}",
+            delta=f"{m20['macro_f1'] - m5['macro_f1']:+.1%}",
         )
+    with col2:
+        st.metric(
+            "Accuracy (20k)",
+            f"{m20['accuracy']:.2%}",
+            delta=f"{m20['accuracy'] - m5['accuracy']:+.1%}",
+        )
+    with col3:
+        st.metric("Macro F1 (5k)", f"{m5['macro_f1']:.2%}")
+    with col4:
+        st.metric("Accuracy (5k)", f"{m5['accuracy']:.2%}")
+
+    # Side-by-side per-class breakdown
+    st.subheader("Per-Class Breakdown")
+    tab20, tab5 = st.tabs(["20k Model", "5k Model"])
+
+    with tab20:
+        cols = st.columns(2)
+        for i, name in enumerate(LABEL_NAMES):
+            with cols[i]:
+                st.markdown(f"**{name}**")
+                st.markdown(
+                    f"Precision: {m20['per_class']['precision'][i]:.2%}  \n"
+                    f"Recall:    {m20['per_class']['recall'][i]:.2%}  \n"
+                    f"F1:        {m20['per_class']['f1'][i]:.2%}"
+                )
+
+    with tab5:
+        cols = st.columns(2)
+        for i, name in enumerate(LABEL_NAMES):
+            with cols[i]:
+                st.markdown(f"**{name}**")
+                st.markdown(
+                    f"Precision: {m5['per_class']['precision'][i]:.2%}  \n"
+                    f"Recall:    {m5['per_class']['recall'][i]:.2%}  \n"
+                    f"F1:        {m5['per_class']['f1'][i]:.2%}"
+                )
+
+    # Side-by-side confusion matrices
+    st.subheader("Confusion Matrices")
+    cm_col1, cm_col2 = st.columns(2)
+
+    def plot_cm(ax, cm, title):
+        ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+        ax.set_xticks(range(len(LABEL_NAMES)))
+        ax.set_yticks(range(len(LABEL_NAMES)))
+        ax.set_xticklabels(LABEL_NAMES, fontsize=9)
+        ax.set_yticklabels(LABEL_NAMES, fontsize=9)
+        ax.set_title(title, fontsize=11)
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                ax.text(
+                    j,
+                    i,
+                    str(cm[i, j]),
+                    ha="center",
+                    va="center",
+                    fontsize=10,
+                    color="white" if cm[i, j] > cm.max() / 2 else "black",
+                )
+        ax.set_xlabel("Predicted", fontsize=9)
+        ax.set_ylabel("True", fontsize=9)
+
+    with cm_col1:
+        fig, ax = plt.subplots(figsize=(3.5, 3))
+        plot_cm(ax, np.array(m20["confusion_matrix"]), "20k Model")
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+
+    with cm_col2:
+        fig, ax = plt.subplots(figsize=(3.5, 3))
+        plot_cm(ax, np.array(m5["confusion_matrix"]), "5k Model")
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+
+elif metrics_5k_path.exists():
+    st.info("Only 5k metrics found. Run 20k training to see the full comparison.")
+elif metrics_20k_path.exists():
+    st.info("Only 20k metrics found. Run 5k training to see the full comparison.")
+else:
+    st.caption("Run training to populate metrics.")
+
+# ── About the Model ─────────────────────────────────────────
+st.markdown("---")
+st.header("About the Model (20k training samples)")
+st.markdown(
+    """
+    **Architecture**: DistilBERT (`distilbert-base-uncased`)
+    - 6 transformer layers (vs BERT's 12)
+    - 12 attention heads per layer
+    - ~67M parameters
+
+    **Training**:
+    - Dataset: Amazon Polarity
+    - 20,000 stratified samples
+    - 3 epochs, batch size 16
+    - AdamW optimiser, linear warmup
+
+    **Classes**:
+    - **Negative** 
+    - **Positive** 
+    """
+)

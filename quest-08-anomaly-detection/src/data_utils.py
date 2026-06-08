@@ -46,8 +46,14 @@ def download_credit_card_fraud(
 ) -> Path:
     """Download Credit Card Fraud dataset from Kaggle via kagglehub.
 
+    Loads Kaggle credentials from the project .env file (KAGGLE_USERNAME,
+    KAGGLE_KEY) before calling kagglehub.
+
     Returns the path to the downloaded CSV.
     """
+    # Load Kaggle credentials from .env
+    _load_kaggle_env()
+
     import kagglehub
 
     cache_dir = cache_dir or KAGGLE_CACHE_DIR
@@ -67,6 +73,28 @@ def download_credit_card_fraud(
     shutil.copy2(source, csv_path)
     logger.info(f"Saved to {csv_path}")
     return csv_path
+
+
+def _load_kaggle_env():
+    """Load Kaggle credentials from .env into environment variables."""
+    from dotenv import load_dotenv
+
+    # Try project root .env first, then grandparent (repo root)
+    for env_path in [
+        PROJECT / ".env",
+        PROJECT.parent / ".env",
+    ]:
+        if env_path.exists():
+            load_dotenv(env_path)
+            logger.info(f"Loaded env from {env_path}")
+            break
+
+    # Ensure kagglehub can find credentials
+    if not os.environ.get("KAGGLE_USERNAME") or not os.environ.get("KAGGLE_KEY"):
+        logger.warning(
+            "KAGGLE_USERNAME and/or KAGGLE_KEY not found in environment. "
+            "kagglehub may fall back to ~/.kaggle/kaggle.json."
+        )
 
 
 def load_credit_card_fraud(
