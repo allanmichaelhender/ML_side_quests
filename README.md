@@ -12,7 +12,7 @@ Each quest is independently containerised with Docker and has its own Streamlit 
 | --- | ----------------------------------------------------------------- | --------------- | ------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | 1   | 🌱 [**Plant Disease Classification**](quest-01-cv-plant-disease/) | Computer Vision | MobileNetV2 (ONNX)                         | **96.1% accuracy** (38 classes)                                 | [streamlit](https://ml-sidequests-01.streamlit.app) · [GitHub](quest-01-cv-plant-disease/)       |
 | 2   | 📝 [**Sentiment Analysis**](quest-02-nlp-sentiment-analysis/)     | NLP             | DistilBERT                                 | **94.4% accuracy** · **0.94 F1** (20k samples)                  | [streamlit](https://ml-sidequests-02.streamlit.app) · [GitHub](quest-02-nlp-sentiment-analysis/) |
-| 3   | 🕵️ [**Anomaly Detection**](quest-03-anomaly-detection/)          | Anomaly         | 5 methods (IF, LOF, SVM, DBSCAN, AE)      | **Best F1 via Autoencoder**                                      | [GitHub](quest-03-anomaly-detection/)                                                           |
+| 3   | 🕵️ [**Anomaly Detection**](quest-03-anomaly-detection/)           | Anomaly         | 5 methods (IF, LOF, SVM, DBSCAN, AE)       | **Best F1 via Autoencoder**                                     | [GitHub](quest-03-anomaly-detection/)                                                            |
 | 4   | [**RAG Retrieval Pipeline**](quest-04-rag-pipeline/)              | RAG             | MiniLM + Cross-Encoder + FAISS             | **Hit@5 74.5%** · **MRR 0.57** · 18.8k docs                     | [GitHub](quest-04-rag-pipeline/)                                                                 |
 | 5   | 🎫 [**Support Ticket Routing**](quest-05-nlp-ticket-routing/)     | NLP             | TF-IDF / DistilBERT / DeepSeek (zero-shot) | **83.6% acc** (TF-IDF) · 77-class Banking77                     | [GitHub](quest-05-nlp-ticket-routing/)                                                           |
 | 6   | ⚡ [**Energy Grid Load Balancing**](quest-06-rl-grid-balancing/)  | RL              | PPO (Stable Baselines3)                    | **-29.9M reward** · **91.7% reliability** · beats all baselines | [streamlit](https://ml-sidequests-06.streamlit.app) · [GitHub](quest-06-rl-grid-balancing/)      |
@@ -113,14 +113,14 @@ streamlit run app.py
 
 All quests are designed to train and run on CPU (no GPU required).
 
-| Quest                | Actual CPU Training Time           | Key Metric                            |
-| -------------------- | ---------------------------------- | ------------------------------------- |
-| 1 — Plant Disease CV | ~2 hours                           | **96.1%** accuracy                    |
-| 2 — Sentiment BERT   | **~25 min** (3 epochs, 5k samples) | **84.2%** accuracy, **0.84** macro F1 |
-| 3 — Anomaly Detection | depends on subsample                | Compared 5 methods                   |
-| 4 — RAG Pipeline      | ~30 min (indexing only)             | **74.5%** Hit@5, **0.57** MRR         |
-| 5 — Ticket Routing   | **< 30 min** per model             | **85.2%** accuracy (DistilBERT)       |
-| 6 — Grid RL Agent    | **30–60 min**                      | **-30.0M** reward (vs -414M random)   |
+| Quest                 | Actual CPU Training Time           | Key Metric                            |
+| --------------------- | ---------------------------------- | ------------------------------------- |
+| 1 — Plant Disease CV  | ~2 hours                           | **96.1%** accuracy                    |
+| 2 — Sentiment BERT    | **~25 min** (3 epochs, 5k samples) | **84.2%** accuracy, **0.84** macro F1 |
+| 3 — Anomaly Detection | depends on subsample               | Compared 5 methods                    |
+| 4 — RAG Pipeline      | ~30 min (indexing only)            | **74.5%** Hit@5, **0.57** MRR         |
+| 5 — Ticket Routing    | **< 30 min** per model             | **85.2%** accuracy (DistilBERT)       |
+| 6 — Grid RL Agent     | **30–60 min**                      | **-30.0M** reward (vs -414M random)   |
 
 ---
 

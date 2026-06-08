@@ -1,5 +1,5 @@
 """
-Unified detector wrappers for all 5 anomaly detection methods.
+Unified detector wrappers for 5 anomaly detection methods.
 
 Provides a consistent .fit() / .score() interface so the evaluation
 pipeline can treat all detectors interchangeably.
@@ -7,22 +7,25 @@ pipeline can treat all detectors interchangeably.
 Methods:
   - Isolation Forest          (sklearn)
   - Local Outlier Factor      (sklearn)
-  - One-Class SVM             (sklearn)
   - Autoencoder               (PyTorch — see autoencoder.py)
   - DBSCAN                    (sklearn, used as outlier detector)
+  - XGBoost                   (xgboost, supervised — uses y_train)
+  - Hybrid (XGB+AE)          (ensemble, OR-gate combination)
 """
 
 import logging
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.svm import OneClassSVM
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
+
+from xgboost_detector import XGBoostDetector
+from hybrid_detector import HybridDetector
 
 logger = logging.getLogger(__name__)
 
@@ -60,18 +63,6 @@ DETECTOR_INFO: Dict[str, Dict[str, Any]] = {
         "needs_fit": True,
         "requires_y": False,
     },
-    "One-Class SVM": {
-        "class": OneClassSVM,
-        "default_kwargs": {
-            "kernel": "rbf",
-            "gamma": "scale",
-            "nu": 0.1,
-        },
-        "score_attr": "score_samples",  # more negative = more anomalous
-        "negate_score": True,
-        "needs_fit": True,
-        "requires_y": False,
-    },
     "DBSCAN": {
         "class": DBSCAN,
         "default_kwargs": {
@@ -91,6 +82,31 @@ DETECTOR_INFO: Dict[str, Dict[str, Any]] = {
         "negate_score": False,
         "needs_fit": True,
         "requires_y": False,  # trained only on normal data internally
+    },
+    "XGBoost": {
+        "class": XGBoostDetector,
+        "default_kwargs": {
+            "n_estimators": 200,
+            "max_depth": 6,
+            "learning_rate": 0.1,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "scale_pos_weight": None,  # auto-computed from class ratio
+            "random_state": 42,
+            "n_jobs": -1,
+        },
+        "score_attr": "score_samples",  # returns proba of class 1
+        "negate_score": False,  # already higher = more anomalous
+        "needs_fit": True,
+        "requires_y": True,  # supervised — needs labels!
+    },
+    "Hybrid (XGB+AE)": {
+        "class": None,  # special handling
+        "default_kwargs": {},
+        "score_attr": None,
+        "negate_score": False,
+        "needs_fit": True,
+        "requires_y": True,  # XGBoost needs labels; AE uses normal only
     },
 }
 
@@ -141,6 +157,9 @@ def _fit_autoencoder(
 def fit_detector(
     name: str,
     X_train: np.ndarray,
+    y_train: Optional[np.ndarray] = None,
+    X_val: Optional[np.ndarray] = None,
+    y_val: Optional[np.ndarray] = None,
     kwargs: Optional[dict] = None,
     model_dir: Optional[Path] = None,
     verbose: bool = False,
@@ -150,6 +169,10 @@ def fit_detector(
     Args:
         name: Detector name (must be in DETECTOR_NAMES).
         X_train: (n_samples, n_features) training data.
+        y_train: (n_samples,) labels — required for supervised detectors
+                 like XGBoost (requires_y=True).
+        X_val: Optional validation features (for XGBoost early stopping).
+        y_val: Optional validation labels (for XGBoost early stopping).
         kwargs: Override default kwargs for the detector.
         model_dir: Directory to save autoencoder (only used for Autoencoder).
         verbose: Print progress.
@@ -166,6 +189,37 @@ def fit_detector(
 
     if name == "Autoencoder":
         return _fit_autoencoder(X_train, fit_kwargs, model_dir, verbose)
+
+    if name == "Hybrid (XGB+AE)":
+        if y_train is None:
+            raise ValueError(
+                "Hybrid (XGB+AE) requires y_train (supervised component). "
+                "Pass y_train to fit_detector()."
+            )
+        start = time.time()
+        model = HybridDetector(
+            xgb_kwargs=kwargs or {},
+            model_dir=model_dir,
+            verbose=verbose,
+        )
+        model.fit(X_train, y_train, X_val=X_val, y_val=y_val)
+        elapsed = time.time() - start
+        logger.info(f"Hybrid (XGB+AE) fitted in {elapsed:.2f}s")
+        return model, elapsed
+
+    if name == "XGBoost":
+        if y_train is None:
+            raise ValueError(
+                "XGBoost requires y_train (supervised detector). "
+                "Pass y_train to fit_detector()."
+            )
+        start = time.time()
+        model = XGBoostDetector(**fit_kwargs)
+        eval_set = (X_val, y_val) if X_val is not None and y_val is not None else None
+        model.fit(X_train, y_train, eval_set=eval_set)
+        elapsed = time.time() - start
+        logger.info(f"XGBoost fitted in {elapsed:.2f}s")
+        return model, elapsed
 
     start = time.time()
     model = info["class"](**fit_kwargs)
@@ -199,6 +253,9 @@ def score_detector(
         from autoencoder import compute_anomaly_scores
 
         return compute_anomaly_scores(model, X)
+
+    if name == "Hybrid (XGB+AE)":
+        return model.score_samples(X)
 
     if name == "DBSCAN":
         # DBSCAN assigns -1 to outliers, 0/1/... to clusters.

@@ -12,8 +12,7 @@ Compare **5 detection methods** head-to-head on real-world transaction data with
   - 30 features: V1–V28 (PCA components), Time, Amount
   - Heavily imbalanced — perfect for anomaly detection benchmarking
   - Downloaded automatically via `kagglehub` (credentials in `.env`)
-- **Fallback**: Synthetic multivariate normal with injected outliers (no download needed)
-- **Optional**: [Numenta Anomaly Benchmark (NAB)](https://github.com/numenta/NAB) — real-world time series
+- **Dataset**: [Credit Card Fraud (Kaggle)](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) — 284k transactions with ~0.17% fraud rate
 
 ## Pipeline
 
@@ -54,12 +53,6 @@ python src/evaluate.py
 
 # Quick test with 10% subsample
 python src/evaluate.py --sample 0.1
-
-# Run on synthetic data
-python src/evaluate.py --data synthetic --synthetic-samples 5000
-
-# Run on NAB time series
-python src/evaluate.py --data nab --nab-dataset machine_temp
 ```
 
 ### Option C — Docker
@@ -86,7 +79,7 @@ quest-03-anomaly-detection/
 ├── app.py                      # Streamlit: explore anomalies interactively
 ├── src/
 │   ├── __init__.py
-│   ├── data_utils.py           # Kaggle / synthetic / NAB data loaders
+│   ├── data_utils.py           # Kaggle Credit Card Fraud data loader
 │   ├── detectors.py            # Unified wrapper around all 5 methods
 │   ├── autoencoder.py          # PyTorch autoencoder implementation
 │   ├── evaluate.py             # Full evaluation pipeline (CLI entry point)

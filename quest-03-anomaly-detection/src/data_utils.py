@@ -2,8 +2,6 @@
 Data utilities for Quest 08 — Anomaly Detection.
 
 Primary dataset: Credit Card Fraud (Kaggle).
-Fallback: Synthetic multivariate normal with injected outliers.
-Also provides hooks for Numenta Anomaly Benchmark (NAB) time series data.
 """
 
 import json
@@ -32,7 +30,6 @@ CREDIT_CARD_TARGET = "Class"
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 KAGGLE_CACHE_DIR = DEFAULT_DATA / "kaggle"
-SYNTHETIC_FILE = DEFAULT_DATA / "synthetic_data.npz"
 
 
 # =========================================================================
@@ -141,186 +138,6 @@ def load_credit_card_fraud(
     n_fraud = int(y.sum())
     logger.info(
         f"Loaded {len(X)} samples, {n_fraud} fraud ({n_fraud / len(X) * 100:.3f}%)"
-    )
-    return X, y
-
-
-# =========================================================================
-#  Synthetic Data (fallback / quick-test)
-# =========================================================================
-
-
-def generate_synthetic_data(
-    n_samples: int = 5000,
-    n_features: int = 8,
-    contamination: float = 0.05,
-    random_state: int = 42,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Generate multivariate normal data with injected outliers.
-
-    Outliers are placed farther from the mean in random directions.
-
-    Args:
-        n_samples: Total number of samples.
-        n_features: Dimensionality.
-        contamination: Fraction of samples that are outliers.
-        random_state: Random seed.
-
-    Returns:
-        X: (n_samples, n_features) feature array
-        y: (n_samples,) binary labels (0=normal, 1=anomaly)
-    """
-    rng = np.random.default_rng(random_state)
-    n_normal = n_samples - int(n_samples * contamination)
-    n_anom = n_samples - n_normal
-
-    # Normal data: multivariate normal with random covariance
-    mean = rng.uniform(-1, 1, size=n_features)
-    cov = rng.uniform(0.5, 2.0, size=(n_features, n_features))
-    cov = cov @ cov.T + np.eye(n_features) * 0.1  # make PSD
-
-    X_normal = rng.multivariate_normal(mean, cov, size=n_normal)
-
-    # Anomalies: shifted from mean by 3-5 sigma in random directions
-    directions = rng.standard_normal((n_anom, n_features))
-    directions = directions / np.linalg.norm(directions, axis=1, keepdims=True)
-    magnitudes = rng.uniform(3.0, 6.0, size=(n_anom, 1))
-    X_anom = mean + directions * magnitudes * np.sqrt(np.diag(cov))
-
-    X = np.vstack([X_normal, X_anom]).astype(np.float32)
-    y = np.zeros(n_samples, dtype=np.int64)
-    y[n_normal:] = 1
-
-    # Shuffle
-    idx = rng.permutation(n_samples)
-    X, y = X[idx], y[idx]
-
-    logger.info(
-        f"Generated synthetic data: {n_samples} samples, "
-        f"{n_features} features, {n_anom} anomalies ({contamination * 100:.1f}%)"
-    )
-    return X, y
-
-
-def save_synthetic_data(
-    X: np.ndarray,
-    y: np.ndarray,
-    path: Optional[Path] = None,
-) -> Path:
-    """Save synthetic data to NPZ file."""
-    path = path or SYNTHETIC_FILE
-    path.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(path, X=X, y=y)
-    logger.info(f"Saved synthetic data to {path}")
-    return path
-
-
-def load_synthetic_data(path: Optional[Path] = None) -> Tuple[np.ndarray, np.ndarray]:
-    """Load synthetic data from NPZ file."""
-    path = path or SYNTHETIC_FILE
-    if not path.exists():
-        raise FileNotFoundError(f"Synthetic data not found: {path}")
-    data = np.load(path)
-    logger.info(f"Loaded synthetic data from {path}")
-    return data["X"], data["y"]
-
-
-# =========================================================================
-#  Numenta Anomaly Benchmark (NAB) — optional
-# =========================================================================
-
-NAB_REPO = "https://raw.githubusercontent.com/numenta/NAB/master/data"
-NAB_DATASETS = {
-    "ec2_cpu": "realAWSCloudwatch/ec2_cpu_utilization_24ae8d.csv",
-    "ec2_network": "realAWSCloudwatch/ec2_network_in_257a54.csv",
-    "rds_cpu": "realAWSCloudwatch/rds_cpu_utilization_cc0c53.csv",
-    "machine_temp": "realKnownCause/machine_temperature_system_failure.csv",
-    "nyc_taxi": "realKnownCause/nyc_taxi.csv",
-    "ambient_temp": "realKnownCause/ambient_temperature_system_failure.csv",
-}
-
-
-def download_nab_dataset(
-    dataset_name: str,
-    cache_dir: Optional[Path] = None,
-) -> Path:
-    """Download a NAB dataset CSV by name.
-
-    Args:
-        dataset_name: Key from NAB_DATASETS (e.g. 'ec2_cpu', 'machine_temp').
-        cache_dir: Directory to cache the CSV.
-
-    Returns:
-        Path to the downloaded CSV.
-
-    Raises:
-        ValueError: If dataset_name not in NAB_DATASETS.
-    """
-    import requests
-
-    if dataset_name not in NAB_DATASETS:
-        raise ValueError(
-            f"Unknown NAB dataset '{dataset_name}'. "
-            f"Available: {list(NAB_DATASETS.keys())}"
-        )
-
-    cache_dir = cache_dir or (DEFAULT_DATA / "nab")
-    csv_path = cache_dir / f"{dataset_name}.csv"
-
-    if csv_path.exists():
-        logger.info(f"Using cached NAB dataset: {csv_path}")
-        return csv_path
-
-    url = f"{NAB_REPO}/{NAB_DATASETS[dataset_name]}"
-    logger.info(f"Downloading NAB dataset '{dataset_name}' from {url}")
-
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    resp = requests.get(url, timeout=30)
-    resp.raise_for_status()
-    with open(csv_path, "wb") as f:
-        f.write(resp.content)
-    logger.info(f"Saved to {csv_path}")
-    return csv_path
-
-
-def load_nab_dataset(
-    dataset_name: str,
-    cache_dir: Optional[Path] = None,
-    value_column: str = "value",
-    timestamp_column: str = "timestamp",
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Load a NAB dataset as (X, y) for anomaly detection.
-
-    NAB datasets include an 'anomaly' label column (0/1).
-    Returns a 1D feature array reshaped to (n_samples, 1) for sklearn compat.
-
-    Args:
-        dataset_name: Key from NAB_DATASETS.
-        cache_dir: Directory for caching.
-        value_column: Column name for the time series values.
-        timestamp_column: Column name for timestamps.
-
-    Returns:
-        X: (n_samples, 1) feature array
-        y: (n_samples,) binary labels
-    """
-    import pandas as pd
-
-    path = download_nab_dataset(dataset_name, cache_dir)
-    df = pd.read_csv(path)
-
-    if "anomaly_label" not in df.columns:
-        # Some NAB CSVs don't have labels embedded — warn
-        logger.warning(f"No 'anomaly_label' column in {dataset_name}; using zeros")
-        df["anomaly_label"] = 0
-
-    X = df[value_column].values.astype(np.float32).reshape(-1, 1)
-    y = df["anomaly_label"].values.astype(np.int64)
-
-    n_anom = int(y.sum())
-    logger.info(
-        f"Loaded NAB '{dataset_name}': {len(X)} samples, "
-        f"{n_anom} anomalies ({n_anom / len(X) * 100:.2f}%)"
     )
     return X, y
 
