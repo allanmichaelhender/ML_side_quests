@@ -38,6 +38,7 @@ if not RESULTS_PATH.exists():
 with open(RESULTS_PATH) as f:
     data = json.load(f)
 
+train_set = data["train_set"]
 test_set = data["test_set"]
 useless = data["useless_detectors"]
 threshold_data = data["threshold_comparison"]
@@ -61,25 +62,25 @@ st.sidebar.markdown("**Quest 03** — Pre-computed results")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Dataset Info")
-st.sidebar.metric("Test samples", f"{test_set['n_samples']:,}")
-st.sidebar.metric("Test anomalies", f"{test_set['n_anomalies']}")
-st.sidebar.metric("Anomaly rate", f"{test_set['anomaly_rate'] * 100:.3f}%")
-st.sidebar.metric("Features", test_set["n_features"])
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### Workflow")
-st.sidebar.markdown(
-    "1. `train_models.py` — train XGBoost + AE\n"
-    "2. `batch_evaluate.py` — pre-compute all metrics\n"
-    "3. This dashboard loads saved results"
-)
+st.sidebar.markdown("**Training Set**")
+st.sidebar.metric("Samples", f"{train_set['n_samples']:,}")
+st.sidebar.metric("Anomalies", f"{train_set['n_anomalies']}")
+st.sidebar.metric("Rate", f"{train_set['anomaly_rate'] * 100:.3f}%")
+
+st.sidebar.markdown("**Test Set**")
+st.sidebar.metric("Samples", f"{test_set['n_samples']:,}")
+st.sidebar.metric("Anomalies", f"{test_set['n_anomalies']}")
+st.sidebar.metric("Rate", f"{test_set['anomaly_rate'] * 100:.3f}%")
+
+st.sidebar.metric("Features", test_set["n_features"])
 
 # ── Main panel ──────────────────────────────────────────────────────────────
 
 st.title("📊 Anomaly Detection — Method Comparison")
 st.markdown(
     "Pre-computed results on the **Credit Card Fraud** dataset (284k transactions). "
-    "No live model inference — all data loaded from `results/comparison_results.json`."
+    "No live model inference."
 )
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -95,17 +96,26 @@ useless_df.columns = ["Precision", "Recall", "F1"]
 st.dataframe(useless_df.style.format("{:.4f}"), use_container_width=True)
 
 st.markdown(
-    "**Isolation Forest**, **LOF**, and **DBSCAN** all perform poorly "
-    "on this dataset. The extreme class imbalance (~0.17% fraud) and the "
-    "PCA-transformed features make unsupervised density/distance-based "
-    "methods ineffective. A supervised approach is required."
+    "**Isolation Forest**, **LOF**, and **DBSCAN** all perform poorly. We therefore focused on two options, NN Autoencoder and XGBoost."
 )
+
+st.markdown(
+    "We tested XGBoost with 4 threshold values for positive classification. We will also consider using XGBoost in concert with the Autoencoder, simply classifiying a row as positive whenever either model returns a positive classification."
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #   SECTION 2 — Recall vs Precision Plot (9 options)
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.subheader("🎯 Recall vs Precision — Threshold Tradeoff")
+
+st.markdown(
+    "**Precision** = of all flagged anomalies, how many were real?\n\n"
+    "**Recall** = of all real anomalies, how many did we catch?\n\n"
+    "$\\text{Precision} = \\frac{TP}{TP + FP}$ "
+    "$\\text{Recall} = \\frac{TP}{TP + FN}$"
+)
 
 plot_points = []
 for key in ALL_KEYS_ORDERED:
@@ -196,27 +206,18 @@ for key in ALL_KEYS_ORDERED:
             "Precision": m["precision"],
             "Recall": m["recall"],
             "F1": m["f1"],
-            "Threshold": m["threshold"],
         }
     )
 
 full_df = pd.DataFrame(metrics_rows)
 
 
-def highlight_best(val):
-    if isinstance(val, (int, float)):
-        if val == full_df["F1"].max():
-            return "background-color: #d4edda; font-weight: bold"
-    return ""
-
-
 st.dataframe(
-    full_df.style.map(highlight_best).format(
+    full_df.style.format(
         {
             "Precision": "{:.4f}",
             "Recall": "{:.4f}",
             "F1": "{:.4f}",
-            "Threshold": "{:.4f}",
         }
     ),
     use_container_width=True,
@@ -235,11 +236,11 @@ best_label = best_entry["label"]
 st.markdown(
     f"- **Best F1**: **{best_label}** — F1 = **{best_entry['f1']:.4f}** "
     f"(Precision={best_entry['precision']:.4f}, Recall={best_entry['recall']:.4f})\n"
-    f"- XGBoost alone consistently outperforms the Hybrid OR-gate — the "
-    f"Autoencoder adds false positives without catching enough extra frauds.\n"
-    f"- Lower thresholds boost recall but tank precision; the F1-optimized "
-    f"threshold (~0.91) is the best all-round balance.\n"
-    f"- All 3 unsupervised methods (IF, LOF, DBSCAN) are non-viable — "
+    f"- If **recall is the priority**, XGBoost at t=0.2 catches **86.9% of frauds** "
+    f"while keeping precision at 66.2% — 2 in 3 flagged transactions are genuine fraud.\n"
+    f"- The Hybrid OR-gate boosts recall slightly (87.9% at t=0.2) but precision drops "
+    f"to 58.8%, the Autoencoder adding noise.\n"
+    f"- Relative to these results, all 3 unsupervised methods (IF, LOF, DBSCAN) are non-viable — "
     f"supervised learning is mandatory for this problem."
 )
 

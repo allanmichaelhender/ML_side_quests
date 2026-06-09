@@ -1,4 +1,10 @@
 {
+  "train_set": {
+    "n_samples": 170884,
+    "n_anomalies": 295,
+    "anomaly_rate": 0.001726,
+    "n_features": 30
+  },
   "test_set": {
     "n_samples": 56962,
     "n_anomalies": 99,

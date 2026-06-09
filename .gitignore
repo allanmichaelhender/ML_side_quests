@@ -29,10 +29,6 @@ quest-*/results/*
 !quest-*/results/eval_results.json
 !quest-*/results/label_info.json
 !quest-*/results/comparison_results.json
-!quest-*/results/model/
-!quest-*/results/model/**
-!quest-*/results/autoencoder_model/
-!quest-*/results/autoencoder_model/**
 !quest-*/results/gradcam/
 !quest-*/results/gradcam/**
 !quest-*/results/figures/

@@ -159,6 +159,12 @@ def main():
 
     # ── 7. Compile & save ──────────────────────────────────────────────────
     output = {
+        "train_set": {
+            "n_samples": int(len(X_train)),
+            "n_anomalies": int(y_train.sum()),
+            "anomaly_rate": round(float(y_train.mean()), 6),
+            "n_features": int(X_train.shape[1]),
+        },
         "test_set": {
             "n_samples": int(len(X_test)),
             "n_anomalies": int(y_test.sum()),
