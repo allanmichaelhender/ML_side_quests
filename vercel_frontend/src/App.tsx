@@ -25,23 +25,23 @@ const QUESTS: Quest[] = [
     description:
       "DistilBERT fine-tuned on Amazon reviews for 3-class sentiment classification with attention visualisation.",
     emoji: "📝",
-    tags: ["NLP", "DistilBERT", "Hugging Face", "Attention"],
+    tags: ["NLP", "DistilBERT", "Hugging Face"],
     streamlitUrl: "https://ml-sidequests-02.streamlit.app",
   },
   {
     id: 3,
     title: "Anomaly Detection",
     description:
-      "XGBoost, Autoencoder, and Hybrid OR-gate compared on 284k credit card transactions — unsupervised methods shown non-viable.",
+      "XGBoost, Autoencoder, and Hybrid OR-gate compared on 284k credit card transactions.",
     emoji: "🕵️",
-    tags: ["XGBoost", "PyTorch", "Fraud Detection", "Threshold Sweep"],
+    tags: ["XGBoost", "PyTorch", "Fraud Detection"],
     streamlitUrl: "https://ml-sidequests-03.streamlit.app",
   },
   {
     id: 4,
     title: "RAG Retrieval Pipeline",
     description:
-      "End-to-end retrieval evaluation comparing BM25, dense, hybrid, and reranked search over arXiv abstracts.",
+      "Dense retrieval with MiniLM embeddings + FAISS, re-ranked by a cross-encoder for improved precision.",
     emoji: "🔍",
     tags: ["RAG", "FAISS", "Sentence-Transformers", "Reranking"],
     streamlitUrl: "https://ml-sidequests-04.streamlit.app",
@@ -52,7 +52,7 @@ const QUESTS: Quest[] = [
     description:
       "TF-IDF, DistilBERT, and zero-shot LLM compared on multi-class ticket routing for customer support.",
     emoji: "🎫",
-    tags: ["NLP", "Classification", "TF-IDF", "Zero-shot"],
+    tags: ["NLP", "Classification", "TF-IDF + LR", "Zero-shot LLM"],
     streamlitUrl: "https://ml-sidequests-05.streamlit.app",
   },
   {

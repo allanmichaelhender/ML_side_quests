@@ -44,8 +44,8 @@ Classical NLP pipeline:
 
 - Convert text to TF‑IDF vectors (5k features, 1–2 ngrams)
 - Train multinomial logistic regression
-- **Training time:** ~30 seconds
-- **Expected accuracy:** ~85–88%
+- **Training time:** ~4.5 seconds
+- **Validation accuracy:** 81.3%
 
 **Pros:** Fast, interpretable, works on any hardware  
 **Cons:** No understanding of word order or context
@@ -56,8 +56,8 @@ Fine-tune DistilBERT (66M params) on the Banking77 training set:
 
 - Sequence classification head on `distilbert-base-uncased`
 - 128 token max length, 3 epochs
-- **Training time:** ~15–25 minutes (CPU) / ~3 minutes (GPU)
-- **Expected accuracy:** ~92–94%
+- **Training time:** ~213 minutes (CPU)
+- **Validation accuracy:** 91.4%
 
 **Pros:** Context-aware, state-of-the-art for text classification  
 **Cons:** Larger model, requires training
@@ -145,26 +145,25 @@ docker compose up -d quest-05-ticket
 
 ## Results
 
-| Approach          | Test Accuracy | Macro F1 | Match Rate | Training Time |
-| ----------------- | ------------- | -------- | ---------- | ------------- |
-| TF‑IDF + LR       | **83.6%**     | 0.269    | 100%       | 1s            |
-| DistilBERT        | **85.2%**     | 0.333    | 100%       | 53 min        |
-| DeepSeek V4 Flash | **63.0%** †   | 0.499    | 69.8%      | None          |
+| Approach          | Test Accuracy | Macro F1 | Training Time    |
+| ----------------- | ------------- | -------- | ---------------- |
+| TF‑IDF + LR       | **81.3%**     | 81.3%    | 4.5s             |
+| DistilBERT        | **91.4%**     | 91.3%    | 213 min          |
+| DeepSeek V4 Flash | **76.4%**     | 76.9%    | None (zero-shot) |
 
-> † DeepSeek uses Pydantic `Literal` to enforce exact intent names. It only predicts
-> on **349/500** samples where it's confident enough to return a valid category —
-> on those, accuracy is **90.3%**. The 151 skipped tickets are cases where the model
-> couldn't find a good match among the 77 intents, effectively saying "I don't know."
-> This honest-uncertainty behaviour is a strength of frontier LLMs vs. trained models
-> that always guess.
+_Metrics from the held-out test set (3,080 samples, 77 classes)._
+
+> **Note:** DistilBERT significantly outperforms both TF‑IDF and the zero-shot LLM,
+> capturing contextual nuance that bag-of-words and pure prompting miss. DeepSeek's
+> zero-shot performance is respectable given it never saw Banking77 data.
 
 ---
 
 ## Key Findings
 
-1. **TF‑IDF is shockingly good** for a 1-second train time — it captures keyword-level patterns that differentiate intents well.
-2. **DistilBERT captures nuance** that TF‑IDF misses: "My card was declined" vs "I want to decline a charge" get different routes.
-3. **DeepSeek knows when it doesn't know** — with Pydantic `Literal` enforcement, it achieves 90% accuracy on confident predictions but declines ~30% of tickets. This makes it ideal as a triage layer before falling back to trained models.
+1. **TF‑IDF is strong for a 4-second train time** — 81.3% accuracy with a simple bag-of-words pipeline is a solid baseline.
+2. **DistilBERT captures nuance** that TF‑IDF misses, achieving 91.4% accuracy (+10% over TF‑IDF) by understanding word order and context.
+3. **DeepSeek V4 Flash is competitive zero-shot** — 76.4% with no training at all, showing frontier LLMs can be surprisingly effective for intent classification out of the box.
 
 ---
 
@@ -189,14 +188,18 @@ quest-05-nlp-ticket-routing/
 └── src/
     ├── data_utils.py          # Data loading, preprocessing
     ├── train.py               # TF-IDF + DistilBERT training
-    └── evaluate.py            # Test-set evaluation & plots
+    ├── evaluate.py            # Test-set evaluation & plots
+    ├── llm_eval.py            # DeepSeek zero-shot evaluation via API
+    └── _test_deepseek.py      # DeepSeek prompt format sandbox
 ```
 
 ---
 
 ## What I Learned
 
-- Banking77 is a well-structured dataset but some intents are very similar (`card_arrival` vs `getting_spare_card`) — a challenge even for BERT.
-- TF‑IDF + LR is a strong baseline that often beats simple deep learning approaches on well-separated classes.
+- Banking77 is a well-structured dataset but some intents are very similar (`card_arrival` vs `getting_spare_card`) — a challenge even for DistilBERT.
+- TF‑IDF + LR is a strong baseline (81.3%) that completes in seconds vs hours for transformer fine-tuning.
+- DistilBERT's 10-point lead over TF‑IDF comes from contextual understanding, particularly for intents that share keywords but differ in meaning.
+- DeepSeek zero-shot at 76.4% is impressive for an off-the-shelf LLM — no training data required.
 - Zero-shot LLM classification is powerful but unpredictable — controlling output format is the hardest part.
 - For production ticket routing, a two-stage approach (fast model → fallback to LLM for low-confidence cases) is ideal.

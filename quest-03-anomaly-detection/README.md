@@ -1,4 +1,4 @@
-# 📊 Quest 08 — Anomaly Detection
+# 📊 Quest 03 — Anomaly Detection
 
 **Domain**: Unsupervised / Semi-supervised Anomaly Detection  
 **Stack**: scikit-learn, PyTorch (autoencoders), Streamlit  
