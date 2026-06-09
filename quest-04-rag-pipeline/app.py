@@ -7,6 +7,7 @@ passages with relevance scores, before and after cross-encoder re-ranking.
 Auto-builds a FAISS index from sample data on first run (Streamlit Cloud ready).
 """
 
+import random
 import sys
 import time
 from pathlib import Path
@@ -40,17 +41,20 @@ st.set_page_config(
 INDEX_DIR = PROJECT_ROOT / "results" / "faiss_index"
 DATA_DIR = PROJECT_ROOT / "data"
 SAMPLE_DATA_DIR = DATA_DIR / "sample"
+QUERIES_PATH = DATA_DIR / "queries.json"
 
-SAMPLE_QUESTIONS = [
-    "When did Beyonce start becoming popular?",
-    "What areas did Beyonce compete in when she was growing up?",
-    "What town did Beyonce go to school in?",
-    "Who decided to place Beyonce's group in Star Search?",
-    "Which film featured Destiny's Child's first major single?",
-    "What mental health issue did Beyonce go through?",
-    "Who did Beyonce star with in Austin Powers in Goldmember?",
-    "What was the name of Destiny's Child's first major single?",
-]
+
+def _load_sample_questions(n: int = 8) -> list[str]:
+    """Pick n random questions from the SQuAD v2 query set."""
+    if not QUERIES_PATH.exists():
+        return ["When did Beyonce start becoming popular?"]
+    import json
+
+    with open(QUERIES_PATH, encoding="utf-8") as f:
+        queries = json.load(f)
+    selected = random.sample(queries, min(n, len(queries)))
+    return [q["question"] for q in selected]
+
 
 # ── Session state ────────────────────────────────────────────────────────────
 
@@ -98,7 +102,7 @@ This RAG pipeline demonstrates:
 - **Cross-encoder re-ranking** for improved precision
 - **Explainable retrieval** — see scores and document text
 
-**Data**: SQuAD v2 context passages
+**Data**: SQuAD v2 (Wikipedia passages, 18.8k docs)
 **Embedding**: `all-MiniLM-L6-v2`
 **Re-ranker**: `ms-marco-MiniLM-L-6-v2`
 """
@@ -161,6 +165,13 @@ st.markdown(
     "document corpus using dense embeddings + cross-encoder re-ranking."
 )
 
+st.markdown(
+    "📖 **About the dataset:** This demo uses **SQuAD v2** (Stanford Question "
+    "Answering Dataset), a collection of **18,877 Wikipedia passages** spanning "
+    "thousands of topics — from music and history to science, geography, and "
+    "technology. Type any question or click a sample below to see retrieval in action."
+)
+
 # Load retriever on first interaction
 if not st.session_state.index_loaded:
     with st.spinner("Loading FAISS index and embedding models..."):
@@ -181,16 +192,18 @@ if st.session_state.index_loaded and retriever:
 # Quick sample questions
 if st.session_state.index_loaded:
     cols = st.columns(4)
-    for i, q in enumerate(SAMPLE_QUESTIONS):
+    sample_questions = _load_sample_questions()
+    for i, q in enumerate(sample_questions):
         with cols[i % 4]:
             if st.button(q, key=f"sample_{i}", use_container_width=True):
-                st.session_state.query = q
+                st.session_state.query_input = q
+                st.session_state.run_search = True
 
 # Query input
 query = st.text_input(
     "**Enter your question:**",
     value=st.session_state.get("query", ""),
-    placeholder="e.g., When did Beyonce start becoming popular?",
+    placeholder="e.g., What is the capital of France?",
     key="query_input",
 )
 
@@ -198,7 +211,9 @@ query = st.text_input(
 
 col1, col2 = st.columns([1, 5])
 with col1:
-    search_clicked = st.button("🔎 Search", type="primary", use_container_width=True)
+    search_clicked = st.button(
+        "🔎 Search", type="primary", use_container_width=True
+    ) or st.session_state.pop("run_search", False)
 
 if search_clicked and query and st.session_state.index_loaded:
     with st.spinner("Retrieving and re-ranking..."):
@@ -231,11 +246,15 @@ if search_clicked and query and st.session_state.index_loaded:
     st.markdown("---")
 
     # Metrics row
+    def _fmt_time(s: float) -> str:
+        ms = s * 1000
+        return f"{ms:.0f} ms" if ms < 1000 else f"{s:.2f} s"
+
     met_col1, met_col2, met_col3, met_col4 = st.columns(4)
     with met_col1:
-        st.metric("Retrieval time", f"{t_retrieve * 1000:.1f} ms")
+        st.metric("Retrieval time", _fmt_time(t_retrieve))
     with met_col2:
-        st.metric("Total time", f"{t_total * 1000:.1f} ms")
+        st.metric("Total time", _fmt_time(t_total))
     with met_col3:
         st.metric("Initial candidates", len(initial_results))
     with met_col4:

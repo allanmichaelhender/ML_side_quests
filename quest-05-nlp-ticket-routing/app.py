@@ -10,6 +10,7 @@ import pickle
 import sys
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 import torch
 import torch.nn.functional as F
@@ -201,18 +202,6 @@ SAMPLE_TICKETS = [
 
 # ── UI ──────────────────────────────────────────────────────
 st.title("🎫 Support Ticket Routing")
-st.markdown(
-    """
-    Automatically route customer support tickets to the right team using
-    **TF‑IDF + Logistic Regression** and fine‑tuned **DistilBERT**.
-
-    Trained on the **[Banking77](https://huggingface.co/datasets/PolyAI/banking77)**
-    dataset — 77 fine-grained intent categories for banking queries.
-
-    > Sidebar shows test-set metrics for both models. DeepSeek V4 Flash
-    > has been evaluated offline for comparison (see README).
-    """
-)
 
 # Load models
 vec_tfidf, clf_tfidf = load_tfidf()
@@ -223,168 +212,344 @@ models_loaded = {
     "DistilBERT": model_bert is not None,
 }
 
-st.sidebar.header("🔧 Models Available")
-for name, loaded in models_loaded.items():
-    icon = "✅" if loaded else "❌"
-    st.sidebar.markdown(f"{icon} **{name}**")
-
-if not any(models_loaded.values()):
-    st.warning(
-        "No models found. Run `python src/train.py` locally to train them. "
-        "The demo will still show sample predictions if you proceed."
-    )
-
-# ── Input ───────────────────────────────────────────────────
-st.subheader("📝 Enter a support ticket")
-
-col1, col2 = st.columns([3, 1])
-with col2:
-    use_sample = st.button("🎲 Random sample ticket")
-
-if use_sample or "ticket_text" not in st.session_state:
-    if use_sample:
-        st.session_state.ticket_text = np.random.choice(SAMPLE_TICKETS)
-    else:
-        st.session_state.ticket_text = ""
-
-ticket_text = st.text_area(
-    "Describe your issue:",
-    value=st.session_state.ticket_text,
-    height=100,
-    placeholder="e.g. I lost my card and need a replacement...",
-    label_visibility="collapsed",
-)
-st.session_state.ticket_text = ticket_text
-
-# ── Predict ─────────────────────────────────────────────────
-if ticket_text.strip():
-    st.markdown("---")
-    st.subheader("🔮 Predictions")
-
-    results_cols = st.columns(2)
-
-    # ── TF-IDF ───────────────────────────────────────────────
-    if vec_tfidf is not None:
-        result_tfidf = predict_tfidf(ticket_text, vec_tfidf, clf_tfidf)
-        with results_cols[0]:
-            st.markdown("#### 📊 TF‑IDF + Logistic Regression")
-            st.markdown(
-                f"**Prediction:** `{result_tfidf['label'].replace('_', ' ').title()}`"
-            )
-            st.metric("Confidence", f"{result_tfidf['confidence']:.1%}")
-            fig = plot_confidence_bars(
-                result_tfidf["top_k"][:5],
-                "Top-5 Predictions — TF‑IDF",
-                "#2e86ab",
-            )
-            st.pyplot(fig)
-            plt.close()
-
-    # ── DistilBERT ───────────────────────────────────────────
-    if model_bert is not None:
-        result_bert = predict_distilbert(
-            ticket_text, model_bert, tokenizer_bert, device_bert
-        )
-        col_idx = 1 if vec_tfidf is not None else 0
-        with results_cols[col_idx]:
-            st.markdown("#### 🤖 DistilBERT")
-            st.markdown(
-                f"**Prediction:** `{result_bert['label'].replace('_', ' ').title()}`"
-            )
-            st.metric("Confidence", f"{result_bert['confidence']:.1%}")
-            fig = plot_confidence_bars(
-                result_bert["top_k"][:5],
-                "Top-5 Predictions — DistilBERT",
-                "#a23b72",
-            )
-            st.pyplot(fig)
-            plt.close()
-
-    # ── Agreement indicator ──────────────────────────────────
-    st.markdown("---")
-    st.subheader("📊 Model Agreement")
-
-    predictions = []
-    if vec_tfidf is not None:
-        predictions.append(
-            ("TF‑IDF", result_tfidf["label"], result_tfidf["confidence"])
-        )
-    if model_bert is not None:
-        predictions.append(
-            ("DistilBERT", result_bert["label"], result_bert["confidence"])
-        )
-
-    unique_labels = set(p[1] for p in predictions)
-    if len(unique_labels) == 1 and len(predictions) >= 2:
-        st.success("✅ Both models agree on the route!")
-    elif len(predictions) >= 2:
-        st.warning("⚠️ Models disagree — consider manual review")
-
-    for name, label, conf in predictions:
-        st.markdown(f"- **{name}**: `{label.replace('_', ' ').title()}` ({conf:.1%})")
-
-    # ── Interpretability: TF-IDF top words ───────────────────
-    st.markdown("---")
-    st.subheader("🔍 What's driving the prediction?")
-
-    if vec_tfidf is not None:
-        with st.expander("📌 TF‑IDF top keywords"):
-            feature_names = vec_tfidf.get_feature_names_out()
-            row = vec_tfidf.transform([ticket_text])
-            if row.nnz > 0:
-                coef_idx = row.indices
-                coef_data = row.data
-                sorted_idx = np.argsort(coef_data)[-10:][::-1]
-                keywords = [
-                    (feature_names[coef_idx[i]], coef_data[i]) for i in sorted_idx
-                ]
-                for word, score in keywords:
-                    st.markdown(f"- **{word}**: `{score:.4f}`")
-            else:
-                st.caption("No TF‑IDF features found (text too short?)")
-
-else:
-    st.info("👆 Enter a support ticket above to see routing predictions.")
-
-
-# ── Sidebar: metrics ────────────────────────────────────────
-st.sidebar.header("📈 Results")
+# Load metrics
+metrics = None
 metrics_path = RESULTS_DIR / "metrics.json"
 if metrics_path.exists():
     with open(metrics_path) as f:
         metrics = json.load(f)
 
-    st.sidebar.subheader("Model Performance")
-    for approach_key in ["tfidf", "distilbert"]:
-        if approach_key in metrics:
-            m = metrics[approach_key]
-            name = "TF‑IDF" if approach_key == "tfidf" else "DistilBERT"
-            acc = m.get("val_accuracy", m.get("accuracy", "—"))
-            st.sidebar.metric(
-                f"{name} Accuracy", f"{acc:.1%}" if isinstance(acc, float) else acc
-            )
+tab1, tab2 = st.tabs(["🔮 Live Inference", "📊 Metrics"])
 
-    if "evaluation" in metrics:
-        st.sidebar.subheader("Test Set Results")
-        for m in metrics["evaluation"]:
-            st.sidebar.metric(
-                f"{m['approach']} Test",
-                f"{m['accuracy']:.1%}",
-                delta=f"F1: {m['macro_f1']:.1%}",
-            )
+# ═══════════════════════════════════════════════════════════════
+# TAB 1 — Live Inference
+# ═══════════════════════════════════════════════════════════════
+with tab1:
+    st.markdown(
+        """
+    Three approaches were evaluated on the **[Banking77](https://huggingface.co/datasets/PolyAI/banking77)**
+    dataset (77 intent categories):
 
-    st.sidebar.markdown("---")
-    st.sidebar.caption(f"77 intent categories · Banking77 dataset")
-else:
-    st.sidebar.info(
-        "Run `python src/train.py && python src/evaluate.py` to populate results."
+    - **TF‑IDF + Logistic Regression** — trained locally
+    - **DistilBERT** (fine-tuned) — trained locally
+    - **DeepSeek V4 Flash** — zero-shot via API (see Metrics tab)
+
+    This tab lets you test the two trained models (TF-IDF/LR and DistilBERT) live. Enter a ticket below
+    to compare their predictions side by side.
+        """
     )
 
-# ── Footer ───────────────────────────────────────────────────
-st.sidebar.markdown("---")
-st.sidebar.markdown(
-    """
-    **Built with:** scikit-learn, Transformers, PyTorch, Streamlit  
-    **Port:** 8505
-    """
-)
+    if not any(models_loaded.values()):
+        st.warning(
+            "No models found. Run `python src/train.py` locally to train them. "
+            "The demo will still show sample predictions if you proceed."
+        )
+
+    # ── Input ───────────────────────────────────────────────
+    # Seed a random ticket on first load
+    if "ticket_text" not in st.session_state:
+        st.session_state.ticket_text = np.random.choice(SAMPLE_TICKETS)
+
+    st.subheader("📝 Enter a support ticket")
+
+    use_sample = st.button("🎲 New random ticket")
+
+    if use_sample:
+        st.session_state.ticket_text = np.random.choice(SAMPLE_TICKETS)
+
+    ticket_text = st.text_area(
+        "Describe your issue:",
+        value=st.session_state.ticket_text,
+        height=100,
+        placeholder="e.g. I lost my card and need a replacement...",
+        label_visibility="collapsed",
+    )
+    st.session_state.ticket_text = ticket_text
+
+    # ── Predict ─────────────────────────────────────────────
+    if ticket_text.strip():
+        st.markdown("---")
+        st.subheader("🔮 Predictions")
+
+        results_cols = st.columns(2)
+
+        # ── TF-IDF ───────────────────────────────────────────
+        if vec_tfidf is not None:
+            result_tfidf = predict_tfidf(ticket_text, vec_tfidf, clf_tfidf)
+            with results_cols[0]:
+                st.markdown("#### 📊 TF‑IDF + Logistic Regression")
+                st.markdown(
+                    f"**Prediction:** `{result_tfidf['label'].replace('_', ' ').title()}`"
+                )
+                st.metric("Confidence", f"{result_tfidf['confidence']:.1%}")
+                fig = plot_confidence_bars(
+                    result_tfidf["top_k"][:5],
+                    "Top-5 Predictions — TF‑IDF",
+                    "#2e86ab",
+                )
+                st.pyplot(fig)
+                plt.close()
+
+        # ── DistilBERT ───────────────────────────────────────
+        if model_bert is not None:
+            result_bert = predict_distilbert(
+                ticket_text, model_bert, tokenizer_bert, device_bert
+            )
+            col_idx = 1 if vec_tfidf is not None else 0
+            with results_cols[col_idx]:
+                st.markdown("#### 🤖 DistilBERT")
+                st.markdown(
+                    f"**Prediction:** `{result_bert['label'].replace('_', ' ').title()}`"
+                )
+                st.metric("Confidence", f"{result_bert['confidence']:.1%}")
+                fig = plot_confidence_bars(
+                    result_bert["top_k"][:5],
+                    "Top-5 Predictions — DistilBERT",
+                    "#a23b72",
+                )
+                st.pyplot(fig)
+                plt.close()
+
+        # ── Agreement indicator ──────────────────────────────
+        st.markdown("---")
+        st.subheader("📊 Model Agreement")
+
+        predictions = []
+        if vec_tfidf is not None:
+            predictions.append(
+                ("TF‑IDF", result_tfidf["label"], result_tfidf["confidence"])
+            )
+        if model_bert is not None:
+            predictions.append(
+                ("DistilBERT", result_bert["label"], result_bert["confidence"])
+            )
+
+        unique_labels = set(p[1] for p in predictions)
+        if len(unique_labels) == 1 and len(predictions) >= 2:
+            st.success("✅ Both models agree on the route!")
+        elif len(predictions) >= 2:
+            st.warning("⚠️ Models disagree — consider manual review")
+
+        for name, label, conf in predictions:
+            st.markdown(
+                f"- **{name}**: `{label.replace('_', ' ').title()}` ({conf:.1%})"
+            )
+
+        # ── Interpretability ─────────────────────────────────
+        st.markdown("---")
+        st.subheader("🔍 What's driving the prediction?")
+
+        interp_cols = st.columns(2)
+
+        # ── TF-IDF top keywords ──────────────────────────────
+        with interp_cols[0]:
+            if vec_tfidf is not None:
+                with st.expander("📌 TF‑IDF top keywords"):
+                    feature_names = vec_tfidf.get_feature_names_out()
+                    row = vec_tfidf.transform([ticket_text])
+                    if row.nnz > 0:
+                        coef_idx = row.indices
+                        coef_data = row.data
+                        sorted_idx = np.argsort(coef_data)[-10:][::-1]
+                        keywords = [
+                            (feature_names[coef_idx[i]], coef_data[i])
+                            for i in sorted_idx
+                        ]
+                        for word, score in keywords:
+                            st.markdown(f"- **{word}**: `{score:.4f}`")
+                    else:
+                        st.caption("No TF‑IDF features found (text too short?)")
+
+        # ── DistilBERT token importance ──────────────────────
+        with interp_cols[1]:
+            if model_bert is not None and ticket_text.strip():
+                with st.expander("🤖 DistilBERT influential tokens"):
+                    with st.spinner("Analysing token impact..."):
+                        encoding = tokenizer_bert(
+                            ticket_text,
+                            return_tensors="pt",
+                            truncation=True,
+                            max_length=128,
+                            padding="max_length",
+                        )
+                        enc = {k: v.to(device_bert) for k, v in encoding.items()}
+
+                        with torch.no_grad():
+                            base_out = model_bert(**enc)
+                        base_probs = F.softmax(base_out.logits, dim=-1).squeeze(0).cpu()
+                        pred_class = int(torch.argmax(base_probs))
+                        base_conf = float(base_probs[pred_class])
+
+                        input_ids = encoding["input_ids"][0].to(device_bert)
+                        mask_id = tokenizer_bert.mask_token_id
+                        tokens = tokenizer_bert.convert_ids_to_tokens(input_ids)
+                        # Only mask real content tokens (skip special tokens)
+                        content_indices = [
+                            i
+                            for i, t in enumerate(tokens)
+                            if t not in ("[CLS]", "[SEP]", "[PAD]")
+                        ][:25]
+
+                        importance = []
+                        for idx in content_indices:
+                            masked_ids = input_ids.clone()
+                            masked_ids[idx] = mask_id
+                            with torch.no_grad():
+                                m_out = model_bert(
+                                    input_ids=masked_ids.unsqueeze(0),
+                                    attention_mask=enc["attention_mask"],
+                                )
+                            m_probs = F.softmax(m_out.logits, dim=-1).squeeze(0).cpu()
+                            m_conf = float(m_probs[pred_class])
+                            drop = base_conf - m_conf
+                            importance.append((tokens[idx], drop))
+
+                        importance.sort(key=lambda x: -x[1])
+                        st.caption(
+                            f"Impact on `{label_names[pred_class].replace('_', ' ').title()}` "
+                            f"(masking each token)"
+                        )
+                        for rank, (token, drop) in enumerate(importance[:10]):
+                            display = token.replace("##", "")
+                            bg = "#2d7d46" if rank == 0 else "#555"
+                            st.markdown(
+                                f"<span style='background:{bg}; color:white; padding:2px 8px; "
+                                f"border-radius:4px; font-size:0.9em'>"
+                                f"**{display}**</span> &nbsp; ∆ {drop:.1%}",
+                                unsafe_allow_html=True,
+                            )
+
+    else:
+        st.info("👆 Enter a support ticket above to see routing predictions.")
+
+# ═══════════════════════════════════════════════════════════════
+# TAB 2 — Metrics
+# ═══════════════════════════════════════════════════════════════
+with tab2:
+    st.markdown(
+        """
+    Model performance comparison across approaches.
+    Trained on the **[Banking77](https://huggingface.co/datasets/PolyAI/banking77)**
+    dataset — 77 fine-grained intent categories for banking queries.
+        """
+    )
+
+    if metrics is None:
+        st.info(
+            "Run `python src/train.py && python src/evaluate.py` to populate results."
+        )
+    else:
+        rows = []
+
+        def _fmt_acc(acc):
+            return f"{acc:.1%}" if isinstance(acc, float) else str(acc)
+
+        # TF-IDF
+        if "tfidf" in metrics:
+            m = metrics["tfidf"]
+            f1 = m.get("test_macro_f1")
+            rows.append(
+                {
+                    "Model": "TF‑IDF + Logistic Regression",
+                    "Type": "Linear classification pipeline using TF-IDF features",
+                    "Accuracy": _fmt_acc(m.get("val_accuracy", "—")),
+                    "F1 Score": f"{f1:.1%}" if f1 else "—",
+                    "Train Time": f"{m.get('training_time_s', '—')}s",
+                }
+            )
+
+        # DistilBERT
+        if "distilbert" in metrics:
+            m = metrics["distilbert"]
+            rows.append(
+                {
+                    "Model": "DistilBERT (fine-tuned)",
+                    "Type": "Transformer (66M params)",
+                    "Accuracy": _fmt_acc(m.get("val_accuracy", "—")),
+                    "F1 Score": f"{m.get('val_macro_f1', 0):.1%}",
+                    "Train Time": f"{m.get('training_time_min', '—'):.0f} min",
+                }
+            )
+
+        # Evaluation approaches (DeepSeek etc.)
+        if "evaluation" in metrics:
+            for m in metrics["evaluation"]:
+                rows.append(
+                    {
+                        "Model": m["approach"],
+                        "Type": "Zero-shot LLM",
+                        "Accuracy": f"{m['accuracy']:.1%}",
+                        "F1 Score": f"{m.get('macro_f1', 0):.1%}",
+                        "Train Time": "—",
+                    }
+                )
+
+        if rows:
+            st.subheader("📊 Model Comparison")
+            st.dataframe(rows, use_container_width=True, hide_index=True)
+
+            # ── Bar chart comparison ─────────────────────────
+            st.subheader("📈 Accuracy & F1 Comparison")
+
+            model_names = [r["Model"] for r in rows]
+            short_names = [n.split("(")[0].strip() for n in model_names]
+            n_models = len(rows)
+            x = range(n_models)
+            width = 0.35
+
+            fig, ax = plt.subplots(figsize=(9, 4))
+
+            acc_vals = []
+            f1_vals = []
+            for r in rows:
+                acc = (
+                    float(r["Accuracy"].rstrip("%")) / 100
+                    if r["Accuracy"] != "—"
+                    else None
+                )
+                f1 = (
+                    float(r["F1 Score"].rstrip("%")) / 100
+                    if r["F1 Score"] != "—"
+                    else None
+                )
+                acc_vals.append(acc)
+                f1_vals.append(f1)
+
+            bars_acc = ax.bar(
+                [p - width / 2 for p in x],
+                [v if v is not None else 0 for v in acc_vals],
+                width,
+                label="Accuracy",
+                color="#2e86ab",
+            )
+            bars_f1 = ax.bar(
+                [p + width / 2 for p in x],
+                [v if v is not None else 0 for v in f1_vals],
+                width,
+                label="F1 Score",
+                color="#a23b72",
+            )
+
+            for bars, vals in [(bars_acc, acc_vals), (bars_f1, f1_vals)]:
+                for bar, v in zip(bars, vals):
+                    if v is not None:
+                        ax.text(
+                            bar.get_x() + bar.get_width() / 2,
+                            bar.get_height() + 0.005,
+                            f"{v:.1%}",
+                            ha="center",
+                            va="bottom",
+                            fontsize=9,
+                        )
+
+            ax.set_xticks(list(x))
+            ax.set_xticklabels(short_names, fontsize=10)
+            ax.set_ylabel("Score", fontsize=11)
+            ax.set_ylim(0, 1.1)
+            ax.legend(fontsize=10)
+            sns.despine()
+            plt.tight_layout()
+            st.pyplot(fig)
+            plt.close()
+        else:
+            st.info("No metrics data available.")

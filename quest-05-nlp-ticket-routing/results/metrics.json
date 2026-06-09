@@ -85,7 +85,8 @@
     "val_accuracy": 0.813,
     "training_time_s": 4.5,
     "max_features": 5000,
-    "num_classes": 77
+    "num_classes": 77,
+    "test_macro_f1": 0.8129
   },
   "distilbert": {
     "approach": "distilbert",
