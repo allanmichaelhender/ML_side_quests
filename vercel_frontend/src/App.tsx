@@ -32,9 +32,9 @@ const QUESTS: Quest[] = [
     id: 3,
     title: "Anomaly Detection",
     description:
-      "5-method comparison (Isolation Forest, LOF, One-Class SVM, DBSCAN, Autoencoder) on credit card fraud data.",
+      "XGBoost, Autoencoder, and Hybrid OR-gate compared on 284k credit card transactions — unsupervised methods shown non-viable.",
     emoji: "🕵️",
-    tags: ["Anomaly", "Sklearn", "PyTorch", "Fraud Detection"],
+    tags: ["XGBoost", "PyTorch", "Fraud Detection", "Threshold Sweep"],
     streamlitUrl: "https://ml-sidequests-03.streamlit.app",
   },
   {
