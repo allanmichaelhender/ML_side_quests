@@ -15,7 +15,7 @@ Each quest is independently containerised with Docker and has its own Streamlit 
 | 3   | 🕵️ [**Anomaly Detection**](quest-03-anomaly-detection/)           | Anomaly         | 5 methods (IF, LOF, SVM, DBSCAN, AE)       | **Best F1 via Autoencoder**                                     | [GitHub](quest-03-anomaly-detection/)                                                            |
 | 4   | [**RAG Retrieval Pipeline**](quest-04-rag-pipeline/)              | RAG             | MiniLM + Cross-Encoder + FAISS             | **Hit@5 74.5%** · **MRR 0.57** · 18.8k docs                     | [GitHub](quest-04-rag-pipeline/)                                                                 |
 | 5   | 🎫 [**Support Ticket Routing**](quest-05-nlp-ticket-routing/)     | NLP             | TF-IDF / DistilBERT / DeepSeek (zero-shot) | **83.6% acc** (TF-IDF) · 77-class Banking77                     | [GitHub](quest-05-nlp-ticket-routing/)                                                           |
-| 6   | ⚡ [**Energy Grid Load Balancing**](quest-06-rl-grid-balancing/)  | RL              | PPO (Stable Baselines3)                    | **-29.9M reward** · **91.7% reliability** · beats all baselines | [streamlit](https://ml-sidequests-06.streamlit.app) · [GitHub](quest-06-rl-grid-balancing/)      |
+<!-- | 6   | ⚡ [**Energy Grid Load Balancing**](quest-06-rl-grid-balancing/)  | RL              | PPO (Stable Baselines3)                    | **-29.9M reward** · **91.7% reliability** · beats all baselines | [streamlit](https://ml-sidequests-06.streamlit.app) · [GitHub](quest-06-rl-grid-balancing/)      | -->
 
 > Click into any quest folder for the full walkthrough: problem statement, pipeline steps, training instructions, results, and key findings.
 
@@ -120,7 +120,7 @@ All quests are designed to train and run on CPU (no GPU required).
 | 3 — Anomaly Detection | depends on subsample               | Compared 5 methods                    |
 | 4 — RAG Pipeline      | ~30 min (indexing only)            | **74.5%** Hit@5, **0.57** MRR         |
 | 5 — Ticket Routing    | **< 30 min** per model             | **85.2%** accuracy (DistilBERT)       |
-| 6 — Grid RL Agent     | **30–60 min**                      | **-30.0M** reward (vs -414M random)   |
+<!-- | 6 — Grid RL Agent     | **30–60 min**                      | **-30.0M** reward (vs -414M random)   | -->
 
 ---
 

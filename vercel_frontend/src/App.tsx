@@ -98,7 +98,7 @@ export default function App() {
         <h1>Side Quests - ML & AI</h1>
         <p className="app-subtitle">
           Industry application focused ML projects spanning Computer Vision,
-          NLP, Anomaly Detection, RAG retrieval, and Reinforcement Learning.
+          NLP, Anomaly Detection, RAG retrieval, and zero-shot LLM classification.
         </p>
       </header>
 
