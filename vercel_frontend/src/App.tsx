@@ -55,15 +55,15 @@ const QUESTS: Quest[] = [
     tags: ["NLP", "Classification", "TF-IDF + LR", "Zero-shot LLM"],
     streamlitUrl: "https://ml-sidequests-05.streamlit.app",
   },
-  {
-    id: 6,
-    title: "Energy Grid Load Balancing",
-    description:
-      "PPO reinforcement learning agent dispatching generation sources to balance cost, emissions, and reliability.",
-    emoji: "⚡",
-    tags: ["RL", "PPO", "Stable Baselines3", "Gymnasium"],
-    streamlitUrl: "https://ml-sidequests-06.streamlit.app",
-  },
+  // {
+  //   id: 6,
+  //   title: "Energy Grid Load Balancing",
+  //   description:
+  //     "PPO reinforcement learning agent dispatching generation sources to balance cost, emissions, and reliability.",
+  //   emoji: "⚡",
+  //   tags: ["RL", "PPO", "Stable Baselines3", "Gymnasium"],
+  //   streamlitUrl: "https://ml-sidequests-06.streamlit.app",
+  // },
 ];
 
 function QuestCard({ quest }: { quest: Quest }) {
@@ -95,7 +95,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>ML Side Quests</h1>
+        <h1>Side Quests - ML & AI</h1>
         <p className="app-subtitle">
           Industry application focused ML projects spanning Computer Vision,
           NLP, Anomaly Detection, RAG retrieval, and Reinforcement Learning.

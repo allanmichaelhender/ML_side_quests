@@ -18,58 +18,68 @@ if str(HERE) not in sys.path:
 MACHINE_DEFS = [
     {
         "name": "general",
-        "min_instances": 50,
-        "max_instances": 2000,
+        "min_instances": 5,
+        "max_instances": 150,
         "cpu_per_instance": 8,
         "mem_per_instance": 32,
         "cost_per_hour": 0.32,
         "power_watts": 180,
         "co2_rate": 0.00018,
         "gpu": False,
+        "gpu_per_instance": 0,
+        "iops_per_instance": 1000,
     },
     {
         "name": "compute_opt",
-        "min_instances": 20,
-        "max_instances": 1000,
+        "min_instances": 3,
+        "max_instances": 60,
         "cpu_per_instance": 16,
         "mem_per_instance": 32,
         "cost_per_hour": 0.48,
         "power_watts": 220,
         "co2_rate": 0.00022,
         "gpu": False,
+        "gpu_per_instance": 0,
+        "iops_per_instance": 500,
     },
     {
         "name": "memory_opt",
-        "min_instances": 10,
-        "max_instances": 500,
+        "min_instances": 2,
+        "max_instances": 40,
         "cpu_per_instance": 8,
         "mem_per_instance": 128,
         "cost_per_hour": 0.64,
         "power_watts": 200,
         "co2_rate": 0.00020,
         "gpu": False,
+        "gpu_per_instance": 0,
+        "iops_per_instance": 500,
     },
     {
         "name": "gpu",
-        "min_instances": 5,
-        "max_instances": 200,
+        "min_instances": 1,
+        "max_instances": 25,
         "cpu_per_instance": 16,
         "mem_per_instance": 64,
         "cost_per_hour": 3.50,
         "power_watts": 550,
         "co2_rate": 0.00055,
         "gpu": True,
+        "gpu_per_instance": 1,
+        "iops_per_instance": 1000,
     },
     {
         "name": "storage_opt",
-        "min_instances": 10,
-        "max_instances": 300,
+        "min_instances": 2,
+        "max_instances": 30,
         "cpu_per_instance": 8,
         "mem_per_instance": 64,
         "cost_per_hour": 0.40,
         "power_watts": 260,
         "co2_rate": 0.00026,
         "gpu": False,
+        "gpu_per_instance": 0,
+        "iops_per_instance": 10000,
     },
 ]
 
@@ -104,12 +114,77 @@ HOURLY_WORKLOAD_SHAPE = np.array(
 
 WEEKEND_CPU_SCALE = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 0.95, 5: 0.60, 6: 0.50}
 WEEKEND_MEM_SCALE = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 0.95, 5: 0.65, 6: 0.55}
+WEEKEND_GPU_SCALE = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 0.90, 5: 0.55, 6: 0.40}
+WEEKEND_IOPS_SCALE = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 0.95, 5: 0.70, 6: 0.60}
 
 BASE_CPU_DEMAND = 4000
 BASE_MEM_DEMAND = 12000
+BASE_GPU_DEMAND = 8  # GPU-accelerated tasks (e.g. ML training jobs)
+BASE_IOPS_DEMAND = 60000  # Storage IOPS throughput
+BASE_POWER_CAPACITY_KW = 55  # Data center power budget in kW
 
-FAILURE_RATE = 0.005
-REPAIR_RATE = 0.3
+# Carbon intensity (kg CO2/kWh) varies by hour — lower when solar/wind available
+HOURLY_CARBON_SHAPE = np.array(
+    [
+        0.80,
+        0.75,
+        0.70,
+        0.65,
+        0.65,
+        0.70,  # midnight-5am: wind available
+        0.60,
+        0.50,
+        0.40,
+        0.30,
+        0.20,
+        0.15,  # 6-11am: solar ramps up
+        0.12,
+        0.10,
+        0.10,
+        0.15,
+        0.20,
+        0.30,  # noon-5pm: peak solar
+        0.50,
+        0.70,
+        0.85,
+        0.90,
+        0.85,
+        0.80,  # 6-11pm: solar fades, gas/coal
+    ]
+)
+
+# Power budget scaling — higher during day (more cooling efficiency + solar)
+HOURLY_POWER_SHAPE = np.array(
+    [
+        0.75,
+        0.72,
+        0.70,
+        0.68,
+        0.68,
+        0.70,  # night: less efficient cooling
+        0.75,
+        0.82,
+        0.88,
+        0.95,
+        1.00,
+        1.00,  # morning: ramping up
+        1.00,
+        1.00,
+        0.98,
+        0.95,
+        0.92,
+        0.90,  # afternoon: peak solar helps
+        0.88,
+        0.85,
+        0.82,
+        0.80,
+        0.78,
+        0.76,  # evening: cooling costs rise
+    ]
+)
+
+FAILURE_RATE = 0.008  # Slightly higher failure rate for more volatility
+REPAIR_RATE = 0.25
 
 
 @dataclass
@@ -118,6 +193,10 @@ class ClusterParams:
     day_of_week: int
     cpu_demand: float
     mem_demand: float
+    gpu_demand: float  # GPU-accelerated tasks requiring GPU instances
+    storage_iops_demand: float  # Storage IOPS throughput demand
+    power_budget_kw: float  # Max power draw before penalty (kW)
+    carbon_intensity: float  # kg CO2 per kWh at this hour
     machine_availability: Dict[str, float]
     machine_prices: Dict[str, float]
 
@@ -126,13 +205,22 @@ def sample_workload_demand(
     hour: int,
     day_of_week: int,
     noise_std: float = 0.08,
-) -> Tuple[float, float]:
+) -> Tuple[float, float, float, float]:
     shape_val = HOURLY_WORKLOAD_SHAPE[hour]
     cpu_demand = BASE_CPU_DEMAND * shape_val * WEEKEND_CPU_SCALE[day_of_week]
     mem_demand = BASE_MEM_DEMAND * shape_val * WEEKEND_MEM_SCALE[day_of_week]
+    gpu_demand = BASE_GPU_DEMAND * shape_val * WEEKEND_GPU_SCALE[day_of_week]
+    iops_demand = BASE_IOPS_DEMAND * shape_val * WEEKEND_IOPS_SCALE[day_of_week]
     cpu_demand *= np.random.lognormal(0, noise_std)
     mem_demand *= np.random.lognormal(0, noise_std)
-    return max(cpu_demand, 100), max(mem_demand, 500)
+    gpu_demand *= np.random.lognormal(0, noise_std * 0.5)
+    iops_demand *= np.random.lognormal(0, noise_std)
+    return (
+        max(cpu_demand, 100),
+        max(mem_demand, 500),
+        max(round(gpu_demand), 0),
+        max(iops_demand, 5000),
+    )
 
 
 def sample_machine_availability(
@@ -158,18 +246,27 @@ def sample_cluster_params(
     day_of_week: int,
     prev_availability: Optional[Dict[str, float]] = None,
 ) -> ClusterParams:
-    cpu_demand, mem_demand = sample_workload_demand(hour, day_of_week)
+    cpu_demand, mem_demand, gpu_demand, iops_demand = sample_workload_demand(
+        hour, day_of_week
+    )
     avail = {}
     prices = {}
     for m in MACHINE_DEFS:
         prev = prev_availability.get(m["name"]) if prev_availability else None
         avail[m["name"]] = sample_machine_availability(m, prev)
         prices[m["name"]] = m["cost_per_hour"] + np.random.normal(0, 0.02)
+    power_budget = BASE_POWER_CAPACITY_KW * HOURLY_POWER_SHAPE[hour]
+    power_budget *= np.random.lognormal(0, 0.03)
+    carbon_intensity = HOURLY_CARBON_SHAPE[hour] * np.random.lognormal(0, 0.05)
     return ClusterParams(
         hour=hour,
         day_of_week=day_of_week,
         cpu_demand=cpu_demand,
         mem_demand=mem_demand,
+        gpu_demand=gpu_demand,
+        storage_iops_demand=iops_demand,
+        power_budget_kw=power_budget,
+        carbon_intensity=carbon_intensity,
         machine_availability=avail,
         machine_prices=prices,
     )

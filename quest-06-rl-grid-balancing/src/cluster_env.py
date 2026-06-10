@@ -5,9 +5,13 @@ ClusterDispatchEnv is a discrete-time simulation of a data center cluster
 where an RL agent must allocate machines (from multiple types) to meet
 computing workload demand at minimum cost, energy, and with high reliability.
 
-State space (16 dims):
+State space (21 dims):
   - CPU demand (vCPU cores)
   - Memory demand (GB)
+  - GPU demand (GPU-accelerated tasks)
+  - Storage IOPS demand
+  - Power budget (kW)
+  - Carbon intensity (kg CO2/kWh)
   - Available instances per type: general, compute_opt, memory_opt, gpu, storage_opt
   - Current price per type ($/hr)
   - Time encoding: hour_sin, hour_cos, day_sin, day_cos
@@ -16,7 +20,9 @@ Action space (5 dims, continuous Box):
   - Fraction of available instances to allocate from each type [0, 1]
 
 Reward:
-  r = -compute_cost - λ * energy - μ * (unmet_cpu² + unmet_mem²) - ν * stranded²
+  r = -(cost + λ*energy + μ_c*(unmet_cpu²) + μ_m*(unmet_mem²)
+          + μ_g*(unmet_gpu²) + μ_i*(unmet_iops²)
+          + β*power_overuse² + γ*carbon_cost + ν*stranded²)
 """
 
 import sys
@@ -40,12 +46,17 @@ from data_utils import (
     estimate_total_mem_capacity,
 )
 
-# ── Reward weights ──────────────────────────────────────────────────────────
-LAMBDA_COST = 1.0  # weight on $ cost
-LAMBDA_ENERGY = 0.001  # weight on energy penalty
-LAMBDA_UNMET_CPU = 0.5  # weight on unmet CPU demand penalty
-LAMBDA_UNMET_MEM = 0.5  # weight on unmet memory demand penalty
-NU_STRANDED = 0.2  # weight on stranded (over-provisioned) penalty
+# ── Reward weights (all linear — no squaring) ──────────────────────────────
+# Weights are calibrated so each component contributes ~200-2000 when "bad"
+LAMBDA_COST = 2.0  # weight on $ cost (lower so meeting demand is prioritized)
+LAMBDA_ENERGY = 0.001  # weight on energy penalty (largely captured by cost + carbon)
+LAMBDA_UNMET_CPU = 2.0  # weight on unmet CPU demand (primary SLI)
+LAMBDA_UNMET_MEM = 1.0  # weight on unmet memory demand
+LAMBDA_UNMET_GPU = 150.0  # weight on unmet GPU demand (tasks literally can't run)
+LAMBDA_UNMET_IOPS = 0.05  # weight on unmet IOPS demand (performance degrades)
+LAMBDA_POWER_OVERUSE = 80.0  # weight on exceeding power budget (kW)
+LAMBDA_CARBON = 30.0  # weight on carbon emissions cost (per kg CO2)
+NU_STRANDED = 1000.0  # weight on stranded over-provisioning (ratio scale)
 
 # How many timesteps in an episode
 DEFAULT_EPISODE_LENGTH = 24 * 7  # one week
@@ -87,9 +98,12 @@ class ClusterDispatchEnv(gym.Env):
         self.type_names = [m["name"] for m in MACHINE_DEFS]
 
         # ── Observation space ───────────────────────────────────────────────
-        # cpu_demand(1) + mem_demand(1) + avail_instances(5) + prices(5)
-        # + hour_sin/cos(2) + day_sin/cos(2) = 16
-        obs_dim = 2 + self.n_types + self.n_types + 4
+        # cpu_demand(1) + mem_demand(1) + gpu_demand(1) + iops_demand(1)
+        # + power_budget(1) + carbon_intensity(1) = 6
+        # + avail_instances(5) + prices(5)
+        # + hour_sin/cos(2) + day_sin/cos(2) = 4
+        # Total: 6 + 10 + 4 = 20
+        obs_dim = 6 + self.n_types + self.n_types + 4
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32
         )
@@ -110,6 +124,10 @@ class ClusterDispatchEnv(gym.Env):
             "energy": [],
             "unmet_cpu": [],
             "unmet_mem": [],
+            "unmet_gpu": [],
+            "unmet_iops": [],
+            "power_overuse": [],
+            "carbon": [],
             "stranded": [],
             "total": [],
         }
@@ -142,6 +160,10 @@ class ClusterDispatchEnv(gym.Env):
             [
                 [s.cpu_demand],
                 [s.mem_demand],
+                [float(s.gpu_demand)],
+                [s.storage_iops_demand],
+                [s.power_budget_kw],
+                [s.carbon_intensity],
                 avail_instances,
                 prices,
                 [hour_sin, hour_cos, day_sin, day_cos],
@@ -159,6 +181,8 @@ class ClusterDispatchEnv(gym.Env):
         # Compute what each machine type provides
         total_cpu = 0.0
         total_mem = 0.0
+        total_gpu = 0.0
+        total_iops = 0.0
         cost = 0.0
         energy = 0.0
 
@@ -167,6 +191,8 @@ class ClusterDispatchEnv(gym.Env):
             m = MACHINE_DEFS[i]
             total_cpu += n_allocated * m["cpu_per_instance"]
             total_mem += n_allocated * m["mem_per_instance"]
+            total_gpu += n_allocated * m.get("gpu_per_instance", 0)
+            total_iops += n_allocated * m.get("iops_per_instance", 0)
             cost += n_allocated * s.machine_prices[type_name]
             energy += n_allocated * m["power_watts"] / 1000.0  # kW
 
@@ -174,27 +200,46 @@ class ClusterDispatchEnv(gym.Env):
         unmet_cpu = max(0.0, s.cpu_demand - total_cpu)
         unmet_mem = max(0.0, s.mem_demand - total_mem)
 
+        # Unmet GPU demand — tasks that need GPU acceleration
+        unmet_gpu = max(0.0, s.gpu_demand - total_gpu)
+
+        # Unmet IOPS demand — storage throughput shortfall
+        unmet_iops = max(0.0, s.storage_iops_demand - total_iops)
+
+        # Power overuse penalty — exceeding data center power budget
+        total_power_kw = energy  # already in kW from power_watts / 1000
+        power_overuse = max(0.0, total_power_kw - s.power_budget_kw)
+
+        # Carbon cost — emissions from energy consumption
+        carbon_kg = energy * s.carbon_intensity
+
         # Stranded (over-provisioned) instances — allocated but not needed
-        # Penalise if both CPU and memory are significantly over-provisioned
         cpu_ratio = total_cpu / s.cpu_demand if s.cpu_demand > 0 else 1.0
         mem_ratio = total_mem / s.mem_demand if s.mem_demand > 0 else 1.0
         stranded_penalty = 0.0
         if cpu_ratio > 1.2 and mem_ratio > 1.2:
-            # Over-provisioned beyond 20% — waste
             stranded_penalty = min(cpu_ratio, mem_ratio) - 1.0
 
-        # Reward components (all negative penalties)
+        # Reward components (all linear penalties for balanced scaling)
         cost_penalty = LAMBDA_COST * cost
         energy_penalty = LAMBDA_ENERGY * energy
-        unmet_cpu_penalty = LAMBDA_UNMET_CPU * (unmet_cpu**2)
-        unmet_mem_penalty = LAMBDA_UNMET_MEM * (unmet_mem**2)
-        stranded = NU_STRANDED * (stranded_penalty**2)
+        unmet_cpu_penalty = LAMBDA_UNMET_CPU * unmet_cpu
+        unmet_mem_penalty = LAMBDA_UNMET_MEM * unmet_mem
+        unmet_gpu_penalty = LAMBDA_UNMET_GPU * unmet_gpu
+        unmet_iops_penalty = LAMBDA_UNMET_IOPS * unmet_iops
+        power_penalty = LAMBDA_POWER_OVERUSE * power_overuse
+        carbon_penalty = LAMBDA_CARBON * carbon_kg
+        stranded = NU_STRANDED * stranded_penalty
 
         total_reward = -(
             cost_penalty
             + energy_penalty
             + unmet_cpu_penalty
             + unmet_mem_penalty
+            + unmet_gpu_penalty
+            + unmet_iops_penalty
+            + power_penalty
+            + carbon_penalty
             + stranded
         )
 
@@ -203,6 +248,10 @@ class ClusterDispatchEnv(gym.Env):
             "energy": -energy_penalty,
             "unmet_cpu": -unmet_cpu_penalty,
             "unmet_mem": -unmet_mem_penalty,
+            "unmet_gpu": -unmet_gpu_penalty,
+            "unmet_iops": -unmet_iops_penalty,
+            "power_overuse": -power_penalty,
+            "carbon": -carbon_penalty,
             "stranded": -stranded,
             "total": total_reward,
         }
@@ -241,6 +290,10 @@ class ClusterDispatchEnv(gym.Env):
             "energy": [],
             "unmet_cpu": [],
             "unmet_mem": [],
+            "unmet_gpu": [],
+            "unmet_iops": [],
+            "power_overuse": [],
+            "carbon": [],
             "stranded": [],
             "total": [],
         }
@@ -294,6 +347,12 @@ class ClusterDispatchEnv(gym.Env):
             info["avg_energy_kw"] = self._aggregate_metric("energy", "cost")
             info["cpu_reliability"] = self._compute_reliability("unmet_cpu")
             info["mem_reliability"] = self._compute_reliability("unmet_mem")
+            info["gpu_reliability"] = self._compute_reliability("unmet_gpu")
+            info["iops_reliability"] = self._compute_reliability("unmet_iops")
+            info["avg_power_overuse_kw"] = self._aggregate_metric(
+                "power_overuse", "cost"
+            )
+            info["avg_carbon_kg"] = self._aggregate_metric("carbon", "cost")
 
         return obs, reward, terminated, truncated, info
 
@@ -322,6 +381,10 @@ class ClusterDispatchEnv(gym.Env):
             "day_of_week": s.day_of_week,
             "cpu_demand": s.cpu_demand,
             "mem_demand": s.mem_demand,
+            "gpu_demand": s.gpu_demand,
+            "iops_demand": s.storage_iops_demand,
+            "power_budget_kw": s.power_budget_kw,
+            "carbon_intensity": s.carbon_intensity,
         }
 
     def render(self):
@@ -331,8 +394,12 @@ class ClusterDispatchEnv(gym.Env):
         s = self._last_scenario
         out = (
             f"Cluster State — Day {s.day_of_week}, Hour {s.hour:02d}:00 | "
-            f"CPU demand: {s.cpu_demand:.0f} vCores | "
-            f"Mem demand: {s.mem_demand:.0f} GB | "
+            f"CPU: {s.cpu_demand:.0f} vCores | "
+            f"Mem: {s.mem_demand:.0f} GB | "
+            f"GPU tasks: {s.gpu_demand:.0f} | "
+            f"IOPS: {s.storage_iops_demand:.0f} | "
+            f"Power budget: {s.power_budget_kw:.1f} kW | "
+            f"Carbon: {s.carbon_intensity:.3f} kg/kWh | "
             f"Step: {self.current_step}/{self.episode_length}"
         )
         if self.render_mode == "human":

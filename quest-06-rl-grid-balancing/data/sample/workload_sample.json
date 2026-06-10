@@ -1,0 +1,578 @@
+[
+  {
+    "hour": 0,
+    "day_of_week": 0,
+    "cpu_demand": 1040.5,
+    "mem_demand": 2967.0,
+    "gpu_demand": 2,
+    "storage_iops_demand": 16943.640803813658,
+    "power_budget_kw": 39.16970348921876,
+    "carbon_intensity": 0.7778217238562021,
+    "machine_availability": {
+      "general": 0.964,
+      "compute_opt": 1.0,
+      "memory_opt": 0.96,
+      "gpu": 0.96,
+      "storage_opt": 0.974
+    },
+    "machine_prices": {
+      "general": 0.315,
+      "compute_opt": 0.495,
+      "memory_opt": 0.651,
+      "gpu": 3.491,
+      "storage_opt": 0.362
+    }
+  },
+  {
+    "hour": 1,
+    "day_of_week": 0,
+    "cpu_demand": 811.5,
+    "mem_demand": 2707.2,
+    "gpu_demand": 2,
+    "storage_iops_demand": 11789.773857426895,
+    "power_budget_kw": 38.175876418601234,
+    "carbon_intensity": 0.7578734250530343,
+    "machine_availability": {
+      "general": 0.967,
+      "compute_opt": 1.0,
+      "memory_opt": 0.95,
+      "gpu": 0.92,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.321,
+      "compute_opt": 0.452,
+      "memory_opt": 0.628,
+      "gpu": 3.494,
+      "storage_opt": 0.416
+    }
+  },
+  {
+    "hour": 2,
+    "day_of_week": 0,
+    "cpu_demand": 683.9,
+    "mem_demand": 2158.1,
+    "gpu_demand": 2,
+    "storage_iops_demand": 12730.28723810174,
+    "power_budget_kw": 37.72604034273567,
+    "carbon_intensity": 0.7217394126853329,
+    "machine_availability": {
+      "general": 0.967,
+      "compute_opt": 1.0,
+      "memory_opt": 0.925,
+      "gpu": 0.92,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.323,
+      "compute_opt": 0.45,
+      "memory_opt": 0.626,
+      "gpu": 3.506,
+      "storage_opt": 0.392
+    }
+  },
+  {
+    "hour": 3,
+    "day_of_week": 0,
+    "cpu_demand": 781.9,
+    "mem_demand": 2327.1,
+    "gpu_demand": 1,
+    "storage_iops_demand": 10536.117789146294,
+    "power_budget_kw": 39.19738416538262,
+    "carbon_intensity": 0.5701988203752372,
+    "machine_availability": {
+      "general": 0.96,
+      "compute_opt": 1.0,
+      "memory_opt": 0.95,
+      "gpu": 0.96,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.31,
+      "compute_opt": 0.476,
+      "memory_opt": 0.639,
+      "gpu": 3.52,
+      "storage_opt": 0.399
+    }
+  },
+  {
+    "hour": 4,
+    "day_of_week": 0,
+    "cpu_demand": 768.9,
+    "mem_demand": 2175.1,
+    "gpu_demand": 1,
+    "storage_iops_demand": 10879.573020876858,
+    "power_budget_kw": 36.62053364363089,
+    "carbon_intensity": 0.6394377378200458,
+    "machine_availability": {
+      "general": 0.947,
+      "compute_opt": 1.0,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.28,
+      "compute_opt": 0.464,
+      "memory_opt": 0.63,
+      "gpu": 3.489,
+      "storage_opt": 0.41
+    }
+  },
+  {
+    "hour": 5,
+    "day_of_week": 0,
+    "cpu_demand": 775.3,
+    "mem_demand": 2134.8,
+    "gpu_demand": 2,
+    "storage_iops_demand": 12253.248329105923,
+    "power_budget_kw": 38.46938864985298,
+    "carbon_intensity": 0.7021112347551495,
+    "machine_availability": {
+      "general": 0.96,
+      "compute_opt": 1.0,
+      "memory_opt": 0.925,
+      "gpu": 1.0,
+      "storage_opt": 0.933
+    },
+    "machine_prices": {
+      "general": 0.292,
+      "compute_opt": 0.472,
+      "memory_opt": 0.678,
+      "gpu": 3.503,
+      "storage_opt": 0.362
+    }
+  },
+  {
+    "hour": 6,
+    "day_of_week": 0,
+    "cpu_demand": 1461.4,
+    "mem_demand": 3545.0,
+    "gpu_demand": 2,
+    "storage_iops_demand": 17950.084390067335,
+    "power_budget_kw": 39.37500443767729,
+    "carbon_intensity": 0.602060418937602,
+    "machine_availability": {
+      "general": 0.94,
+      "compute_opt": 0.983,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.297,
+      "compute_opt": 0.496,
+      "memory_opt": 0.622,
+      "gpu": 3.48,
+      "storage_opt": 0.389
+    }
+  },
+  {
+    "hour": 7,
+    "day_of_week": 0,
+    "cpu_demand": 1837.1,
+    "mem_demand": 6231.7,
+    "gpu_demand": 4,
+    "storage_iops_demand": 33960.297919495955,
+    "power_budget_kw": 46.170309161959906,
+    "carbon_intensity": 0.47001309822437715,
+    "machine_availability": {
+      "general": 0.927,
+      "compute_opt": 0.967,
+      "memory_opt": 0.975,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.304,
+      "compute_opt": 0.474,
+      "memory_opt": 0.645,
+      "gpu": 3.526,
+      "storage_opt": 0.405
+    }
+  },
+  {
+    "hour": 8,
+    "day_of_week": 0,
+    "cpu_demand": 2519.3,
+    "mem_demand": 8758.2,
+    "gpu_demand": 6,
+    "storage_iops_demand": 42850.1457445495,
+    "power_budget_kw": 50.111858720663804,
+    "carbon_intensity": 0.38391855402194786,
+    "machine_availability": {
+      "general": 0.927,
+      "compute_opt": 0.983,
+      "memory_opt": 0.975,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.327,
+      "compute_opt": 0.486,
+      "memory_opt": 0.626,
+      "gpu": 3.476,
+      "storage_opt": 0.413
+    }
+  },
+  {
+    "hour": 9,
+    "day_of_week": 0,
+    "cpu_demand": 3672.4,
+    "mem_demand": 10542.5,
+    "gpu_demand": 7,
+    "storage_iops_demand": 59356.941405066966,
+    "power_budget_kw": 53.01177524464039,
+    "carbon_intensity": 0.29666671452844756,
+    "machine_availability": {
+      "general": 0.94,
+      "compute_opt": 0.95,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.302,
+      "compute_opt": 0.464,
+      "memory_opt": 0.64,
+      "gpu": 3.529,
+      "storage_opt": 0.379
+    }
+  },
+  {
+    "hour": 10,
+    "day_of_week": 0,
+    "cpu_demand": 3896.3,
+    "mem_demand": 11466.0,
+    "gpu_demand": 7,
+    "storage_iops_demand": 51584.40797706625,
+    "power_budget_kw": 56.816383300607605,
+    "carbon_intensity": 0.21082058614845464,
+    "machine_availability": {
+      "general": 0.94,
+      "compute_opt": 0.967,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.29,
+      "compute_opt": 0.483,
+      "memory_opt": 0.648,
+      "gpu": 3.501,
+      "storage_opt": 0.377
+    }
+  },
+  {
+    "hour": 11,
+    "day_of_week": 0,
+    "cpu_demand": 3403.4,
+    "mem_demand": 10576.0,
+    "gpu_demand": 8,
+    "storage_iops_demand": 59391.67968459104,
+    "power_budget_kw": 52.00371869837324,
+    "carbon_intensity": 0.1552362738367397,
+    "machine_availability": {
+      "general": 0.953,
+      "compute_opt": 0.967,
+      "memory_opt": 0.975,
+      "gpu": 1.0,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.33,
+      "compute_opt": 0.557,
+      "memory_opt": 0.634,
+      "gpu": 3.515,
+      "storage_opt": 0.446
+    }
+  },
+  {
+    "hour": 12,
+    "day_of_week": 0,
+    "cpu_demand": 3164.3,
+    "mem_demand": 10399.9,
+    "gpu_demand": 8,
+    "storage_iops_demand": 54278.40490387575,
+    "power_budget_kw": 53.7077635171624,
+    "carbon_intensity": 0.11931355224815253,
+    "machine_availability": {
+      "general": 0.947,
+      "compute_opt": 0.967,
+      "memory_opt": 0.975,
+      "gpu": 1.0,
+      "storage_opt": 0.933
+    },
+    "machine_prices": {
+      "general": 0.298,
+      "compute_opt": 0.481,
+      "memory_opt": 0.627,
+      "gpu": 3.459,
+      "storage_opt": 0.404
+    }
+  },
+  {
+    "hour": 13,
+    "day_of_week": 0,
+    "cpu_demand": 3665.1,
+    "mem_demand": 11317.3,
+    "gpu_demand": 7,
+    "storage_iops_demand": 51405.80438403594,
+    "power_budget_kw": 56.29311333735596,
+    "carbon_intensity": 0.09547110749653964,
+    "machine_availability": {
+      "general": 0.953,
+      "compute_opt": 0.95,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.355,
+      "compute_opt": 0.488,
+      "memory_opt": 0.682,
+      "gpu": 3.521,
+      "storage_opt": 0.409
+    }
+  },
+  {
+    "hour": 14,
+    "day_of_week": 0,
+    "cpu_demand": 3383.8,
+    "mem_demand": 7870.2,
+    "gpu_demand": 7,
+    "storage_iops_demand": 49979.86281538748,
+    "power_budget_kw": 54.0838704568591,
+    "carbon_intensity": 0.10336606530966297,
+    "machine_availability": {
+      "general": 0.96,
+      "compute_opt": 0.933,
+      "memory_opt": 0.975,
+      "gpu": 1.0,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.295,
+      "compute_opt": 0.509,
+      "memory_opt": 0.611,
+      "gpu": 3.504,
+      "storage_opt": 0.388
+    }
+  },
+  {
+    "hour": 15,
+    "day_of_week": 0,
+    "cpu_demand": 3723.7,
+    "mem_demand": 8912.3,
+    "gpu_demand": 7,
+    "storage_iops_demand": 42086.482128194766,
+    "power_budget_kw": 53.246323295009184,
+    "carbon_intensity": 0.14390963149993072,
+    "machine_availability": {
+      "general": 0.947,
+      "compute_opt": 0.95,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.326,
+      "compute_opt": 0.468,
+      "memory_opt": 0.628,
+      "gpu": 3.517,
+      "storage_opt": 0.416
+    }
+  },
+  {
+    "hour": 16,
+    "day_of_week": 0,
+    "cpu_demand": 3251.0,
+    "mem_demand": 10828.4,
+    "gpu_demand": 7,
+    "storage_iops_demand": 50914.79275516901,
+    "power_budget_kw": 51.094485057165166,
+    "carbon_intensity": 0.1987027945904747,
+    "machine_availability": {
+      "general": 0.96,
+      "compute_opt": 0.983,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.322,
+      "compute_opt": 0.476,
+      "memory_opt": 0.662,
+      "gpu": 3.526,
+      "storage_opt": 0.4
+    }
+  },
+  {
+    "hour": 17,
+    "day_of_week": 0,
+    "cpu_demand": 3628.0,
+    "mem_demand": 11326.7,
+    "gpu_demand": 7,
+    "storage_iops_demand": 63839.68561926138,
+    "power_budget_kw": 48.66990797218206,
+    "carbon_intensity": 0.2879167727536444,
+    "machine_availability": {
+      "general": 0.967,
+      "compute_opt": 0.983,
+      "memory_opt": 0.95,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.343,
+      "compute_opt": 0.496,
+      "memory_opt": 0.642,
+      "gpu": 3.486,
+      "storage_opt": 0.408
+    }
+  },
+  {
+    "hour": 18,
+    "day_of_week": 0,
+    "cpu_demand": 3874.8,
+    "mem_demand": 11625.6,
+    "gpu_demand": 7,
+    "storage_iops_demand": 54892.03211060516,
+    "power_budget_kw": 48.87086301520008,
+    "carbon_intensity": 0.47974108457999937,
+    "machine_availability": {
+      "general": 0.993,
+      "compute_opt": 0.983,
+      "memory_opt": 0.925,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.325,
+      "compute_opt": 0.466,
+      "memory_opt": 0.636,
+      "gpu": 3.5,
+      "storage_opt": 0.38
+    }
+  },
+  {
+    "hour": 19,
+    "day_of_week": 0,
+    "cpu_demand": 3544.2,
+    "mem_demand": 11530.6,
+    "gpu_demand": 7,
+    "storage_iops_demand": 52665.60418707541,
+    "power_budget_kw": 45.62999599527092,
+    "carbon_intensity": 0.6712181815651032,
+    "machine_availability": {
+      "general": 1.0,
+      "compute_opt": 0.983,
+      "memory_opt": 0.9,
+      "gpu": 1.0,
+      "storage_opt": 1.0
+    },
+    "machine_prices": {
+      "general": 0.324,
+      "compute_opt": 0.48,
+      "memory_opt": 0.669,
+      "gpu": 3.519,
+      "storage_opt": 0.444
+    }
+  },
+  {
+    "hour": 20,
+    "day_of_week": 0,
+    "cpu_demand": 2668.9,
+    "mem_demand": 7087.4,
+    "gpu_demand": 5,
+    "storage_iops_demand": 39525.22222059098,
+    "power_budget_kw": 46.724350376965354,
+    "carbon_intensity": 0.8302921002405119,
+    "machine_availability": {
+      "general": 0.973,
+      "compute_opt": 0.967,
+      "memory_opt": 0.9,
+      "gpu": 0.96,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.323,
+      "compute_opt": 0.499,
+      "memory_opt": 0.628,
+      "gpu": 3.474,
+      "storage_opt": 0.437
+    }
+  },
+  {
+    "hour": 21,
+    "day_of_week": 0,
+    "cpu_demand": 1918.2,
+    "mem_demand": 7355.0,
+    "gpu_demand": 4,
+    "storage_iops_demand": 36435.10986269807,
+    "power_budget_kw": 45.71927304171375,
+    "carbon_intensity": 0.9150790581779193,
+    "machine_availability": {
+      "general": 0.967,
+      "compute_opt": 0.983,
+      "memory_opt": 0.875,
+      "gpu": 0.92,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.32,
+      "compute_opt": 0.481,
+      "memory_opt": 0.619,
+      "gpu": 3.497,
+      "storage_opt": 0.369
+    }
+  },
+  {
+    "hour": 22,
+    "day_of_week": 0,
+    "cpu_demand": 1582.4,
+    "mem_demand": 5705.9,
+    "gpu_demand": 3,
+    "storage_iops_demand": 27693.224191426674,
+    "power_budget_kw": 42.5546707945895,
+    "carbon_intensity": 0.8810491931871319,
+    "machine_availability": {
+      "general": 0.967,
+      "compute_opt": 0.967,
+      "memory_opt": 0.875,
+      "gpu": 0.92,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.321,
+      "compute_opt": 0.493,
+      "memory_opt": 0.667,
+      "gpu": 3.521,
+      "storage_opt": 0.365
+    }
+  },
+  {
+    "hour": 23,
+    "day_of_week": 0,
+    "cpu_demand": 1443.5,
+    "mem_demand": 3862.8,
+    "gpu_demand": 3,
+    "storage_iops_demand": 17192.997217121207,
+    "power_budget_kw": 40.637851934906756,
+    "carbon_intensity": 0.7797071354459242,
+    "machine_availability": {
+      "general": 0.973,
+      "compute_opt": 1.0,
+      "memory_opt": 0.9,
+      "gpu": 0.92,
+      "storage_opt": 0.967
+    },
+    "machine_prices": {
+      "general": 0.286,
+      "compute_opt": 0.479,
+      "memory_opt": 0.614,
+      "gpu": 3.513,
+      "storage_opt": 0.407
+    }
+  }
+]

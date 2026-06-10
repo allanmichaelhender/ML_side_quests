@@ -46,30 +46,73 @@ def random_policy(obs: np.ndarray, env: ClusterDispatchEnv) -> np.ndarray:
 
 def cost_first_policy(obs: np.ndarray, env: ClusterDispatchEnv) -> np.ndarray:
     """
-    Cost-first allocation: allocate cheapest machine types first
-    until CPU demand is met. Simple greedy heuristic.
+    Greedy baseline: meet GPU demand first, then IOPS, then CPU/mem cheapest-first.
+    Respects power budget by throttling GPU if needed.
     """
     s = env._last_scenario
-    # Sort machine types by price (cheapest first)
+    action = np.zeros(len(MACHINE_DEFS), dtype=np.float32)
+    remaining_power = s.power_budget_kw
+
+    # Build lookup dicts for convenience
+    m_by_name = {m["name"]: m for m in MACHINE_DEFS}
+
+    # ── 1. Meet GPU demand (only GPU instances provide this) ──────────────
+    gpu_needed = int(s.gpu_demand)
+    if gpu_needed > 0:
+        m_gpu = m_by_name["gpu"]
+        avail_gpu = s.machine_availability["gpu"] * m_gpu["max_instances"]
+        take_gpu = min(gpu_needed, avail_gpu)
+        gpu_power = take_gpu * m_gpu["power_watts"] / 1000.0
+        if gpu_power > remaining_power * 0.8:
+            # Power constrained — take what we can
+            take_gpu = min(
+                take_gpu, int(remaining_power * 0.8 / (m_gpu["power_watts"] / 1000.0))
+            )
+        action[env.type_names.index("gpu")] = (
+            take_gpu / avail_gpu if avail_gpu > 0 else 0.0
+        )
+        remaining_power -= take_gpu * m_gpu["power_watts"] / 1000.0
+
+    # ── 2. Meet IOPS demand (storage_opt is most efficient) ──────────────
+    remaining_iops = max(0, s.storage_iops_demand)
+    m_stor = m_by_name["storage_opt"]
+    avail_stor = s.machine_availability["storage_opt"] * m_stor["max_instances"]
+    iops_per_stor = m_stor.get("iops_per_instance", 500)
+    need_stor = min(int(remaining_iops / iops_per_stor) + 1, int(avail_stor))
+    if need_stor > 0:
+        stor_power = need_stor * m_stor["power_watts"] / 1000.0
+        if stor_power > remaining_power * 0.5:
+            need_stor = max(
+                1, int(remaining_power * 0.5 / (m_stor["power_watts"] / 1000.0))
+            )
+        action[env.type_names.index("storage_opt")] = (
+            need_stor / avail_stor if avail_stor > 0 else 0.0
+        )
+        remaining_power -= need_stor * m_stor["power_watts"] / 1000.0
+        remaining_iops -= need_stor * iops_per_stor
+
+    # ── 3. Meet CPU/memory demand cheapest-first ────────────────────────
+    remaining_cpu = s.cpu_demand
+    remaining_mem = s.mem_demand
+
+    # Sort by price (cheapest first)
     priced = sorted(
         [
             (s.machine_prices[m["name"]], m, s.machine_availability[m["name"]])
             for m in MACHINE_DEFS
+            if m["name"] not in ("gpu", "storage_opt")  # already handled
         ],
         key=lambda x: x[0],
     )
 
-    action = np.zeros(len(MACHINE_DEFS), dtype=np.float32)
-    remaining_cpu = s.cpu_demand
-    remaining_mem = s.mem_demand
-
     for price, m, avail_frac in priced:
-        idx = next(i for i, m2 in enumerate(MACHINE_DEFS) if m2["name"] == m["name"])
+        idx = env.type_names.index(m["name"])
         avail = avail_frac * m["max_instances"]
         if remaining_cpu <= 0 and remaining_mem <= 0:
             break
+        if remaining_power <= 0:
+            break
 
-        # How many instances needed to meet remaining demand
         need_cpu = (
             max(0, remaining_cpu / m["cpu_per_instance"])
             if m["cpu_per_instance"] > 0
@@ -83,9 +126,14 @@ def cost_first_policy(obs: np.ndarray, env: ClusterDispatchEnv) -> np.ndarray:
         need = max(need_cpu, need_mem)
 
         take = min(avail, need)
+        # Power check
+        take_power = take * m["power_watts"] / 1000.0
+        if take_power > remaining_power:
+            take = min(take, int(remaining_power / (m["power_watts"] / 1000.0)))
         action[idx] = take / avail if avail > 0 else 0.0
         remaining_cpu -= take * m["cpu_per_instance"]
         remaining_mem -= take * m["mem_per_instance"]
+        remaining_power -= take * m["power_watts"] / 1000.0
 
     return action
 
@@ -143,8 +191,12 @@ def evaluate_policy(
     std_reward = np.std(all_rewards)
     cpu_reliabilities = [inf.get("cpu_reliability", 0.0) for inf in all_info]
     mem_reliabilities = [inf.get("mem_reliability", 0.0) for inf in all_info]
+    gpu_reliabilities = [inf.get("gpu_reliability", 0.0) for inf in all_info]
+    iops_reliabilities = [inf.get("iops_reliability", 0.0) for inf in all_info]
     costs = [inf.get("avg_cost_per_hour", 0.0) for inf in all_info]
     energy = [inf.get("avg_energy_kw", 0.0) for inf in all_info]
+    carbon = [inf.get("avg_carbon_kg", 0.0) for inf in all_info]
+    power_overuse = [inf.get("avg_power_overuse_kw", 0.0) for inf in all_info]
 
     results = {
         "policy": policy_name,
@@ -153,8 +205,12 @@ def evaluate_policy(
         "std_reward": round(float(std_reward), 2),
         "mean_cpu_reliability": round(float(np.mean(cpu_reliabilities)), 4),
         "mean_mem_reliability": round(float(np.mean(mem_reliabilities)), 4),
+        "mean_gpu_reliability": round(float(np.mean(gpu_reliabilities)), 4),
+        "mean_iops_reliability": round(float(np.mean(iops_reliabilities)), 4),
         "mean_cost_per_hour": round(float(np.mean(costs)), 2),
         "mean_energy_kw": round(float(np.mean(energy)), 2),
+        "mean_carbon_kg": round(float(np.mean(carbon)), 4),
+        "mean_power_overuse_kw": round(float(np.mean(power_overuse)), 2),
     }
     return results
 
