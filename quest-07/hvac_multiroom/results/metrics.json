@@ -1,0 +1,27 @@
+{
+  "algorithm": "DQN",
+  "n_zones": 3,
+  "zone_names": [
+    "living",
+    "kitchen",
+    "bedroom"
+  ],
+  "total_timesteps": 500000,
+  "training_time_minutes": 5.5,
+  "n_eval_episodes": 10,
+  "mean_episodic_reward": -290.14,
+  "std_episodic_reward": 63.41,
+  "episode_rewards": [
+    -211.07,
+    -349.24,
+    -215.9,
+    -250.47,
+    -322.5,
+    -257.25,
+    -362.37,
+    -374.7,
+    -213.26,
+    -344.64
+  ],
+  "seed": 42
+}

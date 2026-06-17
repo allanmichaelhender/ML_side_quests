@@ -123,7 +123,7 @@ def main():
 
     metrics = {
         "algorithm": "DQN",
-        "n_zones": cfg.n_zones,
+        "n_zones": len(cfg.zone_names),
         "zone_names": cfg.zone_names,
         "total_timesteps": args.timesteps,
         "training_time_minutes": round(train_time / 60, 1),

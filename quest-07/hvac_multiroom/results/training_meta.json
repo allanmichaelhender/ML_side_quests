@@ -1,0 +1,18 @@
+{
+  "algorithm": "DQN",
+  "total_timesteps": 500000,
+  "episode_steps": 72,
+  "seed": 42,
+  "learning_rate": 0.0005,
+  "buffer_size": 100000,
+  "gamma": 0.95,
+  "batch_size": 64,
+  "net_arch": [
+    128,
+    128
+  ],
+  "exploration_fraction": 0.3,
+  "exploration_final_eps": 0.05,
+  "target_update_interval": 250,
+  "train_freq": 4
+}

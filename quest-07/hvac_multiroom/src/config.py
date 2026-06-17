@@ -52,10 +52,10 @@ class BuildingConfig:
     #   Room 1 (south-facing): significant solar gain peaking at noon
     #   Room 2 (internal): no direct solar gain
     #   Room 3 (north-facing): minor indirect gain
-    solar_amp: List[float] = field(default_factory=lambda: [3.0, 0.0, 0.5])
+    solar_amp: List[float] = field(default_factory=lambda: [1.5, 0.0, 0.2])
 
     # ── AC cooling power per zone (°C per step) ────────────────────────────
-    beta: List[float] = field(default_factory=lambda: [1.5, 1.2, 1.0])
+    beta: List[float] = field(default_factory=lambda: [3.0, 2.5, 2.0])
 
     # ── Outdoor temp parameters ────────────────────────────────────────────
     outdoor_base: float = 27.0  # centre of sine wave (°C)

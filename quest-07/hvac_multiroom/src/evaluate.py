@@ -77,7 +77,9 @@ def run_episode(env: MultiRoomHVACEnv, model: DQN, base_temp: float) -> dict:
     return history
 
 
-def plot_scenario(history: dict, label: str, color: str, save_path: Path) -> None:
+def plot_scenario(
+    history: dict, label: str, color: str, save_path: Path, n_zones: int = 3
+) -> None:
     """Generate a multi-panel figure for one climate scenario."""
     hours = np.arange(len(history["hours"]))
     temps = np.array(history["temps"])
@@ -125,7 +127,7 @@ def plot_scenario(history: dict, label: str, color: str, save_path: Path) -> Non
 
     ax.set_ylabel("Zones with AC ON")
     ax.set_title("AC Activation per Zone")
-    ax.set_ylim(0, env.n_zones + 0.5)
+    ax.set_ylim(0, n_zones + 0.5)
     ax.set_yticks([0, 1, 2, 3])
     ax.legend(loc="upper right", fontsize=8)
     ax.grid(True, alpha=0.3, axis="y")
@@ -240,7 +242,7 @@ def main():
         plot_path = FIGURES_DIR / f"{scenario_key}.png"
         colors = {"cool": "#2ecc71", "warm": "#f39c12", "hot": "#e74c3c"}
         plot_color = next((c for k, c in colors.items() if k in scenario_key), "#888")
-        plot_scenario(history, label, plot_color, plot_path)
+        plot_scenario(history, label, plot_color, plot_path, n_zones=env.n_zones)
         print(f"  Figure saved to {plot_path}")
 
     env.close()
