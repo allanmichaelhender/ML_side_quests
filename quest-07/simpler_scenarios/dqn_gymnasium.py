@@ -19,20 +19,22 @@ class HVACEnv(gym.Env):
     Observation: [indoor_temp, outdoor_temp, hour_normalized]  (Box 3,)
     Action: 0 = AC OFF, 1 = AC ON                              (Discrete 2)
     Reward: -|temp - target| + energy_cost (AC ON = -1.5)
-    Episode: 24 steps (one full day)
+    Episode: 72 steps (three full days)
     """
 
-    def __init__(self):
+    def __init__(self, episode_steps=72):
         super().__init__()
 
+        self.episode_steps = episode_steps
         self.target_temp = 21.0
         self.alpha = 0.1  # Heat leakage rate
         self.beta = 1.5  # AC cooling power
 
         # Gym spaces — lets SB3 auto-configure the network
+        max_hour_norm = episode_steps / 24.0
         self.observation_space = spaces.Box(
             low=np.array([15.0, 10.0, 0.0], dtype=np.float32),
-            high=np.array([35.0, 50.0, 1.0], dtype=np.float32),
+            high=np.array([35.0, 50.0, max_hour_norm], dtype=np.float32),
             dtype=np.float32,
         )
         self.action_space = spaces.Discrete(2)
@@ -79,7 +81,7 @@ class HVACEnv(gym.Env):
 
         # Advance hour
         self.hour += 1
-        terminated = self.hour >= 24
+        terminated = self.hour >= self.episode_steps
         truncated = False
 
         return self._get_obs(), reward, terminated, truncated, {}
@@ -88,7 +90,7 @@ class HVACEnv(gym.Env):
 # ============================================================
 # 2. HYPERPARAMETERS
 # ============================================================
-TOTAL_TIMESTEPS = 100_000  # ~4166 episodes (×24 steps)
+TOTAL_TIMESTEPS = 300_000  # ~4166 episodes (×72 steps)
 
 # ============================================================
 # 3. TRAIN WITH SB3
@@ -99,25 +101,21 @@ print("=" * 55)
 
 env = HVACEnv()
 
-# SB3's DQN replaces ~150 lines of hand-written code:
-#   - Neural network (MlpPolicy = 2 hidden layers × 64 neurons)
-#   - Replay buffer
-#   - Target network (hard-updated via tau=1.0)
-#   - ε-greedy exploration (decays from 1.0 → exploration_final_eps)
+
 model = DQN(
     "MlpPolicy",
     env,
     learning_rate=0.001,
-    buffer_size=20_000,
-    learning_starts=1_000,
-    batch_size=64,
-    tau=1.0,  # Hard target update (like our old code)
-    target_update_interval=10,
-    train_freq=1,
-    gradient_steps=1,
+    buffer_size=50_000,  # ~700 episodes of experience stored
+    learning_starts=1_000,  # Fill buffer with random steps before training
+    batch_size=64,  # Transitions sampled per gradient step
+    tau=1.0,  # Hard target update (full copy every interval)
+    target_update_interval=10,  # Copy online → target net every 10 train steps
+    train_freq=1,  # Train every environment step
+    gradient_steps=1,  # One gradient update per train call
     exploration_fraction=0.3,  # Explore for first 30% of training
     exploration_final_eps=0.05,  # ε decays from 1.0 to 0.05
-    gamma=0.9,
+    gamma=0.95,  # Discount — rewards 70 steps ahead still matter
     verbose=1,
     seed=42,
 )
@@ -128,12 +126,12 @@ print("Training complete!\n")
 
 
 # ============================================================
-# 4. TEST — evaluate on 3 different base temps
+# 4. TEST — roll out the learned policy over 3-day scenarios
 # ============================================================
 for label, base_temp in [
-    ("Cool day  (base=22°C)", 22.0),
-    ("Warm day  (base=27°C)", 27.0),
-    ("Hot day   (base=32°C)", 32.0),
+    ("Cool climate  (base=22°C)", 22.0),
+    ("Warm climate  (base=27°C)", 27.0),
+    ("Hot climate   (base=32°C)", 32.0),
 ]:
     env.base_temp = base_temp
     env.current_temp = 20.0
@@ -147,7 +145,7 @@ for label, base_temp in [
     print("-" * 55)
 
     total_reward = 0.0
-    for hour in range(24):
+    for hour in range(env.episode_steps):
         action, _ = model.predict(obs, deterministic=True)
         action_text = "AC ON" if action == 1 else "OFF"
 

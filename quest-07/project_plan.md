@@ -16,9 +16,10 @@ Reinforcement learning for building HVAC control, progressing from a single-room
 | **Observation** | `[indoor_temp, outdoor_temp, hour/24]`                              |
 | **Action**      | Discrete 2 — AC OFF / ON                                            |
 | **Reward**      | `-                                                                  | temp - target | `+`-1.5` if AC ON |
-| **Algorithm**   | SB3 DQN (`MlpPolicy`, 2×64 hidden)                                  |
-| **Episode**     | 24 steps (1 day)                                                    |
-| **Training**    | 100k timesteps (~4166 episodes)                                     |
+| **Algorithm**   | SB3 DQN (`MlpPolicy`, 2×64 hidden, γ=0.95)                          |
+| **Episode**     | 72 steps (3 days)                                                   |
+| **Buffer**      | 50k transitions (~700 episodes)                                     |
+| **Training**    | 300k timesteps (~4166 episodes)                                     |
 
 **Key change from hand-written DQN:**
 
